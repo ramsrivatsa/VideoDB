@@ -4,6 +4,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import nl.tno.stormcv.bolt.BatchInputBolt.History;
 import nl.tno.stormcv.model.CVParticle;
 
@@ -24,6 +27,7 @@ import nl.tno.stormcv.model.CVParticle;
 public class SlidingWindowBatcher implements IBatcher{
 
 	private static final long serialVersionUID = -4296426517808304248L;
+	private Logger logger = LoggerFactory.getLogger(SlidingWindowBatcher.class);
 	private int windowSize;
 	private int sequenceDelta;
 	private int maxSize = Integer.MAX_VALUE;
@@ -53,6 +57,7 @@ public class SlidingWindowBatcher implements IBatcher{
 				history.removeFromHistory(window.get(0));
 			} else break;
 		}
+		logger.info("Frame Obtained" + System.nanoTime());
 		return result;
 	}
 

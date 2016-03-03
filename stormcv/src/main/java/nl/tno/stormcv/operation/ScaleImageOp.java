@@ -7,6 +7,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import backtype.storm.task.TopologyContext;
 import nl.tno.stormcv.model.Frame;
 import nl.tno.stormcv.model.*;
@@ -24,6 +27,7 @@ import nl.tno.stormcv.model.serializer.*;
 public class ScaleImageOp implements ISingleInputOperation<Frame>{
 
 	private static final long serialVersionUID = -8518918556266893201L;
+	private Logger logger = LoggerFactory.getLogger(ScaleImageOp.class);
 
 	private float factor;
 	
@@ -49,6 +53,7 @@ public class ScaleImageOp implements ISingleInputOperation<Frame>{
 
 	@Override
 	public List<Frame> execute(CVParticle particle) throws Exception {
+		//logger.info(" Scale Op" + System.nanoTime());
 		List<Frame> result = new ArrayList<Frame>();
 		if(!(particle instanceof Frame)) return result;
 		

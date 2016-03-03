@@ -11,6 +11,9 @@ import java.util.Map;
 
 import javax.imageio.ImageIO;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import backtype.storm.task.TopologyContext;
 import nl.tno.stormcv.model.*;
 import nl.tno.stormcv.model.serializer.*;
@@ -28,6 +31,7 @@ import nl.tno.stormcv.util.connector.LocalFileConnector;
 public class DrawFeaturesOp implements ISingleInputOperation<Frame> {
 
 	private static final long serialVersionUID = 5628467120758880353L;
+	private Logger logger = LoggerFactory.getLogger(DrawFeaturesOp.class);
 	private FrameSerializer serializer = new FrameSerializer();
 	private static Color[] colors = new Color[]{Color.RED, Color.BLUE, Color.GREEN, Color.PINK, Color.YELLOW, Color.CYAN, Color.MAGENTA};
 	private String writeLocation;
@@ -69,6 +73,7 @@ public class DrawFeaturesOp implements ISingleInputOperation<Frame> {
 
 	@Override
 	public List<Frame> execute(CVParticle particle) throws Exception {
+		//logger.info("Draw Features Op " + System.nanoTime());
 		List<Frame> result = new ArrayList<Frame>();
 		if(!(particle instanceof Frame)) return result;
 		Frame sf = (Frame)particle;

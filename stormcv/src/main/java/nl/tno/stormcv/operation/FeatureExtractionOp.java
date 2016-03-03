@@ -87,6 +87,7 @@ public class FeatureExtractionOp extends OpenCVOp<CVParticle> implements ISingle
 
 	@Override
 	public List<CVParticle> execute(CVParticle particle) throws Exception {
+		//logger.info(" Feature Extraction Op" + System.nanoTime());
 		List<CVParticle> result = new ArrayList<CVParticle>();
 		if(!(particle instanceof Frame)) return result;
 		

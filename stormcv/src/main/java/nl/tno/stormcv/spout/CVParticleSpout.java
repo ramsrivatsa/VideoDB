@@ -102,6 +102,7 @@ public class CVParticleSpout implements IRichSpout{
 			String id = particle.getStreamId()+"_"+particle.getSequenceNr();
 			if(faultTolerant && tupleCache != null) tupleCache.put(id, values);
 			collector.emit(values, id);
+			//logger.info("Frame fetcher" + System.nanoTime());
 		} catch (IOException e) {
 			logger.warn("Unable to fetch next frame from queue due to: "+e.getMessage());
 		}

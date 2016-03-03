@@ -51,7 +51,7 @@ public class E3_MultipleFeaturesTopology {
 		List<String> files = new ArrayList<String>();
 		files.add( "file://"+ userDir + "/resources/data/" );
 
-		int frameSkip = 13; 
+		int frameSkip = 1; 
 		
 		// now create the topology itself (spout -> scale -> {face detection, sift} -> drawer -> streamer)
 		TopologyBuilder builder = new TopologyBuilder();
@@ -59,25 +59,25 @@ public class E3_MultipleFeaturesTopology {
 		builder.setSpout("spout", new CVParticleSpout( new FileFrameFetcher(files).frameSkip(frameSkip) ), 2 );
 		
 		// add bolt that scales frames down to 25% of the original size 
-		builder.setBolt("scale", new SingleInputBolt( new ScaleImageOp(0.25f)), 2)
+		builder.setBolt("scale", new SingleInputBolt( new ScaleImageOp(0.25f)), 4)
 			.shuffleGrouping("spout");
 		
 		// one bolt with a HaarCascade classifier detecting faces. This operation outputs a Frame including the Features with detected faces.
 		// the xml file must be present on the classpath!
-		builder.setBolt("face", new SingleInputBolt( new HaarCascadeOp("face", "lbpcascade_frontalface.xml").outputFrame(true)), 4)
+		builder.setBolt("face", new SingleInputBolt( new HaarCascadeOp("face", "lbpcascade_frontalface.xml").outputFrame(true)), 8)
 			.shuffleGrouping("scale");
 		
 		// add a bolt that performs SIFT keypoint extraction
-		builder.setBolt("sift", new SingleInputBolt( new FeatureExtractionOp("sift", FeatureDetector.SIFT, DescriptorExtractor.SIFT).outputFrame(false)), 16)
+		builder.setBolt("sift", new SingleInputBolt( new FeatureExtractionOp("sift", FeatureDetector.SIFT, DescriptorExtractor.SIFT).outputFrame(false)), 32)
 			.shuffleGrouping("scale");
 		
 		// Batch bolt that waits for input from both the face and sift detection bolts and combines them in a single frame object
-		builder.setBolt("combiner", new BatchInputBolt(new SequenceNrBatcher(2), new FeatureCombinerOp()), 2)
+		builder.setBolt("combiner", new BatchInputBolt(new SequenceNrBatcher(2), new FeatureCombinerOp()), 4)
 			.fieldsGrouping("sift", new Fields(FrameSerializer.STREAMID))
 			.fieldsGrouping("face", new Fields(FrameSerializer.STREAMID));
 		
 		// simple bolt that draws Features (i.e. locations of features) into the frame
-		builder.setBolt("drawer", new SingleInputBolt(new DrawFeaturesOp()), 2)
+		builder.setBolt("drawer", new SingleInputBolt(new DrawFeaturesOp()), 4)
 			.shuffleGrouping("combiner");
 		
 		// add bolt that creates a webservice on port 8558 enabling users to view the result

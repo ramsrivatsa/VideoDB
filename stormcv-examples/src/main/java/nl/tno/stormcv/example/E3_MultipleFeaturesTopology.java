@@ -49,7 +49,7 @@ public class E3_MultipleFeaturesTopology {
 		String userDir = System.getProperty("user.dir").replaceAll("\\\\", "/");
 		// create a list with files to be processed, in this case just one. Multiple files will be spread over the available spouts
 		List<String> files = new ArrayList<String>();
-		files.add( "file://"+ userDir + "/resources/data/" );
+		files.add( "file://"+ userDir + "/resources/data/Breaking_Dawn_Part2_trailer.mp4" );
 
 		int frameSkip = 13; 
 		

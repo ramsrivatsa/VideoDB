@@ -166,11 +166,15 @@ public class StreamReader extends MediaListenerAdapter implements Runnable {
         	if(frameMs > 0 ) timestamp = frameNr * frameMs;
         	Frame newFrame = new Frame(streamId, frameNr, imageType, buffer, timestamp, new Rectangle(0, 0,frame.getWidth(), frame.getHeight()));
         	newFrame.getMetadata().put("uri", streamLocation);
+		logger.info("Inserting frame into queue : " + " StreamID - " + streamId + " Sequence Nr - " + frameNr + " System Time - " + System.currentTimeMillis());
         	frameQueue.put(newFrame);
         	// enforced throttling
         	if(sleepTime > 0) Utils.sleep(sleepTime);
         	// queue based throttling 
-        	if(frameQueue.size() > 20) Utils.sleep(frameQueue.size());
+        	if(frameQueue.size() > 20) {
+			logger.info("Sleeping : " + " System Time - " + System.currentTimeMillis());
+			Utils.sleep(frameQueue.size());
+		}
         }catch(Exception e){
         	logger.warn("Unable to process new frame due to: "+e.getMessage(), e);
         }

@@ -54,10 +54,11 @@ public class SlidingWindowBatcher implements IBatcher{
 			window.addAll(currentSet.subList(i, i+windowSize)); // add all is used to avoid ConcurrentModificationException when the History cleans stuff up
 			if(assessWindow(window) || currentSet.size() > maxSize){
 				result.add(window);
+				logger.info("Completed processing frame : " + "StreamID - "+ window.get(0).getStreamId() + " Sequence Nr - " + window.get(0).getSequenceNr() + " System Time - " + System.currentTimeMillis());
 				history.removeFromHistory(window.get(0));
 			} else break;
 		}
-		logger.info("Frame Obtained" + System.nanoTime());
+		//logger.info("Frame Obtained" + System.nanoTime());
 		return result;
 	}
 

@@ -51,7 +51,7 @@ public class E3_MultipleFeaturesTopology {
 		List<String> files = new ArrayList<String>();
 		files.add( "file://"+ userDir + "/resources/data/Breaking_Dawn_Part2_trailer.mp4" );
 
-		int frameSkip = 13; 
+		int frameSkip = 1; 
 		
 		// now create the topology itself (spout -> scale -> {face detection, sift} -> drawer -> streamer)
 		TopologyBuilder builder = new TopologyBuilder();

@@ -50,6 +50,7 @@ public class CVParticleSpout implements IRichSpout{
 	 * @return
 	 */
 	public CVParticleSpout setFaultTolerant(boolean faultTolerant){
+		//logger.info(" ************** Setting value of falultTolerant ****************** " + faultTolerant);
 		this.faultTolerant = faultTolerant;
 		return this;
 	}
@@ -102,7 +103,6 @@ public class CVParticleSpout implements IRichSpout{
 			String id = particle.getStreamId()+"_"+particle.getSequenceNr();
 			if(faultTolerant && tupleCache != null) tupleCache.put(id, values);
 			collector.emit(values, id);
-			//logger.info("Frame fetcher" + System.nanoTime());
 			logger.info("Time to start execute : " + " StreamID - " + particle.getStreamId() + " Sequence Nr - " + particle.getSequenceNr() + " System Time - " + System.currentTimeMillis());
 		} catch (IOException e) {
 			logger.warn("Unable to fetch next frame from queue due to: "+e.getMessage());

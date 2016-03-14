@@ -56,7 +56,7 @@ public class E3_MultipleFeaturesTopology {
 		// now create the topology itself (spout -> scale -> {face detection, sift} -> drawer -> streamer)
 		TopologyBuilder builder = new TopologyBuilder();
 		 // just one spout reading video files, extracting 1 frame out of 25 (i.e. 1 per second)
-		builder.setSpout("spout", new CVParticleSpout( new FileFrameFetcher(files).frameSkip(frameSkip) ), 1 );
+		builder.setSpout("spout", new CVParticleSpout( new FileFrameFetcher(files).frameSkip(frameSkip) ).setFaultTolerant(true), 1 );
 		
 		// add bolt that scales frames down to 25% of the original size 
 		builder.setBolt("scale", new SingleInputBolt( new ScaleImageOp(0.25f)), 1)

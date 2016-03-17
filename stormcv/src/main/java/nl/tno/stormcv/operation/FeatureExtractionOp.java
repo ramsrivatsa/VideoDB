@@ -1,23 +1,27 @@
 package nl.tno.stormcv.operation;
 
-import java.awt.Rectangle;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-
+import backtype.storm.task.TopologyContext;
+import nl.tno.stormcv.model.CVParticle;
+import nl.tno.stormcv.model.Descriptor;
+import nl.tno.stormcv.model.Feature;
+import nl.tno.stormcv.model.Frame;
+import nl.tno.stormcv.model.serializer.CVParticleSerializer;
+import nl.tno.stormcv.model.serializer.FeatureSerializer;
+import nl.tno.stormcv.model.serializer.FrameSerializer;
+import org.opencv.core.KeyPoint;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfByte;
 import org.opencv.core.MatOfKeyPoint;
 import org.opencv.features2d.DescriptorExtractor;
 import org.opencv.features2d.FeatureDetector;
-import org.opencv.features2d.KeyPoint;
-import org.opencv.highgui.Highgui;
+import org.opencv.imgcodecs.Imgcodecs;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import backtype.storm.task.TopologyContext;
-import nl.tno.stormcv.model.*;
-import nl.tno.stormcv.model.serializer.*;
+import java.awt.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 /**
  * An operation used to detect and describe a wide variety of features using the OpenCV FeatureExtraction and 
@@ -95,7 +99,7 @@ public class FeatureExtractionOp extends OpenCVOp<CVParticle> implements ISingle
 		if(frame.getImageType().equals(Frame.NO_IMAGE)) return result;
 		try{
 			MatOfByte mob = new MatOfByte(frame.getImageBytes());
-			Mat image = Highgui.imdecode(mob, Highgui.CV_LOAD_IMAGE_ANYCOLOR);
+			Mat image = Imgcodecs.imdecode(mob, Imgcodecs.CV_LOAD_IMAGE_ANYCOLOR);
 			
 			FeatureDetector siftDetector = FeatureDetector.create(detectorType);
 			MatOfKeyPoint mokp = new MatOfKeyPoint();

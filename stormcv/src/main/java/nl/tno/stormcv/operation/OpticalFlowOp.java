@@ -1,19 +1,22 @@
 package nl.tno.stormcv.operation;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-
+import backtype.storm.task.TopologyContext;
+import nl.tno.stormcv.model.CVParticle;
+import nl.tno.stormcv.model.Feature;
+import nl.tno.stormcv.model.Frame;
+import nl.tno.stormcv.model.serializer.CVParticleSerializer;
+import nl.tno.stormcv.model.serializer.FeatureSerializer;
+import nl.tno.stormcv.model.serializer.FrameSerializer;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfByte;
-import org.opencv.highgui.Highgui;
+import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.video.Video;
 
-import backtype.storm.task.TopologyContext;
-import nl.tno.stormcv.model.*;
-import nl.tno.stormcv.model.serializer.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Operation to calculate the optical flow between two {@link Frame}s and returns a {@link Feature}
@@ -73,12 +76,12 @@ public class OpticalFlowOp extends OpenCVOp<CVParticle> implements IBatchOperati
 		Frame frame2 = (Frame)input.get(1);
 		
 		MatOfByte mob1 = new MatOfByte(frame1.getImageBytes());
-		Mat image1 = Highgui.imdecode(mob1, Highgui.CV_LOAD_IMAGE_ANYCOLOR);
+		Mat image1 = Imgcodecs.imdecode(mob1, Imgcodecs.CV_LOAD_IMAGE_ANYCOLOR);
 		Mat image1Gray = new Mat( image1.size(), CvType.CV_8UC1 );
 		Imgproc.cvtColor( image1, image1Gray, Imgproc.COLOR_RGB2GRAY );
 		
 		MatOfByte mob2 = new MatOfByte(frame2.getImageBytes());
-		Mat image2 = Highgui.imdecode(mob2, Highgui.CV_LOAD_IMAGE_ANYCOLOR);
+		Mat image2 = Imgcodecs.imdecode(mob2, Imgcodecs.CV_LOAD_IMAGE_ANYCOLOR);
 		Mat image2Gray = new Mat( image2.size(), CvType.CV_8UC1 );
 		Imgproc.cvtColor( image2, image2Gray, Imgproc.COLOR_RGB2GRAY );
 		

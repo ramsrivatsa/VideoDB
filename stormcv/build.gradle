@@ -1,0 +1,147 @@
+plugins {
+    id 'java'
+    id 'cpp'
+    id 'nebula.provided-base' version '3.0.3' // for provided configuration
+    id 'com.dorongold.task-tree' version '1.2.1' // for debug gradle task debug
+    //id 'com.github.johnrengelman.shadow' version '1.2.3' // for build shadow jar
+}
+
+group = 'nl.tno'
+version = '0.8.0'
+
+description = """StormCV
+This is a fork of original [StormCV](https://github.com/sensorstorm/StormCV) with OpenCV upgraded to
+3.1.0 and other bug fixes and improvement.
+"""
+
+sourceCompatibility = 1.7
+targetCompatibility = 1.7
+
+wrapper.gradleVersion = 2.11
+
+repositories {
+    jcenter()
+    maven {
+        url 'http://xuggle.googlecode.com/svn/trunk/repo/share/java/'
+        artifactUrls 'http://xuggle.googlecode.com/svn/trunk/repo/share/java/xuggle'
+    }
+}
+
+dependencies {
+    compile fileTree(dir: 'lib', include: '*.jar')
+    provided group: 'org.apache.storm', name: 'storm-core', version:'0.10.0'
+
+    compile group: 'xuggle', name: 'xuggle-xuggler', version:'5.4'
+    compile group: 'commons-net', name: 'commons-net', version:'3.4'
+
+    // TODO: update to latest version
+    compile group: 'com.amazonaws', name: 'aws-java-sdk', version:'1.4.7'
+    compile group: 'com.sun.jersey', name: 'jersey-bundle', version:'1.18'
+    compile group: 'com.google.guava', name: 'guava', version:'18.0'
+    compile group: 'org.slf4j', name: 'slf4j-api', version:'1.7.19'
+
+    testCompile group: 'org.slf4j', name: 'slf4j-simple', version:'1.7.19'
+}
+
+if (plugins.hasPlugin('com.github.johnrengelman.shadow')) {
+    shadowJar {
+        dependencies {
+            exclude(dependency('org.apache.storm:storm-core'))
+        }
+    }
+}
+
+task gatherNativeLibraries(type: Copy) {
+    ext.outputPath = "$buildDir/generated-resources"
+
+    sourceSets.main.output.dir outputPath, builtBy: gatherNativeLibraries
+
+    into "$outputPath/native/x64"
+}
+
+task generateJNIHeaders(dependsOn: compileJava) {
+    ext.inputClasses = [""]
+    ext.outputDir = file("$buildDir/native-headers")
+
+    description = 'Generate JNI headers'
+
+    inputs.files sourceSets.main.allJava
+    outputs.dir outputDir
+    doLast {
+        def cp = ""
+        sourceSets.each {
+            if (!cp.empty) {
+                cp += File.pathSeparator
+            }
+            cp += it.output.classesDir
+        }
+        cp += File.pathSeparator + configurations.compile.asPath
+
+        logger.quiet('Generating native JNI headers to ' + outputDir.getAbsolutePath())
+        outputDir.mkdirs()
+        logger.quiet('Generating JNI header for ' + inputClasses)
+        ant.javah(class: inputClasses.join(','), destdir: outputDir, classpath: cp)
+    }
+}
+
+model {
+    platforms {
+        linux_x64 {
+            architecture 'x86_64'
+            operatingSystem 'linux'
+        }
+    }
+
+    repositories {
+        prebuiltlibs(PrebuiltLibraries) {
+            jdk {
+                headers.srcDirs "${org.gradle.internal.jvm.Jvm.current().javaHome}/include",
+                        "${org.gradle.internal.jvm.Jvm.current().javaHome}/include/win32",
+                        "${org.gradle.internal.jvm.Jvm.current().javaHome}/include/darwin",
+                        "${org.gradle.internal.jvm.Jvm.current().javaHome}/include/linux"
+            }
+
+            jni {
+                headers.srcDirs generateJNIHeaders.outputs
+            }
+        }
+    }
+
+    components {
+        jniOcvDnn(NativeLibrarySpec) {
+            targetPlatform 'linux_x64'
+            shared
+
+            sources.cpp {
+                source {
+                    lib library: 'jdk', linkage: 'api'
+
+                    srcDir 'src/main/jni'
+                    include '**/*.cpp'
+                }
+            }
+
+            binaries.all {
+                if (toolChain in Gcc || toolChain in Clang) {
+                    cppCompiler.args '-Wall', '-Wextra', '-Werror', '-std=c++14'
+                    linker.args '-lopencv_core', '-lopencv_dnn', '-lopencv_imgproc'
+                }
+            }
+        }
+    }
+
+    binaries {
+        all { binary ->
+            logger.quiet('binary tasks are ' + tasks)
+            binary.tasks.withType(CppCompile) { task ->
+                task.dependsOn generateJNIHeaders
+                task.includes generateJNIHeaders.outputs
+                task.inputs.dir generateJNIHeaders.outputs
+            }
+        }
+        withType(SharedLibraryBinarySpec) {
+            gatherNativeLibraries.dependsOn it.buildTask
+            gatherNativeLibraries.from it.sharedLibraryFile
+        }
+    }
+}

@@ -1,32 +1,26 @@
 package nl.tno.stormcv.operation;
 
-import java.awt.Rectangle;
-import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-
-import org.opencv.core.Mat;
-import org.opencv.core.MatOfByte;
-import org.opencv.core.MatOfRect;
-import org.opencv.core.Rect;
-import org.opencv.core.Size;
-import org.opencv.highgui.Highgui;
+import backtype.storm.task.TopologyContext;
+import backtype.storm.utils.Utils;
+import nl.tno.stormcv.model.CVParticle;
+import nl.tno.stormcv.model.Descriptor;
+import nl.tno.stormcv.model.Feature;
+import nl.tno.stormcv.model.Frame;
+import nl.tno.stormcv.model.serializer.CVParticleSerializer;
+import nl.tno.stormcv.model.serializer.FeatureSerializer;
+import nl.tno.stormcv.model.serializer.FrameSerializer;
+import nl.tno.stormcv.util.NativeUtils;
+import org.opencv.core.*;
+import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.objdetect.CascadeClassifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import backtype.storm.task.TopologyContext;
-import backtype.storm.utils.Utils;
-import nl.tno.stormcv.model.Descriptor;
-import nl.tno.stormcv.model.Feature;
-import nl.tno.stormcv.model.Frame;
-import nl.tno.stormcv.util.NativeUtils;
-import nl.tno.stormcv.model.*;
-import nl.tno.stormcv.model.serializer.*;
+import java.awt.*;
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Detects Haar Cascades in frames/images using OpenCV's CascadeClassifier. 
@@ -127,11 +121,11 @@ public class HaarCascadeOp extends OpenCVOp<CVParticle> implements ISingleInputO
 		if(frame.getImageType().equals(Frame.NO_IMAGE)) return result;
 
 		MatOfByte mob = new MatOfByte(frame.getImageBytes());
-		Mat image = Highgui.imdecode(mob, Highgui.CV_LOAD_IMAGE_COLOR);
+		Mat image = Imgcodecs.imdecode(mob, Imgcodecs.CV_LOAD_IMAGE_COLOR);
 		
 		/*
 		mob = new MatOfByte();
-		Highgui.imencode(".png", image, mob);
+		Imgcodecs.imencode(".png", image, mob);
 		BufferedImage bi = ImageUtils.bytesToImage(mob.toArray());
 		ImageIO.write(bi, "png", new File("testOutput/"+sf.getStreamId()+"_"+sf.getSequenceNr()+".png"));
 		*/

@@ -1,24 +1,23 @@
 package nl.tno.stormcv.operation;
 
-import java.awt.Rectangle;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-
-import org.opencv.core.Mat;
-import org.opencv.core.MatOfInt;
-import org.opencv.core.MatOfFloat;
-import org.opencv.core.MatOfByte;
-import org.opencv.highgui.Highgui;
-import org.opencv.imgproc.Imgproc;
-
 import backtype.storm.task.TopologyContext;
+import nl.tno.stormcv.model.CVParticle;
 import nl.tno.stormcv.model.Descriptor;
 import nl.tno.stormcv.model.Feature;
 import nl.tno.stormcv.model.Frame;
-import nl.tno.stormcv.model.CVParticle;
-import nl.tno.stormcv.model.serializer.FeatureSerializer;
 import nl.tno.stormcv.model.serializer.CVParticleSerializer;
+import nl.tno.stormcv.model.serializer.FeatureSerializer;
+import org.opencv.core.Mat;
+import org.opencv.core.MatOfByte;
+import org.opencv.core.MatOfFloat;
+import org.opencv.core.MatOfInt;
+import org.opencv.imgcodecs.Imgcodecs;
+import org.opencv.imgproc.Imgproc;
+
+import java.awt.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Operation to calculate the color histogram of a {@link Frame} and returns a {@link Feature} 
@@ -63,7 +62,7 @@ public class ColorHistogramOp extends OpenCVOp<Feature> implements ISingleInputO
 	{
 		Frame sf = (Frame)input;
 		MatOfByte mob = new MatOfByte(sf.getImageBytes());
-		Mat image = Highgui.imdecode(mob, Highgui.CV_LOAD_IMAGE_COLOR);
+		Mat image = Imgcodecs.imdecode(mob, Imgcodecs.CV_LOAD_IMAGE_COLOR);
 		Mat hist = new Mat();
 
         MatOfInt chans;

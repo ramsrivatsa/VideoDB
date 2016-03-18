@@ -1,7 +1,6 @@
 package nl.tno.stormcv.operation;
 
 import backtype.storm.task.TopologyContext;
-import backtype.storm.utils.Utils;
 import nl.tno.stormcv.model.CVParticle;
 import nl.tno.stormcv.model.Descriptor;
 import nl.tno.stormcv.model.Feature;
@@ -102,11 +101,9 @@ public class HaarCascadeOp extends OpenCVOp<CVParticle> implements ISingleInputO
 	@Override
 	protected void prepareOpenCVOp(Map stormConf, TopologyContext context) throws Exception { 
 		try {
-			if(haarXML.charAt(0) != '/') haarXML = "/"+haarXML;
+			if(haarXML.charAt(0) != '/') haarXML = OPENCV_RES_HOME +haarXML;
 			File cascadeFile = NativeUtils.extractTmpFileFromJar(haarXML, true);
 			haarDetector = new CascadeClassifier(cascadeFile.getAbsolutePath());
-			Utils.sleep(100); // make sure the classifier has loaded before removing the tmp xml file
-			if(!cascadeFile.delete()) cascadeFile.deleteOnExit();
 		} catch (Exception e) {
 			logger.error("Unable to instantiate SimpleFaceDetectionBolt due to: "+e.getMessage(), e);
 			throw e;
@@ -116,7 +113,7 @@ public class HaarCascadeOp extends OpenCVOp<CVParticle> implements ISingleInputO
 	@Override
 	public List<CVParticle> execute(CVParticle input) throws Exception {
 		long startTime =System.nanoTime();
-		ArrayList<CVParticle> result = new ArrayList<CVParticle>();
+		ArrayList<CVParticle> result = new ArrayList<>();
 		Frame frame = (Frame)input;
 		if(frame.getImageType().equals(Frame.NO_IMAGE)) return result;
 
@@ -132,7 +129,7 @@ public class HaarCascadeOp extends OpenCVOp<CVParticle> implements ISingleInputO
 		
 		MatOfRect haarDetections = new MatOfRect();
 		haarDetector.detectMultiScale(image, haarDetections, scaleFactor, minNeighbors, flags, new Size(minSize[0], minSize[1]), new Size(maxSize[0], maxSize[1]));
-		ArrayList<Descriptor> descriptors = new ArrayList<Descriptor>();
+		ArrayList<Descriptor> descriptors = new ArrayList<>();
 		for(Rect rect : haarDetections.toArray()){
 			Rectangle box = new Rectangle(rect.x, rect.y, rect.width, rect.height);
 			descriptors.add(new Descriptor(input.getStreamId(), input.getSequenceNr(), box, 0, new float[0]));

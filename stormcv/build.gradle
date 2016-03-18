@@ -60,7 +60,7 @@ task gatherNativeLibraries(type: Copy) {
 }
 
 task generateJNIHeaders(dependsOn: compileJava) {
-    ext.inputClasses = [""]
+    ext.inputClasses = ["xyz.unlimitedcodeworks.opencv.dnn.ForwardNet"]
     ext.outputDir = file("$buildDir/native-headers")
 
     description = 'Generate JNI headers'
@@ -68,19 +68,21 @@ task generateJNIHeaders(dependsOn: compileJava) {
     inputs.files sourceSets.main.allJava
     outputs.dir outputDir
     doLast {
-        def cp = ""
-        sourceSets.each {
-            if (!cp.empty) {
-                cp += File.pathSeparator
+        if (!inputClasses.empty) {
+            def cp = ""
+            sourceSets.each {
+                if (!cp.empty) {
+                    cp += File.pathSeparator
+                }
+                cp += it.output.classesDir
             }
-            cp += it.output.classesDir
-        }
-        cp += File.pathSeparator + configurations.compile.asPath
+            cp += File.pathSeparator + configurations.compile.asPath
 
-        logger.quiet('Generating native JNI headers to ' + outputDir.getAbsolutePath())
-        outputDir.mkdirs()
-        logger.quiet('Generating JNI header for ' + inputClasses)
-        ant.javah(class: inputClasses.join(','), destdir: outputDir, classpath: cp)
+            logger.quiet('Generating native JNI headers to ' + outputDir.getAbsolutePath())
+            outputDir.mkdirs()
+            logger.quiet('Generating JNI header for ' + inputClasses)
+            ant.javah(class: inputClasses.join(','), destdir: outputDir, classpath: cp)
+        }
     }
 }
 

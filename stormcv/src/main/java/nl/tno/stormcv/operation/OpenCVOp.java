@@ -20,15 +20,17 @@ import java.util.Map;
  *
  */
 public abstract class OpenCVOp<Output extends CVParticle> implements IOperation<Output>{
-    private static final String OPENCV_NATIVE_LIBNAME = "opencv_java"
-        + Core.VERSION_MAJOR
-        + Core.VERSION_MINOR
-        + Core.VERSION_REVISION;
-
 	private static final long serialVersionUID = -7758652109335765844L;
 
 	private String libName;
-	
+
+    protected static final String OPENCV_NATIVE_LIBNAME = "opencv_java"
+            + Core.VERSION_MAJOR
+            + Core.VERSION_MINOR
+            + Core.VERSION_REVISION;
+
+    protected static final String OPENCV_RES_HOME = "/opencv";
+
 	protected String getLibName(){
 		return this.libName;
 	}

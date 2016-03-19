@@ -38,17 +38,17 @@ import nl.tno.stormcv.model.*;
 import nl.tno.stormcv.model.serializer.*;
 
 /**
- * A BatchInputBolt primarily used for testing that creates its own simple webservice used to view results MJPEG streams. The webservice 
+ * A BatchInputBolt primarily used for testing that creates its own simple webservice used to view results MJPEG streams. The webservice
  * supports a number of calls different calls:
  * <ol>
  * <li>http://IP:PORT/streaming/streams : lists the available JPG and MJPEG urls</li>
  * <li>http://IP:PORT/streaming/picture/{streamid}.jpg : url to grab jpg pictures </li>
  * <li>http://IP:PORT/streaming/tiles : provides a visual overview of all the streams available at this service. Clicking an image will open the mjpeg stream</li>
  * <li>http://IP:PORT/streaming/mjpeg/{streamid}.mjpeg : provides a possibly never ending mjpeg formatted stream</li>
- * </ol> 
- * 
+ * </ol>
+ *
  * The service runs on port 8558 by default but this can be changed by using the port(int) method.
- * 
+ *
  * @author Corne Versloot
  *
  */
@@ -63,11 +63,11 @@ public class MjpegStreamingOp extends Application implements IBatchOperation<Fra
 	private HttpServer server;
 	private int port = 8558;
 	private int frameRate = 2;
-	
+
 	private static Cache<String, BufferedImage> getImages(){
 		if(images == null){
 			images = CacheBuilder.newBuilder()
-					.expireAfterWrite(20, TimeUnit.SECONDS) 
+					.expireAfterWrite(20, TimeUnit.SECONDS)
 					.build();
 		}
 		return images;
@@ -77,12 +77,12 @@ public class MjpegStreamingOp extends Application implements IBatchOperation<Fra
 		this.port = nr;
 		return this;
 	}
-	
+
 	public MjpegStreamingOp framerate(int nr){
 		this.frameRate = nr;
 		return this;
 	}
-	
+
 	/**
 	 * Sets the classes to be used as resources for this application
 	 */
@@ -91,15 +91,15 @@ public class MjpegStreamingOp extends Application implements IBatchOperation<Fra
         s.add(MjpegStreamingOp.class);
         return s;
     }
-	
+
 	@SuppressWarnings("rawtypes")
 	@Override
 	public void prepare(Map stormConf, TopologyContext context)	throws Exception {
 		images = MjpegStreamingOp.getImages();
-		
+
 		ApplicationAdapter connector = new ApplicationAdapter(new MjpegStreamingOp());
 		server = HttpServerFactory.create ("http://localhost:"+port+"/", connector);
-		server.start();		
+		server.start();
 	}
 
 	@Override
@@ -130,12 +130,11 @@ public class MjpegStreamingOp extends Application implements IBatchOperation<Fra
 			//System.err.println("Add frame ["+frame.getSequenceNr()+"] after "+(System.currentTimeMillis() - prevAdd)+" ms");
 			prevAdd = System.currentTimeMillis();
 			*/
-			logger.info("Time to start execute : " + " Sequence Nr - " + frame.getSequenceNr() + " System Time - " + System.currentTimeMillis());
 			break;
 		}
 		return result;
 	}
-	
+
 	@GET @Path("/streams")
 	@Produces("text/plain")
 	public String getStreamIds() throws IOException{
@@ -149,7 +148,7 @@ public class MjpegStreamingOp extends Application implements IBatchOperation<Fra
 		}
 		return result;
 	}
-	
+
 	@GET @Path("/picture/{streamid}.jpeg")
 	@Produces("image/jpg")
 	public Response jpeg(@PathParam("streamid") final String streamId){
@@ -169,7 +168,7 @@ public class MjpegStreamingOp extends Application implements IBatchOperation<Fra
 			return Response.noContent().build();
 		}
 	}
-	
+
 	@GET @Path("/playmultiple")
 	@Produces("text/html")
 	public String showPlayers( @DefaultValue("3") @QueryParam("cols") int cols,
@@ -197,7 +196,7 @@ public class MjpegStreamingOp extends Application implements IBatchOperation<Fra
 		result += "</tr></table></body></html>";
 		return result;
 	}
-	
+
 	@GET @Path("/play")
 	@Produces("text/html")
 	public String showPlayers( @QueryParam("streamid") String streamId) throws IOException{
@@ -208,14 +207,14 @@ public class MjpegStreamingOp extends Application implements IBatchOperation<Fra
 					"Your browser does not support the video tag.</video>";
 		return result;
 	}
-	
+
 	@GET @Path("/tiles")
 	@Produces("text/html")
 	public String showTiles( @DefaultValue("3") @QueryParam("cols") int cols,
 			@DefaultValue("-1") @QueryParam("width") float width) throws IOException{
 		String result = "<html><head><title>Mjpeg stream players</title>";
 		result += "</head><body bgcolor=\"#3C3C3C\">";
-		
+
 		result += "<table style=\"border-spacing:0; border-collapse: collapse;\"><tr>";
 		int videoNr = 0;
 		for(String id : images.asMap().keySet()){
@@ -228,15 +227,15 @@ public class MjpegStreamingOp extends Application implements IBatchOperation<Fra
 		result += "</tr></table></body></html>";
 		return result;
 	}
-	
+
 	@GET @Path("/mjpeg/{streamid}.mjpeg")
 	@Produces("multipart/x-mixed-replace; boundary=--BoundaryString\r\n")
 	public Response mjpeg(@PathParam("streamid") final String streamId){
 		StreamingOutput output = new StreamingOutput() {
-			
+
 			private BufferedImage prevImage = null;
 			private int sleep = 1000/frameRate;
-			
+
 			@Override
 			public void write(OutputStream outputStream) throws IOException, WebApplicationException {
 				BufferedImage image = null;

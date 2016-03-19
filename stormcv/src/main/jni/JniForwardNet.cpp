@@ -23,9 +23,9 @@ JNIEXPORT jlong JNICALL Java_xyz_unlimitedcodeworks_opencv_dnn_ForwardNet_create
     try
     {
         return reinterpret_cast<jlong>(new ForwardNet(fromJString(env, jModelTxt),
-                                                         fromJString(env, jModelBin)));
+                                                      fromJString(env, jModelBin)));
     }
-    catch (JniException *e)
+    catch (runtime_error *e)
     {
         throwJniException(env, e);
     }
@@ -39,13 +39,19 @@ JNIEXPORT jlong JNICALL Java_xyz_unlimitedcodeworks_opencv_dnn_ForwardNet_create
  * Signature: (JJJ)V
  */
 JNIEXPORT void JNICALL Java_xyz_unlimitedcodeworks_opencv_dnn_ForwardNet_n_1forward
-(JNIEnv *, jclass, jlong nativeObj, jlong inputObj, jlong outputObj)
+(JNIEnv *env, jclass, jlong nativeObj, jlong inputObj, jlong outputObj)
 {
-    auto &fn = *reinterpret_cast<ForwardNet*>(nativeObj);
-    auto &input = *reinterpret_cast<cv::Mat*>(inputObj);
-    auto &output = *reinterpret_cast<cv::Mat*>(outputObj);
+    if (nativeObj) {
+        auto &fn = *reinterpret_cast<ForwardNet*>(nativeObj);
+        auto &input = *reinterpret_cast<cv::Mat*>(inputObj);
+        auto &output = *reinterpret_cast<cv::Mat*>(outputObj);
 
-    output = fn.forward(input);
+        try {
+            output = fn.forward(input);
+        } catch (runtime_error *e) {
+            throwJniException(env, e);
+        }
+    }
 }
 
 /*

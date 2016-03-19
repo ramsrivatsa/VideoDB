@@ -110,7 +110,7 @@ model {
     }
 
     components {
-        jniOcvDnn(NativeLibrarySpec) {
+        ForwardNet(NativeLibrarySpec) {
             targetPlatform 'linux_x64'
             shared
 

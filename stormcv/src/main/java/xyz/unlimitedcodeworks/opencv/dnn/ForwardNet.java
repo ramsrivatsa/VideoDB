@@ -10,7 +10,7 @@ public class ForwardNet {
     static {
         NativeUtils.loadLibrary("opencv_core");
         NativeUtils.loadLibrary("opencv_dnn");
-        NativeUtils.loadLibrary("nativeForwardNet");
+        NativeUtils.loadLibrary("ForwardNet");
     }
 
     public ForwardNet(String modelTxt, String modelBin) {

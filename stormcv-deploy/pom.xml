@@ -17,7 +17,7 @@
 		<dependency>
 			<groupId>nl.tno</groupId>
 			<artifactId>stormcv</artifactId>
-			<version>0.8.1</version>
+			<version>0.8.2-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>org.opencv</groupId>
@@ -87,6 +87,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.1</version>
 				<configuration>
 					<source>1.7</source>
 					<target>1.7</target>

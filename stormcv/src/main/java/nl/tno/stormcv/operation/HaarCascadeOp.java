@@ -101,7 +101,7 @@ public class HaarCascadeOp extends OpenCVOp<CVParticle> implements ISingleInputO
 	@Override
 	protected void prepareOpenCVOp(Map stormConf, TopologyContext context) throws Exception { 
 		try {
-			if(haarXML.charAt(0) != '/') haarXML = OPENCV_RES_HOME +haarXML;
+			if(haarXML.charAt(0) != '/') haarXML = OPENCV_RES_HOME + haarXML;
 			File cascadeFile = NativeUtils.extractTmpFileFromJar(haarXML, true);
 			haarDetector = new CascadeClassifier(cascadeFile.getAbsolutePath());
 		} catch (Exception e) {

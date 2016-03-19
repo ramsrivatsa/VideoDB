@@ -29,7 +29,7 @@ public abstract class OpenCVOp<Output extends CVParticle> implements IOperation<
             + Core.VERSION_MINOR
             + Core.VERSION_REVISION;
 
-    protected static final String OPENCV_RES_HOME = "/opencv";
+    protected static final String OPENCV_RES_HOME = "/opencv/";
 
 	protected String getLibName(){
 		return this.libName;

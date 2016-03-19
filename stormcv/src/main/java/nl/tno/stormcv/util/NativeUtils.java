@@ -2,6 +2,7 @@ package nl.tno.stormcv.util;
 
 import backtype.storm.utils.Utils;
 import nl.tno.stormcv.operation.OpenCVOp;
+import xyz.unlimitedcodeworks.utils.ResourceLoader;
 
 import java.io.File;
 import java.io.FileNotFoundException;

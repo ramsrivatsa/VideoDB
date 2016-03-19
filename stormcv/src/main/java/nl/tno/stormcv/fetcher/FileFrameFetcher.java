@@ -182,6 +182,7 @@ public class FileFrameFetcher implements IFetcher<CVParticle> {
 	@Override
 	public CVParticle fetchData() {
 		Frame frame = frameQueue.poll();
+		//logger.info("File Frame Fetcher data : " + " StreamID - " + frame.getStreamId() + " Sequence Nr - " + frame.getSequenceNr() + " System Time - " + System.currentTimeMillis());
 		if(frame != null) {
 			if(batchSize <= 1){
 				return frame;

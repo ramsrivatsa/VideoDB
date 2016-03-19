@@ -153,6 +153,7 @@ public class HaarCascadeOp extends OpenCVOp<CVParticle> implements ISingleInputO
 		}
 		long endTime = System.nanoTime();
 		long latency = endTime - startTime;
+		logger.info("Haar Classifier sequence nr : " + input.getSequenceNr());
 		//logger.info("Haar Classifier latency : " + latency);
 		return result;
 	}

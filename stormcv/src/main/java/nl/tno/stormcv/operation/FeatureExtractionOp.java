@@ -123,6 +123,7 @@ public class FeatureExtractionOp extends OpenCVOp<CVParticle> implements ISingle
 			}else{
 				result.add(feature);
 			}		
+			logger.info("Feature Extraction : " + " Sequence Nr - " + frame.getSequenceNr() + " System Time - " + System.currentTimeMillis());
 		}catch(Exception e){
 			// catching exception at this point will prevent the sent of a fail! 
 			logger.warn("Unable to extract features for frame!", e);

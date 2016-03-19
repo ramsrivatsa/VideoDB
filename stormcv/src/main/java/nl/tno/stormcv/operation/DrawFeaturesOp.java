@@ -78,6 +78,8 @@ public class DrawFeaturesOp implements ISingleInputOperation<Frame> {
 		if(!(particle instanceof Frame)) return result;
 		Frame sf = (Frame)particle;
 		result.add(sf);
+		logger.info("Draw Features Op : " + " Sequence Nr - " + sf.getSequenceNr() + " System Time - " + System.currentTimeMillis());
+		//logger.info("Draw Features Op : " + sf.getSequenceNr());
 		BufferedImage image = sf.getImage();
 		
 		if(image == null) return result;

@@ -1,5 +1,6 @@
 package nl.tno.stormcv.spout;
 
+import java.util.Arrays;
 import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -106,6 +107,7 @@ public class CVParticleSpout implements IRichSpout{
 			logger.info("Time to start execute : " + " StreamID - " + particle.getStreamId() + " Sequence Nr - " + particle.getSequenceNr() + " System Time - " + System.currentTimeMillis());
 		} catch (IOException e) {
 			logger.warn("Unable to fetch next frame from queue due to: "+e.getMessage());
+			logger.info("Unable to fetch next frame from queue due to: "+e.getMessage());
 		}
 	}
 	
@@ -129,6 +131,7 @@ public class CVParticleSpout implements IRichSpout{
 
 	@Override
 	public void ack(Object msgId) {
+		logger.info("Ack works " + " msgid " + msgId + " System Time - " + System.currentTimeMillis());
 		if(faultTolerant && tupleCache != null){
 			tupleCache.invalidate(msgId);
 		}
@@ -137,6 +140,7 @@ public class CVParticleSpout implements IRichSpout{
 	@Override
 	public void fail(Object msgId) {
 		logger.debug("Fail of: "+msgId);
+		logger.info("Tuple failed please print this" + msgId );
 		if(faultTolerant && tupleCache != null && tupleCache.getIfPresent(msgId) != null){
 			collector.emit((Values)tupleCache.getIfPresent(msgId), msgId);
 		}

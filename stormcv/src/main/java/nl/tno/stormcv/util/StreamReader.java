@@ -33,7 +33,7 @@ public class StreamReader extends MediaListenerAdapter implements Runnable {
 	
 	private Logger logger = LoggerFactory.getLogger(StreamReader.class);
 	private IMediaReader mediaReader;
-    private int mVideoStreamIndex = -1;
+    	private int mVideoStreamIndex = -1;
 	private String streamId;
 	private int frameSkip;
 	private int groupSize;

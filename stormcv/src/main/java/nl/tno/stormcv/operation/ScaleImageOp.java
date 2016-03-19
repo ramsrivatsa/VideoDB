@@ -64,6 +64,7 @@ public class ScaleImageOp implements ISingleInputOperation<Frame>{
 		if(factor != 1.0) image = ScaleImageOp.scale(image, factor);
 		frame.setImage(image);
 		result.add(frame);
+		logger.info("Scale Op : " + " Sequence Nr - " + particle.getSequenceNr() + " System Time - " + System.currentTimeMillis());
 		return result;
 	}
 	

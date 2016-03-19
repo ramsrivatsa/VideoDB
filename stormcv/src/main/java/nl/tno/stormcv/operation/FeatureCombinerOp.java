@@ -10,6 +10,9 @@ import nl.tno.stormcv.batcher.SequenceNrBatcher;
 import nl.tno.stormcv.model.*;
 import nl.tno.stormcv.model.serializer.*;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * A batch operation that wraps multiple {@link Feature} objects from multiple bolts in a single {@link Frame} without an image.
  * This operation is typically used in combination with the {@link SequenceNrBatcher} which will batch received Features on their sequence number. 
@@ -27,6 +30,8 @@ public class FeatureCombinerOp implements IBatchOperation<Frame> {
 
 	private static final long serialVersionUID = -2694295477863874065L;
 	private FrameSerializer serializer = new FrameSerializer();
+	private Logger logger = LoggerFactory.getLogger(FeatureCombinerOp.class);
+
 
 	@SuppressWarnings("rawtypes")
 	@Override
@@ -64,6 +69,7 @@ public class FeatureCombinerOp implements IBatchOperation<Frame> {
 			frame.getFeatures().add(newF);
 		}
 		List<Frame> result = new ArrayList<Frame>();
+		logger.info("Feature Combiner : " + " Sequence Nr - " + frame.getSequenceNr() + " System Time - " + System.currentTimeMillis());
 		result.add(frame);
 		return result;
 		

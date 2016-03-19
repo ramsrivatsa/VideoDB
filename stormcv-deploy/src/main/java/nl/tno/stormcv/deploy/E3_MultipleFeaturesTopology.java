@@ -42,9 +42,9 @@ public class E3_MultipleFeaturesTopology {
 		conf.setMaxSpoutPending(256); // maximum un-acked/un-failed frames per spout (spout blocks if this number is reached)
 		conf.put(StormCVConfig.STORMCV_FRAME_ENCODING, Frame.JPG_IMAGE); // indicates frames will be encoded as JPG throughout the topology (JPG is the default when not explicitly set)
 		conf.put(Config.TOPOLOGY_ENABLE_MESSAGE_TIMEOUTS, true); // True if Storm should timeout messages or not.
-		conf.put(Config.TOPOLOGY_MESSAGE_TIMEOUT_SECS , 10); // The maximum amount of time given to the topology to fully process a message emitted by a spout (default = 30)	
+		conf.put(Config.TOPOLOGY_MESSAGE_TIMEOUT_SECS , 10); // The maximum amount of time given to the topology to fully process a message emitted by a spout (default = 30)
 		//conf.put(Config.TOPOLOGY_DEBUG,true); // The maximum amount of time given to the topology to fully process a message emitted by a spout (default = 30)
-		conf.put(StormCVConfig.STORMCV_SPOUT_FAULTTOLERANT, false); // indicates if the spout must be fault tolerant; i.e. spouts do NOT! replay tuples on fail
+		conf.put(StormCVConfig.STORMCV_SPOUT_FAULTTOLERANT, true); // indicates if the spout must be fault tolerant; i.e. spouts do NOT! replay tuples on fail
 		conf.put(StormCVConfig.STORMCV_CACHES_TIMEOUT_SEC, 30); // TTL (seconds) for all elements in all caches throughout the topology (avoids memory overload)
 		
 		String userDir = System.getProperty("user.dir").replaceAll("\\\\", "/");
@@ -60,7 +60,7 @@ public class E3_MultipleFeaturesTopology {
 		builder.setSpout("spout", new CVParticleSpout( new FileFrameFetcher(files).frameSkip(frameSkip) ), 1 );
 		
 		// add bolt that scales frames down to 25% of the original size 
-		builder.setBolt("scale", new SingleInputBolt( new ScaleImageOp(0.25f)), 4)
+		builder.setBolt("scale", new SingleInputBolt( new ScaleImageOp(0.25f)), 8)
 			.shuffleGrouping("spout");
 		
 		// one bolt with a HaarCascade classifier detecting faces. This operation outputs a Frame including the Features with detected faces.
@@ -69,22 +69,22 @@ public class E3_MultipleFeaturesTopology {
 			.shuffleGrouping("scale");
 		
 		// add a bolt that performs SIFT keypoint extraction
-		builder.setBolt("sift", new SingleInputBolt( new FeatureExtractionOp("sift", FeatureDetector.SIFT, DescriptorExtractor.SIFT).outputFrame(false)), 32)
+		builder.setBolt("sift", new SingleInputBolt( new FeatureExtractionOp("sift", FeatureDetector.SIFT, DescriptorExtractor.SIFT).outputFrame(false)), 36)
 			.shuffleGrouping("scale");
 		
 		// Batch bolt that waits for input from both the face and sift detection bolts and combines them in a single frame object
-		builder.setBolt("combiner", new BatchInputBolt(new SequenceNrBatcher(2), new FeatureCombinerOp()), 4)
+		builder.setBolt("combiner", new BatchInputBolt(new SequenceNrBatcher(2), new FeatureCombinerOp()), 1)
 			.fieldsGrouping("sift", new Fields(FrameSerializer.STREAMID))
 			.fieldsGrouping("face", new Fields(FrameSerializer.STREAMID));
 		
 		// simple bolt that draws Features (i.e. locations of features) into the frame
-		builder.setBolt("drawer", new SingleInputBolt(new DrawFeaturesOp()), 4)
+		builder.setBolt("drawer", new SingleInputBolt(new DrawFeaturesOp()), 1)
 			.shuffleGrouping("combiner");
 		
 		// add bolt that creates a webservice on port 8558 enabling users to view the result
 		builder.setBolt("streamer", new BatchInputBolt(
-				new SlidingWindowBatcher(2, frameSkip).maxSize(6), // note the required batcher used as a buffer and maintains the order of the frames
-				new MjpegStreamingOp().port(8558).framerate(5)).groupBy(new Fields(FrameSerializer.STREAMID))
+				new SlidingWindowBatcher(2, frameSkip).maxSize(32),
+				new MjpegStreamingOp().port(8558).framerate(6)).groupBy(new Fields(FrameSerializer.STREAMID))
 			, 1)
 			.shuffleGrouping("drawer");
 

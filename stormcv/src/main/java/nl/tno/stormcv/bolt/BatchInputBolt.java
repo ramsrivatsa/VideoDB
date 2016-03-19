@@ -1,5 +1,17 @@
 package nl.tno.stormcv.bolt;
 
+import backtype.storm.generated.GlobalStreamId;
+import backtype.storm.generated.Grouping;
+import backtype.storm.task.TopologyContext;
+import backtype.storm.topology.OutputFieldsDeclarer;
+import backtype.storm.tuple.Fields;
+import backtype.storm.tuple.Tuple;
+import com.google.common.cache.*;
+import nl.tno.stormcv.StormCVConfig;
+import nl.tno.stormcv.batcher.IBatcher;
+import nl.tno.stormcv.model.CVParticle;
+import nl.tno.stormcv.operation.IBatchOperation;
+
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -7,24 +19,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
-
-import nl.tno.stormcv.StormCVConfig;
-import nl.tno.stormcv.batcher.IBatcher;
-import nl.tno.stormcv.model.CVParticle;
-import nl.tno.stormcv.operation.IBatchOperation;
-
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.RemovalCause;
-import com.google.common.cache.RemovalListener;
-import com.google.common.cache.RemovalNotification;
-
-import backtype.storm.generated.GlobalStreamId;
-import backtype.storm.generated.Grouping;
-import backtype.storm.task.TopologyContext;
-import backtype.storm.topology.OutputFieldsDeclarer;
-import backtype.storm.tuple.Fields;
-import backtype.storm.tuple.Tuple;
 
 /**
  * A {@link CVParticleBolt} that stores all input in the History until some criteria are met. Items will remain in the History for a 
@@ -76,9 +70,8 @@ public class BatchInputBolt extends CVParticleBolt implements RemovalListener<CV
 	
 	/**
 	 * Creates a BatchInputBolt with given Batcher and BatchOperation.
-	 * @param batcher
-	 * @param operation
-	 * @param refreshExpirationOfOlderItems
+	 * @param batcher the Batcher to use
+	 * @param operation the BatchOperation to use
 	 */
 	public BatchInputBolt(IBatcher batcher, IBatchOperation<? extends CVParticle> operation){
 		this.operation = operation;
@@ -86,9 +79,9 @@ public class BatchInputBolt extends CVParticleBolt implements RemovalListener<CV
 	}
 	
 	/**
-	 * Sets the time to live for items being cached by this bolt
-	 * @param ttl
-	 * @return
+	 * Sets the time to live (TTL) for items being cached by this bolt
+	 * @param ttl the new value of TTL
+	 * @return this instance for chaining
 	 */
 	public BatchInputBolt ttl(int ttl){
 		this.TTL = ttl;
@@ -96,10 +89,10 @@ public class BatchInputBolt extends CVParticleBolt implements RemovalListener<CV
 	}
 	
 	/**
-	 * Specifies the maximum size of the cashe used. Hitting the maximum will cause oldest items to be 
-	 * expired from the cache
-	 * @param size
-	 * @return
+	 * Specifies the maximum size of the cashe used.
+	 * Hitting the maximum will cause oldest items to be expired from the cache
+	 * @param size the maximum size
+	 * @return this instance for chaining
 	 */
 	public BatchInputBolt maxCacheSize(int size){
 		this.maxSize = size;
@@ -108,8 +101,8 @@ public class BatchInputBolt extends CVParticleBolt implements RemovalListener<CV
 	
 	/**
 	 * Specifies the fields used to group items on. 
-	 * @param group
-	 * @return
+	 * @param group the fields to group items on
+     * @return this instance for chaining
 	 */
 	public BatchInputBolt groupBy(Fields group){
 		this.groupBy = group;
@@ -119,8 +112,8 @@ public class BatchInputBolt extends CVParticleBolt implements RemovalListener<CV
 	/**
 	 * Specifies weather items with hither sequence number within a group must have their
 	 * ttl's refreshed if an item with lower sequence number is added
-	 * @param refresh
-	 * @return
+	 * @param refresh whether to refresh
+     * @return this instance for chaining
 	 */
 	public BatchInputBolt refreshExpiration(boolean refresh){
 		this.refreshExperation = refresh;
@@ -206,7 +199,7 @@ public class BatchInputBolt extends CVParticleBolt implements RemovalListener<CV
 	 * @return key created for this tuple or NULL if no key could be created (i.e. tuple does not contain any of groupBy Fields)
 	 */
 	private String generateKey(Tuple tuple){
-		String key = new String();
+		String key = "";
 		for(String field : groupBy){
 			key += tuple.getValueByField(field)+"_";
 		}

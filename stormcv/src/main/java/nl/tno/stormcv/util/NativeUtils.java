@@ -64,7 +64,6 @@ public class NativeUtils {
 				+ nativeLibraryName(libname);
 		try {
 			File libFile = getAsLocalFile(resPath);
-			System.err.println("Loading " + libFile.getAbsolutePath());
 			System.load(libFile.getAbsolutePath());
 		} catch (Exception e) {
 			throw new RuntimeException("Failed to load native library from resource at " + resPath, e);

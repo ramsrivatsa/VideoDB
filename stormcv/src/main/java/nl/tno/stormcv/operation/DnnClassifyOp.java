@@ -32,7 +32,7 @@ import java.util.Map;
  */
 public class DnnClassifyOp extends OpenCVOp<CVParticle> implements ISingleInputOperation<CVParticle> {
     private static final long serialVersionUID = 1672563550721443006L;
-    private Logger logger = LoggerFactory.getLogger(HaarCascadeOp.class);
+    private Logger logger = LoggerFactory.getLogger(DnnClassifyOp.class);
     private String name;
     private boolean addMetadata = false;
     private String classNamePath;
@@ -139,7 +139,6 @@ public class DnnClassifyOp extends OpenCVOp<CVParticle> implements ISingleInputO
             classification[1] = (float) minMax.maxVal;
 
             if (addMetadata) {
-                logger.info("Adding metadata: {} => {}", "classname-"+i, classNames.get((int) minMax.maxLoc.x) + "(" + minMax.maxVal + ")");
                 metadata.put("classname-"+i, classNames.get((int) minMax.maxLoc.x) + "(" + minMax.maxVal + ")");
             }
 

@@ -42,6 +42,9 @@ public class E5_DNNTopology {
         // TTL (seconds) for all elements in all caches throughout the topology (avoids memory overload)
         conf.put(StormCVConfig.STORMCV_CACHES_TIMEOUT_SEC, 30);
 
+        // Enable time profiling for spout and bolt
+        conf.put(StormCVConfig.STORMCV_LOG_PROFILING, true);
+
         // create a list with files to be processed, in this case just one.
         // Multiple files will be spread over the available spouts
         List<String> files = new ArrayList<>();

@@ -32,6 +32,7 @@ public class CVParticleSpout implements IRichSpout {
 
     private Logger logger = LoggerFactory.getLogger(CVParticleSpout.class);
     private boolean profiling = false;
+    private String spoutName = "";
     private Cache<Object, Object> tupleCache; // a cache holding emitted tuples so they can be replayed on failure
     protected SpoutOutputCollector collector;
     private boolean faultTolerant = false;
@@ -69,6 +70,7 @@ public class CVParticleSpout implements IRichSpout {
     @Override
     public void open(Map conf, TopologyContext context, SpoutOutputCollector collector) {
         this.collector = collector;
+        this.spoutName = context.getThisComponentId();
         faultTolerant = (Boolean) conf.getOrDefault(StormCVConfig.STORMCV_SPOUT_FAULTTOLERANT, false);
         if (faultTolerant) {
             long timeout = conf.get(StormCVConfig.STORMCV_CACHES_TIMEOUT_SEC) == null ? 30 : (Long) conf.get(StormCVConfig.STORMCV_CACHES_TIMEOUT_SEC);
@@ -104,8 +106,8 @@ public class CVParticleSpout implements IRichSpout {
             collector.emit(values, id);
 
             if (profiling)
-                logger.info("[Timing] StreamID: {} Sequence Nr: {} leaving spout: {}",
-                    particle.getStreamId(), particle.getSequenceNr(), System.currentTimeMillis());
+                logger.info("[Timing] StreamID: {} Sequence Nr: {} Leaving '{}': {}",
+                    particle.getStreamId(), particle.getSequenceNr(), spoutName, System.currentTimeMillis());
         } catch (IOException e) {
             logger.warn("Unable to fetch next frame from queue due to: " + e.getMessage());
         }

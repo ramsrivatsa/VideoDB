@@ -1,7 +1,8 @@
 package nl.tno.stormcv.util;
 
-import backtype.storm.utils.Utils;
 import nl.tno.stormcv.operation.OpenCVOp;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import xyz.unlimitedcodeworks.utils.ResourceLoader;
 
 import java.io.File;
@@ -27,6 +28,7 @@ import java.net.URL;
  * @author Corne Versloot
  */
 public class NativeUtils {
+    private static Logger logger = LoggerFactory.getLogger(NativeUtils.class);
 
 	/**
 	 * Loads the openCV library independent of OS and architecture
@@ -41,20 +43,6 @@ public class NativeUtils {
 		}
 	}
 	
-	/**
-	 * Loads the openCV library represented by the given name (should be present on the classpath). 
-	 * @throws RuntimeException when the library cannot be found
-	 * @throws IOException when the library could not be extracted or loaded
-	 * @deprecated use @see nl.tno.stormcv.util.NativeUtils#loadLibrary() instead
-	 */
-	@Deprecated
-	public static void load(String name) throws RuntimeException, IOException{
-		if(!name.startsWith("/")) name = "/"+name;
-		File libFile = NativeUtils.getAsLocalFile(name);
-		Utils.sleep(500); // wait a bit to be sure the library is ready to be read
-		System.load(libFile.getAbsolutePath());
-	}
-
 	/**
 	 * Loads a native library represented by the given name (should be present on the classpath).
 	 * @throws RuntimeException when the library cannot be found

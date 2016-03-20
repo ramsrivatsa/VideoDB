@@ -75,7 +75,7 @@ public class StormCVConfig extends Config{
 	public StormCVConfig(){
 		super();
 		// ------- Create StormCV specific config -------
-        // removed in 0.10.0 see STORM-596
+        // removed in 0.10.0, see STORM-596
 		//put(Config.TOPOLOGY_RECEIVE_BUFFER_SIZE, 2); // sets the maximum number of messages to batch before sending them to executers
 		put(Config.TOPOLOGY_TRANSFER_BUFFER_SIZE, 2); // sets the size of the output queue for each worker.
 		put(STORMCV_FRAME_ENCODING, Frame.JPG_IMAGE); // sets the encoding of frames which determines both serialization speed and tuple size

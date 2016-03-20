@@ -40,6 +40,8 @@ public class FeatureExtractionOp extends OpenCVOp<CVParticle> implements ISingle
     private Logger logger = LoggerFactory.getLogger(getClass());
     private int detectorType;
     private int descriptorType;
+    private FeatureDetector detector;
+    private DescriptorExtractor extractor;
     private String featureName;
     private boolean outputFrame = false;
     @SuppressWarnings("rawtypes")
@@ -63,8 +65,8 @@ public class FeatureExtractionOp extends OpenCVOp<CVParticle> implements ISingle
      * this Operation will return a {@link Feature} object which means the Frame will no longer be available.
      * Default value after construction is FALSE.
      *
-     * @param frame
-     * @return
+     * @param frame the new value
+     * @return this instance for chaining
      */
     public FeatureExtractionOp outputFrame(boolean frame) {
         this.outputFrame = frame;
@@ -79,6 +81,8 @@ public class FeatureExtractionOp extends OpenCVOp<CVParticle> implements ISingle
     @SuppressWarnings("rawtypes")
     @Override
     protected void prepareOpenCVOp(Map stormConf, TopologyContext context) throws Exception {
+        this.detector = FeatureDetector.create(detectorType);
+        this.extractor = DescriptorExtractor.create(descriptorType);
     }
 
     @Override
@@ -93,8 +97,7 @@ public class FeatureExtractionOp extends OpenCVOp<CVParticle> implements ISingle
 
     @Override
     public List<CVParticle> execute(CVParticle particle) throws Exception {
-        //logger.info(" Feature Extraction Op" + System.nanoTime());
-        List<CVParticle> result = new ArrayList<CVParticle>();
+        List<CVParticle> result = new ArrayList<>();
         if (!(particle instanceof Frame)) return result;
 
         Frame frame = (Frame) particle;
@@ -103,15 +106,18 @@ public class FeatureExtractionOp extends OpenCVOp<CVParticle> implements ISingle
             MatOfByte mob = new MatOfByte(frame.getImageBytes());
             Mat image = Imgcodecs.imdecode(mob, Imgcodecs.CV_LOAD_IMAGE_ANYCOLOR);
 
-            FeatureDetector siftDetector = FeatureDetector.create(detectorType);
+            if (image.empty()) {
+                logger.error("!!!!!!!!!!!!!!!!!At StreamID: {}, Sequence Nr: {}!!!!!!!!!!!!!!!!!!!!!!!!!!Got a empty image even after check", frame.getStreamId(), frame.getSequenceNr());
+                return result;
+            }
+
             MatOfKeyPoint mokp = new MatOfKeyPoint();
-            siftDetector.detect(image, mokp);
+            detector.detect(image, mokp);
             List<KeyPoint> keypoints = mokp.toList();
 
             Mat descriptors = new Mat();
-            DescriptorExtractor extractor = DescriptorExtractor.create(descriptorType);
             extractor.compute(image, mokp, descriptors);
-            List<Descriptor> descrList = new ArrayList<Descriptor>();
+            List<Descriptor> descrList = new ArrayList<>();
             float[] tmp = new float[1];
             for (int r = 0; r < descriptors.rows(); r++) {
                 float[] values = new float[descriptors.cols()];

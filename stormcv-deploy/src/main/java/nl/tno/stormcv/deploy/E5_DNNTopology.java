@@ -63,32 +63,34 @@ public class E5_DNNTopology {
         // now create the topology itself
         // (spout -> scale -> fat[face detection & dnn] -> drawer -> streamer)
         TopologyBuilder builder = new TopologyBuilder();
-        builder.setSpout("spout", new CVParticleSpout(
-                         new FileFrameFetcher(files).frameSkip(frameSkip)),
+        builder.setSpout("fetcher", new CVParticleSpout(
+                        new FileFrameFetcher(files).frameSkip(frameSkip)),
                 1);
         // add bolt that scales frames down to 25% of the original size
         builder.setBolt("scale", new SingleInputBolt(new ScaleImageOp(0.25f)), 1)
-                .shuffleGrouping("spout");
+                .shuffleGrouping("fetcher");
 
-        // three 'fat' bolts containing a SequentialFrameOperation will will emit a Frame object containing the detected features
-        //builder.setBolt("fat_features", new SingleInputBolt( new SequentialFrameOp(operations).outputFrame(true).retainImage(true)), 1)
-        //	.shuffleGrouping("scale");
+        // 'fat' bolts containing a SequentialFrameOperation will will emit a Frame object containing the detected features
+        builder.setBolt("fat_features", new SingleInputBolt(
+                        new SequentialFrameOp(operations).outputFrame(true).retainImage(true)), 1)
+                .shuffleGrouping("scale");
 
         // simple bolt that draws Features (i.e. locations of features) into the frame
-        //builder.setBolt("drawer", new SingleInputBolt(new DrawFeaturesOp()), 1) .shuffleGrouping("fat_features");
+        builder.setBolt("drawer", new SingleInputBolt(new DrawFeaturesOp()), 1)
+                .shuffleGrouping("fat_features");
 
         // add bolt that creates a webservice on port 8558 enabling users to view the result
         builder.setBolt("streamer", new BatchInputBolt(
                         new SlidingWindowBatcher(2, frameSkip).maxSize(6),
                         new MjpegStreamingOp().port(8558).framerate(5)).groupBy(new Fields(FrameSerializer.STREAMID)),
                 1)
-                .shuffleGrouping("scale");
+                .shuffleGrouping("drawer");
 
         try {
 
             // run in local mode
             LocalCluster cluster = new LocalCluster();
-            cluster.submitTopology("fatfeature", conf, builder.createTopology());
+            cluster.submitTopology("dnn_classification", conf, builder.createTopology());
             Utils.sleep(120 * 1000); // run for two minutes and then kill the topology
             cluster.shutdown();
 

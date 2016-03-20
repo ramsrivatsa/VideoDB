@@ -102,7 +102,7 @@ public class HaarCascadeOp extends OpenCVOp<CVParticle> implements ISingleInputO
 	protected void prepareOpenCVOp(Map stormConf, TopologyContext context) throws Exception { 
 		try {
 			if(haarXML.charAt(0) != '/') haarXML = OPENCV_RES_HOME + haarXML;
-			File cascadeFile = NativeUtils.extractTmpFileFromJar(haarXML, true);
+			File cascadeFile = NativeUtils.getAsLocalFile(haarXML);
 			haarDetector = new CascadeClassifier(cascadeFile.getAbsolutePath());
 		} catch (Exception e) {
 			logger.error("Unable to instantiate SimpleFaceDetectionBolt due to: "+e.getMessage(), e);

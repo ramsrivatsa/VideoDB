@@ -76,8 +76,8 @@ public class DnnForwardOp extends OpenCVOp<CVParticle> implements ISingleInputOp
     @Override
     protected void prepareOpenCVOp(Map stormConf, TopologyContext context) throws Exception {
         try {
-            File modelTxtFile = NativeUtils.extractTmpFileFromJar(modelTxt, true);
-            File modelBinFile = NativeUtils.extractTmpFileFromJar(modelBin, true);
+            File modelTxtFile = NativeUtils.getAsLocalFile(modelTxt);
+            File modelBinFile = NativeUtils.getAsLocalFile(modelBin);
             net = new ForwardNet(modelTxtFile.getAbsolutePath(), modelBinFile.getAbsolutePath());
         } catch (Exception e) {
             logger.error("Unable to instantiate DnnForwardOp due to: " + e.getMessage(), e);

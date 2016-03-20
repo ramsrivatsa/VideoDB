@@ -58,11 +58,15 @@ public abstract class CVParticleBolt extends BaseRichBolt {
     @Override
     public void execute(Tuple input) {
         boolean hadError = false;
+        long beginExecute = System.currentTimeMillis();
+        long endExecute;
         try {
             CVParticle cvt = deserialize(input);
 
-            logger.info("[Timing] StreamID: {} Sequence Nr: {} entering {}: {}",
-                    cvt.getStreamId(), cvt.getSequenceNr(), boltName, System.currentTimeMillis());
+            if (profiling) {
+                logger.info("[Timing] StreamID: {} Sequence Nr: {} entering {}: {}",
+                        cvt.getStreamId(), cvt.getSequenceNr(), boltName, beginExecute);
+            }
 
             List<? extends CVParticle> results = execute(cvt);
             for (CVParticle output : results) {
@@ -76,8 +80,12 @@ public abstract class CVParticleBolt extends BaseRichBolt {
                     break;
                 }
             }
-            logger.info("[Timing] StreamID: {} Sequence Nr: {} leaving {}: {}",
-                    cvt.getStreamId(), cvt.getSequenceNr(), boltName, System.currentTimeMillis());
+
+            if (profiling) {
+                endExecute = System.currentTimeMillis();
+                logger.info("[Timing] StreamID: {} Sequence Nr: {} leaving {}: {} (latency {})",
+                        cvt.getStreamId(), cvt.getSequenceNr(), boltName, endExecute, endExecute - beginExecute);
+            }
         } catch (Exception e) {
             logger.warn("Unable to process input", e);
             hadError = true;

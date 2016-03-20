@@ -2,12 +2,12 @@ package nl.tno.stormcv.operation;
 
 import backtype.storm.task.TopologyContext;
 import nl.tno.stormcv.model.CVParticle;
-import nl.tno.stormcv.model.Descriptor;
 import nl.tno.stormcv.model.Feature;
 import nl.tno.stormcv.model.Frame;
 import nl.tno.stormcv.model.serializer.CVParticleSerializer;
 import nl.tno.stormcv.model.serializer.FeatureSerializer;
 import nl.tno.stormcv.model.serializer.FrameSerializer;
+import nl.tno.stormcv.util.MatFeatureUtils;
 import nl.tno.stormcv.util.NativeUtils;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfByte;
@@ -16,6 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import xyz.unlimitedcodeworks.opencv.dnn.ForwardNet;
 
+import java.awt.*;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
@@ -36,6 +37,7 @@ public class DnnForwardOp extends OpenCVOp<CVParticle> implements ISingleInputOp
     private String modelTxt;
     private String modelBin;
 
+    private boolean outputFrame;
     @SuppressWarnings("rawtypes")
     private CVParticleSerializer serializer = new FeatureSerializer();
 
@@ -65,6 +67,7 @@ public class DnnForwardOp extends OpenCVOp<CVParticle> implements ISingleInputOp
      * @return this instance for chaining
      */
     public DnnForwardOp outputFrame(boolean frame) {
+        outputFrame = frame;
         if (frame) {
             this.serializer = new FrameSerializer();
         } else {
@@ -88,6 +91,8 @@ public class DnnForwardOp extends OpenCVOp<CVParticle> implements ISingleInputOp
     @Override
     public List<CVParticle> execute(CVParticle input) throws Exception {
         List<CVParticle> result = new ArrayList<>();
+        if (!(input instanceof Frame)) return result;
+
         Frame frame = (Frame) input;
         if (frame.getImageType().equals(Frame.NO_IMAGE))
             return result;
@@ -96,19 +101,16 @@ public class DnnForwardOp extends OpenCVOp<CVParticle> implements ISingleInputOp
         Mat image = Imgcodecs.imdecode(mob, Imgcodecs.CV_LOAD_IMAGE_COLOR);
 
         Mat output = net.forward(image);
-        float[] data = new float[(int) output.total() * output.channels()];
-        output.get(0, 0, data);
 
-        List<Descriptor> descriptors = new ArrayList<>();
-        descriptors.add(new Descriptor(input.getStreamId(),
-                input.getSequenceNr(),
-                frame.getBoundingBox(), 0,
-                data));
+        Feature f = MatFeatureUtils.featureFromMat(input.getStreamId(), input.getSequenceNr(),
+                name, 0, new Rectangle(0, 0, (int) image.size().width, (int) image.size().height),
+                output);
 
-        result.add(new Feature(input.getStreamId(),
-                input.getSequenceNr(),
-                name, 0,
-                descriptors, null));
+        if (outputFrame) {
+            frame.getFeatures().add(f);
+        } else {
+            result.add(f);
+        }
         return result;
     }
 

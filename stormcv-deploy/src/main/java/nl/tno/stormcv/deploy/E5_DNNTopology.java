@@ -56,7 +56,8 @@ public class E5_DNNTopology {
         @SuppressWarnings("rawtypes")
         List<ISingleInputOperation> operations = new ArrayList<>();
         operations.add(new HaarCascadeOp("face", "lbpcascade_frontalface.xml"));
-        operations.add(new DnnForwardOp("dnn", "/data/bvlc_googlenet.prototxt", "/data/bvlc_googlenet.caffemodel"));
+        operations.add(new DnnForwardOp("classprob", "/data/bvlc_googlenet.prototxt", "/data/bvlc_googlenet.caffemodel").outputFrame(true));
+        operations.add(new DnnClassifyOp("classprob", "/data/synset_words.txt").addMetadata(true).outputFrame(true));
         //operations.add(new FeatureExtractionOp("sift", FeatureDetector.SIFT, DescriptorExtractor.SIFT));
 
         int frameSkip = 13;
@@ -66,8 +67,8 @@ public class E5_DNNTopology {
         builder.setSpout("fetcher", new CVParticleSpout(
                         new FileFrameFetcher(files).frameSkip(frameSkip)),
                 1);
-        // add bolt that scales frames down to 25% of the original size
-        builder.setBolt("scale", new SingleInputBolt(new ScaleImageOp(0.25f)), 1)
+        // add bolt that scales frames down to 80% of the original size
+        builder.setBolt("scale", new SingleInputBolt(new ScaleImageOp(0.5f)), 1)
                 .shuffleGrouping("fetcher");
 
         // 'fat' bolts containing a SequentialFrameOperation will will emit a Frame object containing the detected features
@@ -76,7 +77,7 @@ public class E5_DNNTopology {
                 .shuffleGrouping("scale");
 
         // simple bolt that draws Features (i.e. locations of features) into the frame
-        builder.setBolt("drawer", new SingleInputBolt(new DrawFeaturesOp()), 1)
+        builder.setBolt("drawer", new SingleInputBolt(new DrawFeaturesOp().drawMetadata(true)), 1)
                 .shuffleGrouping("fat_features");
 
         // add bolt that creates a webservice on port 8558 enabling users to view the result

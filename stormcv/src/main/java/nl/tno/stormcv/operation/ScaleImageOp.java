@@ -1,19 +1,18 @@
 package nl.tno.stormcv.operation;
 
-import java.awt.Graphics2D;
-import java.awt.RenderingHints;
+import backtype.storm.task.TopologyContext;
+import nl.tno.stormcv.model.CVParticle;
+import nl.tno.stormcv.model.Frame;
+import nl.tno.stormcv.model.serializer.CVParticleSerializer;
+import nl.tno.stormcv.model.serializer.FrameSerializer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import backtype.storm.task.TopologyContext;
-import nl.tno.stormcv.model.Frame;
-import nl.tno.stormcv.model.*;
-import nl.tno.stormcv.model.serializer.*;
 
 /**
  * Scales an image into a new image. The original java drawImage function using RenderingHints is used
@@ -64,7 +63,6 @@ public class ScaleImageOp implements ISingleInputOperation<Frame>{
 		if(factor != 1.0) image = ScaleImageOp.scale(image, factor);
 		frame.setImage(image);
 		result.add(frame);
-		logger.info("Scale Op : " + " Sequence Nr - " + particle.getSequenceNr() + " System Time - " + System.currentTimeMillis());
 		return result;
 	}
 	

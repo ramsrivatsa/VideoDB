@@ -1,25 +1,25 @@
 package nl.tno.stormcv.operation;
 
-import java.awt.Color;
-import java.awt.Graphics2D;
-import java.awt.Rectangle;
+import backtype.storm.task.TopologyContext;
+import nl.tno.stormcv.model.CVParticle;
+import nl.tno.stormcv.model.Descriptor;
+import nl.tno.stormcv.model.Feature;
+import nl.tno.stormcv.model.Frame;
+import nl.tno.stormcv.model.serializer.CVParticleSerializer;
+import nl.tno.stormcv.model.serializer.FrameSerializer;
+import nl.tno.stormcv.util.connector.ConnectorHolder;
+import nl.tno.stormcv.util.connector.FileConnector;
+import nl.tno.stormcv.util.connector.LocalFileConnector;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.imageio.ImageIO;
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-
-import javax.imageio.ImageIO;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import backtype.storm.task.TopologyContext;
-import nl.tno.stormcv.model.*;
-import nl.tno.stormcv.model.serializer.*;
-import nl.tno.stormcv.util.connector.ConnectorHolder;
-import nl.tno.stormcv.util.connector.FileConnector;
-import nl.tno.stormcv.util.connector.LocalFileConnector;
 
 /**
  * Draws the features contained within a {@link Frame} on the image itself and is primarily used for testing purposes.
@@ -73,13 +73,10 @@ public class DrawFeaturesOp implements ISingleInputOperation<Frame> {
 
 	@Override
 	public List<Frame> execute(CVParticle particle) throws Exception {
-		//logger.info("Draw Features Op " + System.nanoTime());
-		List<Frame> result = new ArrayList<Frame>();
+		List<Frame> result = new ArrayList<>();
 		if(!(particle instanceof Frame)) return result;
 		Frame sf = (Frame)particle;
 		result.add(sf);
-		logger.info("Draw Features Op : " + " Sequence Nr - " + sf.getSequenceNr() + " System Time - " + System.currentTimeMillis());
-		//logger.info("Draw Features Op : " + sf.getSequenceNr());
 		BufferedImage image = sf.getImage();
 		
 		if(image == null) return result;

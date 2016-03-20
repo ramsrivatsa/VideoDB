@@ -48,6 +48,7 @@ public class SingleInputBolt extends CVParticleBolt {
 
     @Override
     List<? extends CVParticle> execute(CVParticle input) throws Exception {
+        logger.debug("Execution in {} with input {}-{}", boltName, input.getStreamId(), input.getSequenceNr());
         List<? extends CVParticle> result = operation.execute(input);
         // copy metadata from input to output if configured to do so
         for (CVParticle s : result) {

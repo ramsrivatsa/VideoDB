@@ -6,6 +6,7 @@ import backtype.storm.task.TopologyContext;
 import backtype.storm.topology.base.BaseRichBolt;
 import backtype.storm.tuple.Tuple;
 import clojure.lang.PersistentArrayMap;
+import nl.tno.stormcv.StormCVConfig;
 import nl.tno.stormcv.model.CVParticle;
 import nl.tno.stormcv.model.serializer.CVParticleSerializer;
 import org.slf4j.Logger;
@@ -27,6 +28,7 @@ public abstract class CVParticleBolt extends BaseRichBolt {
     private static final long serialVersionUID = -5421951488628303992L;
 
     protected Logger logger = LoggerFactory.getLogger(CVParticleBolt.class);
+    protected boolean profiling = false;
     protected HashMap<String, CVParticleSerializer<? extends CVParticle>> serializers = new HashMap<>();
     protected OutputCollector collector;
     protected String boltName;
@@ -37,6 +39,7 @@ public abstract class CVParticleBolt extends BaseRichBolt {
     public void prepare(Map conf, TopologyContext context, OutputCollector collector) {
         this.collector = collector;
         this.boltName = context.getThisComponentId();
+        profiling = (Boolean) conf.getOrDefault(StormCVConfig.STORMCV_LOG_PROFILING, false);
 
         try {
             PersistentArrayMap map = (PersistentArrayMap) conf.get(Config.TOPOLOGY_KRYO_REGISTER);

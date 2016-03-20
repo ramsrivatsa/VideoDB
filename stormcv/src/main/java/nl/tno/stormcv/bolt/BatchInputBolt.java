@@ -12,7 +12,6 @@ import nl.tno.stormcv.batcher.IBatcher;
 import nl.tno.stormcv.model.CVParticle;
 import nl.tno.stormcv.operation.IBatchOperation;
 
-import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -67,8 +66,9 @@ public class BatchInputBolt extends CVParticleBolt implements RemovalListener<CV
 	private Fields groupBy;
 	private History history;
 	private boolean refreshExperation = true;
-	
-	/**
+    private String currGroupKey;
+
+    /**
 	 * Creates a BatchInputBolt with given Batcher and BatchOperation.
 	 * @param batcher the Batcher to use
 	 * @param operation the BatchOperation to use
@@ -160,37 +160,31 @@ public class BatchInputBolt extends CVParticleBolt implements RemovalListener<CV
 	 */
 	@Override
 	public void execute(Tuple input) {
-		String group = generateKey(input);
-		if(group == null){
+        currGroupKey = generateKey(input);
+		if(currGroupKey == null){
 			collector.fail(input);
+            logger.warn("Generating key for input tuple failed");
 			return;
 		}
-		CVParticle particle;
-		try {
-			particle = deserialize(input);
-			history.add(group, particle);
-			List<List<CVParticle>> batches = batcher.partition(history, history.getGroupedItems(group));
-			for(List<CVParticle> batch : batches){
-				try{
-					List<? extends CVParticle> results = operation.execute(batch);
-					for(CVParticle result : results){
-						result.setRequestId(particle.getRequestId());
-						collector.emit(input, serializers.get(result.getClass().getName()).toTuple(result));
-					}
-				}catch(Exception e){
-					logger.warn("Unable to to process batch due to ", e);
-				}
-			}
-		} catch (IOException e1) {
-			logger.warn("Unable to deserialize Tuple", e1);
-		}
-		idleTimestamp = System.currentTimeMillis();
+        super.execute(input);
 	}
 	
 	@Override
 	List<? extends CVParticle> execute(CVParticle input) {
-		// TODO Auto-generated method stub
-		return null;
+        List<CVParticle> result = new ArrayList<>();
+        if (currGroupKey == null) return result;
+
+        history.add(currGroupKey, input);
+        List<List<CVParticle>> batches = batcher.partition(history, history.getGroupedItems(currGroupKey));
+        for (List<CVParticle> batch : batches) {
+            try{
+                List<? extends CVParticle> batchResults = operation.execute(batch);
+                result.addAll(batchResults);
+            }catch(Exception e){
+                logger.warn("Unable to to process batch due to ", e);
+            }
+        }
+		return result;
 	}
 	
 	/**

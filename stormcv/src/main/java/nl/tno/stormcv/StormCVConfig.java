@@ -62,6 +62,11 @@ public class StormCVConfig extends Config{
 	 * <b>String</b> configuration parameter setting the library name of the OpenCV lib to be used
 	 */
 	public static final String STORMCV_OPENCV_LIB = "stormcv.opencv.lib";
+
+    /**
+     * <b>Boolean (default = false)</b> configuration parameter setting whether enable logging output for profiling
+     */
+	public static final String STORMCV_LOG_PROFILING = "stormcv.log.profiling";
 	
 	
 	/**
@@ -79,6 +84,7 @@ public class StormCVConfig extends Config{
 		//put(Config.TOPOLOGY_RECEIVE_BUFFER_SIZE, 2); // sets the maximum number of messages to batch before sending them to executers
 		put(Config.TOPOLOGY_TRANSFER_BUFFER_SIZE, 2); // sets the size of the output queue for each worker.
 		put(STORMCV_FRAME_ENCODING, Frame.JPG_IMAGE); // sets the encoding of frames which determines both serialization speed and tuple size
+        put(STORMCV_LOG_PROFILING, false);
 		
 		// register the basic set Kryo serializers
 		registerSerialization(VideoChunk.class, VideoChunkSerializer.class);

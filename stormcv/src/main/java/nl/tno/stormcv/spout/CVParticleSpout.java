@@ -31,6 +31,7 @@ public class CVParticleSpout implements IRichSpout {
     private static final long serialVersionUID = 2828206148753936815L;
 
     private Logger logger = LoggerFactory.getLogger(CVParticleSpout.class);
+    private boolean profiling = false;
     private Cache<Object, Object> tupleCache; // a cache holding emitted tuples so they can be replayed on failure
     protected SpoutOutputCollector collector;
     private boolean faultTolerant = false;
@@ -68,9 +69,7 @@ public class CVParticleSpout implements IRichSpout {
     @Override
     public void open(Map conf, TopologyContext context, SpoutOutputCollector collector) {
         this.collector = collector;
-        if (conf.containsKey(StormCVConfig.STORMCV_SPOUT_FAULTTOLERANT)) {
-            faultTolerant = (Boolean) conf.get(StormCVConfig.STORMCV_SPOUT_FAULTTOLERANT);
-        }
+        faultTolerant = (Boolean) conf.getOrDefault(StormCVConfig.STORMCV_SPOUT_FAULTTOLERANT, false);
         if (faultTolerant) {
             long timeout = conf.get(StormCVConfig.STORMCV_CACHES_TIMEOUT_SEC) == null ? 30 : (Long) conf.get(StormCVConfig.STORMCV_CACHES_TIMEOUT_SEC);
             int maxSize = conf.get(StormCVConfig.STORMCV_CACHES_MAX_SIZE) == null ? 500 : ((Long) conf.get(StormCVConfig.STORMCV_CACHES_MAX_SIZE)).intValue();
@@ -79,6 +78,7 @@ public class CVParticleSpout implements IRichSpout {
                     .expireAfterAccess(timeout, TimeUnit.SECONDS)
                     .build();
         }
+        profiling = (Boolean) conf.getOrDefault(StormCVConfig.STORMCV_LOG_PROFILING, false);
 
         // pass configuration to subclasses
         try {
@@ -102,7 +102,9 @@ public class CVParticleSpout implements IRichSpout {
             String id = particle.getStreamId() + "_" + particle.getSequenceNr();
             if (faultTolerant && tupleCache != null) tupleCache.put(id, values);
             collector.emit(values, id);
-            logger.info("[Timing] StreamID: {} Sequence Nr: {} leaving spout: {}",
+
+            if (profiling)
+                logger.info("[Timing] StreamID: {} Sequence Nr: {} leaving spout: {}",
                     particle.getStreamId(), particle.getSequenceNr(), System.currentTimeMillis());
         } catch (IOException e) {
             logger.warn("Unable to fetch next frame from queue due to: " + e.getMessage());

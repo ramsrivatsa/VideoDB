@@ -7,7 +7,6 @@ import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -56,7 +55,7 @@ public class ResourceLoader {
             }
         }
     }
-    private static Map<String, Object> inflatedResource = new ConcurrentHashMap<>();
+    private static ConcurrentHashMap<String, Object> inflatedResource = new ConcurrentHashMap<>();
 
     private static Path tempDirectory = null;
     private static synchronized Path getTempDirectory() throws IOException {

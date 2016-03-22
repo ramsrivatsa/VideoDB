@@ -71,7 +71,10 @@ public class CVParticleSpout implements IRichSpout {
     public void open(Map conf, TopologyContext context, SpoutOutputCollector collector) {
         this.collector = collector;
         this.spoutName = context.getThisComponentId();
-        faultTolerant = (Boolean) conf.getOrDefault(StormCVConfig.STORMCV_SPOUT_FAULTTOLERANT, false);
+        Object obj = conf.get(StormCVConfig.STORMCV_SPOUT_FAULTTOLERANT);
+        if (obj != null) {
+            faultTolerant = (Boolean) obj;
+        }
         if (faultTolerant) {
             long timeout = conf.get(StormCVConfig.STORMCV_CACHES_TIMEOUT_SEC) == null ? 30 : (Long) conf.get(StormCVConfig.STORMCV_CACHES_TIMEOUT_SEC);
             int maxSize = conf.get(StormCVConfig.STORMCV_CACHES_MAX_SIZE) == null ? 500 : ((Long) conf.get(StormCVConfig.STORMCV_CACHES_MAX_SIZE)).intValue();
@@ -80,7 +83,11 @@ public class CVParticleSpout implements IRichSpout {
                     .expireAfterAccess(timeout, TimeUnit.SECONDS)
                     .build();
         }
-        profiling = (Boolean) conf.getOrDefault(StormCVConfig.STORMCV_LOG_PROFILING, false);
+
+        obj = conf.get(StormCVConfig.STORMCV_LOG_PROFILING);
+        if (obj != null) {
+            profiling = (Boolean) obj;
+        }
 
         // pass configuration to subclasses
         try {

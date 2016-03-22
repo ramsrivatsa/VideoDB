@@ -9,6 +9,7 @@ import org.opencv.core.Mat;
 public class ForwardNet {
     static {
         NativeUtils.loadLibrary("opencv_core");
+        NativeUtils.loadLibrary("opencv_imgproc");
         NativeUtils.loadLibrary("opencv_dnn");
         NativeUtils.loadLibrary("ForwardNet");
     }

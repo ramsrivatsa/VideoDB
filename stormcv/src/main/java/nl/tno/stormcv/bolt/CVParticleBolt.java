@@ -39,7 +39,9 @@ public abstract class CVParticleBolt extends BaseRichBolt {
     public void prepare(Map conf, TopologyContext context, OutputCollector collector) {
         this.collector = collector;
         this.boltName = context.getThisComponentId();
-        profiling = (Boolean) conf.getOrDefault(StormCVConfig.STORMCV_LOG_PROFILING, false);
+        if (conf.containsKey(StormCVConfig.STORMCV_LOG_PROFILING)) {
+            profiling = (Boolean) conf.get(StormCVConfig.STORMCV_LOG_PROFILING);
+        }
 
         try {
             PersistentArrayMap map = (PersistentArrayMap) conf.get(Config.TOPOLOGY_KRYO_REGISTER);

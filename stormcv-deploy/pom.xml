@@ -7,22 +7,27 @@
 	<name>Deploy Boilerplate</name>
 	<description>Boilerplate project to support developers with packaging of their StormCV topologies</description>
 	<repositories>
-		<repository>
-			<id>StormCV repo</id>
-			<url>http://github.com/sensorstorm/maven/raw/master/releases/</url>
-		</repository>
+        <repository>
+            <id>xuggle</id>
+            <url>http://xuggle.googlecode.com/svn/trunk/repo/share/java/</url>
+        </repository>
 	</repositories>
 	<dependencies>
-<!-- 0.7.11 is a version created by Ram Srivatsa Kannan to enable logging -->
+        <!-- 0.8.x is a forked version which brings dnn support -->
 		<dependency>
 			<groupId>nl.tno</groupId>
 			<artifactId>stormcv</artifactId>
-			<version>0.7.11</version>
+			<version>0.8.2-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>org.opencv</groupId>
+			<artifactId>opencv</artifactId>
+			<version>3.1.0</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.storm</groupId>
 			<artifactId>storm-core</artifactId>
-			<version>0.9.4</version>
+			<version>0.10.0</version>
 			<scope>provided</scope>
 		</dependency>
 <!--		<dependency>
@@ -82,6 +87,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.1</version>
 				<configuration>
 					<source>1.7</source>
 					<target>1.7</target>

@@ -1,32 +1,25 @@
 package nl.tno.stormcv.operation;
 
-import java.awt.Rectangle;
-import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-
-import org.opencv.core.Mat;
-import org.opencv.core.MatOfByte;
-import org.opencv.core.MatOfRect;
-import org.opencv.core.Rect;
-import org.opencv.core.Size;
-import org.opencv.highgui.Highgui;
+import backtype.storm.task.TopologyContext;
+import nl.tno.stormcv.model.CVParticle;
+import nl.tno.stormcv.model.Descriptor;
+import nl.tno.stormcv.model.Feature;
+import nl.tno.stormcv.model.Frame;
+import nl.tno.stormcv.model.serializer.CVParticleSerializer;
+import nl.tno.stormcv.model.serializer.FeatureSerializer;
+import nl.tno.stormcv.model.serializer.FrameSerializer;
+import nl.tno.stormcv.util.NativeUtils;
+import org.opencv.core.*;
+import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.objdetect.CascadeClassifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import backtype.storm.task.TopologyContext;
-import backtype.storm.utils.Utils;
-import nl.tno.stormcv.model.Descriptor;
-import nl.tno.stormcv.model.Feature;
-import nl.tno.stormcv.model.Frame;
-import nl.tno.stormcv.util.NativeUtils;
-import nl.tno.stormcv.model.*;
-import nl.tno.stormcv.model.serializer.*;
+import java.awt.*;
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Detects Haar Cascades in frames/images using OpenCV's CascadeClassifier. 
@@ -108,11 +101,9 @@ public class HaarCascadeOp extends OpenCVOp<CVParticle> implements ISingleInputO
 	@Override
 	protected void prepareOpenCVOp(Map stormConf, TopologyContext context) throws Exception { 
 		try {
-			if(haarXML.charAt(0) != '/') haarXML = "/"+haarXML;
-			File cascadeFile = NativeUtils.extractTmpFileFromJar(haarXML, true);
+			if(haarXML.charAt(0) != '/') haarXML = OPENCV_RES_HOME + haarXML;
+			File cascadeFile = NativeUtils.getAsLocalFile(haarXML);
 			haarDetector = new CascadeClassifier(cascadeFile.getAbsolutePath());
-			Utils.sleep(100); // make sure the classifier has loaded before removing the tmp xml file
-			if(!cascadeFile.delete()) cascadeFile.deleteOnExit();
 		} catch (Exception e) {
 			logger.error("Unable to instantiate SimpleFaceDetectionBolt due to: "+e.getMessage(), e);
 			throw e;
@@ -121,24 +112,23 @@ public class HaarCascadeOp extends OpenCVOp<CVParticle> implements ISingleInputO
 	
 	@Override
 	public List<CVParticle> execute(CVParticle input) throws Exception {
-		long startTime =System.nanoTime();
-		ArrayList<CVParticle> result = new ArrayList<CVParticle>();
+		ArrayList<CVParticle> result = new ArrayList<>();
 		Frame frame = (Frame)input;
 		if(frame.getImageType().equals(Frame.NO_IMAGE)) return result;
 
 		MatOfByte mob = new MatOfByte(frame.getImageBytes());
-		Mat image = Highgui.imdecode(mob, Highgui.CV_LOAD_IMAGE_COLOR);
+		Mat image = Imgcodecs.imdecode(mob, Imgcodecs.CV_LOAD_IMAGE_COLOR);
 		
 		/*
 		mob = new MatOfByte();
-		Highgui.imencode(".png", image, mob);
+		Imgcodecs.imencode(".png", image, mob);
 		BufferedImage bi = ImageUtils.bytesToImage(mob.toArray());
 		ImageIO.write(bi, "png", new File("testOutput/"+sf.getStreamId()+"_"+sf.getSequenceNr()+".png"));
 		*/
 		
 		MatOfRect haarDetections = new MatOfRect();
 		haarDetector.detectMultiScale(image, haarDetections, scaleFactor, minNeighbors, flags, new Size(minSize[0], minSize[1]), new Size(maxSize[0], maxSize[1]));
-		ArrayList<Descriptor> descriptors = new ArrayList<Descriptor>();
+		ArrayList<Descriptor> descriptors = new ArrayList<>();
 		for(Rect rect : haarDetections.toArray()){
 			Rectangle box = new Rectangle(rect.x, rect.y, rect.width, rect.height);
 			descriptors.add(new Descriptor(input.getStreamId(), input.getSequenceNr(), box, 0, new float[0]));
@@ -151,10 +141,6 @@ public class HaarCascadeOp extends OpenCVOp<CVParticle> implements ISingleInputO
 		}else{
 			result.add(feature);
 		}
-		long endTime = System.nanoTime();
-		long latency = endTime - startTime;
-		logger.info("Haar Classifier sequence nr : " + input.getSequenceNr());
-		//logger.info("Haar Classifier latency : " + latency);
 		return result;
 	}
 

@@ -1,9 +1,9 @@
 package nl.tno.stormcv.model;
 
-import java.util.HashMap;
-
-import nl.tno.stormcv.model.serializer.CVParticleSerializer;
 import backtype.storm.tuple.Tuple;
+import nl.tno.stormcv.model.serializer.CVParticleSerializer;
+
+import java.util.HashMap;
 
 /**
  * An abstract Computer Vision Particle superclass which contains the information required
@@ -71,7 +71,8 @@ public abstract class CVParticle implements Comparable<CVParticle>{
 	
 	public void setMetadata(HashMap<String, Object> metadata) {
 		if(metadata != null){
-			this.metadata = metadata;
+			this.metadata.clear();
+			this.metadata.putAll(metadata);
 		}
 	}
 	

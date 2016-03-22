@@ -1,12 +1,12 @@
 package nl.tno.stormcv;
 
-import java.util.ArrayList;
-
+import backtype.storm.Config;
+import backtype.storm.tuple.Tuple;
 import nl.tno.stormcv.model.*;
 import nl.tno.stormcv.model.serializer.*;
 import nl.tno.stormcv.util.connector.*;
-import backtype.storm.Config;
-import backtype.storm.tuple.Tuple;
+
+import java.util.ArrayList;
 
 /**
  * Defines the configuration parameters used by StormCV. It is possible to put other configuration in the StormCVConfig as well
@@ -62,6 +62,11 @@ public class StormCVConfig extends Config{
 	 * <b>String</b> configuration parameter setting the library name of the OpenCV lib to be used
 	 */
 	public static final String STORMCV_OPENCV_LIB = "stormcv.opencv.lib";
+
+    /**
+     * <b>Boolean (default = false)</b> configuration parameter setting whether enable logging output for profiling
+     */
+	public static final String STORMCV_LOG_PROFILING = "stormcv.log.profiling";
 	
 	
 	/**
@@ -75,9 +80,11 @@ public class StormCVConfig extends Config{
 	public StormCVConfig(){
 		super();
 		// ------- Create StormCV specific config -------
-		put(Config.TOPOLOGY_RECEIVER_BUFFER_SIZE, 2); // sets the maximum number of messages to batch before sending them to executers
+        // removed in 0.10.0, see STORM-596
+		//put(Config.TOPOLOGY_RECEIVE_BUFFER_SIZE, 2); // sets the maximum number of messages to batch before sending them to executers
 		put(Config.TOPOLOGY_TRANSFER_BUFFER_SIZE, 2); // sets the size of the output queue for each worker.
 		put(STORMCV_FRAME_ENCODING, Frame.JPG_IMAGE); // sets the encoding of frames which determines both serialization speed and tuple size
+        put(STORMCV_LOG_PROFILING, false);
 		
 		// register the basic set Kryo serializers
 		registerSerialization(VideoChunk.class, VideoChunkSerializer.class);

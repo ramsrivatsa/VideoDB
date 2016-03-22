@@ -1,12 +1,13 @@
 package nl.tno.stormcv.operation;
 
-import java.io.IOException;
-import java.util.Map;
-
 import backtype.storm.task.TopologyContext;
 import nl.tno.stormcv.StormCVConfig;
 import nl.tno.stormcv.model.CVParticle;
 import nl.tno.stormcv.util.NativeUtils;
+import org.opencv.core.Core;
+
+import java.io.IOException;
+import java.util.Map;
 
 /**
  * Abstract class containing basic functionality to load (custom) OpenCV libraries. The name of the library to be loaded
@@ -19,11 +20,17 @@ import nl.tno.stormcv.util.NativeUtils;
  *
  */
 public abstract class OpenCVOp<Output extends CVParticle> implements IOperation<Output>{
-
 	private static final long serialVersionUID = -7758652109335765844L;
 
 	private String libName;
-	
+
+    protected static final String OPENCV_NATIVE_LIBNAME = "opencv_java"
+            + Core.VERSION_MAJOR
+            + Core.VERSION_MINOR
+            + Core.VERSION_REVISION;
+
+    protected static final String OPENCV_RES_HOME = "/opencv/";
+
 	protected String getLibName(){
 		return this.libName;
 	}
@@ -37,8 +44,8 @@ public abstract class OpenCVOp<Output extends CVParticle> implements IOperation<
 	@SuppressWarnings("rawtypes")
 	protected void loadOpenCV( Map stormConf) throws RuntimeException, IOException{
 		this.libName = (String)stormConf.get(StormCVConfig.STORMCV_OPENCV_LIB);
-		if(libName == null) NativeUtils.load();
-		else NativeUtils.load(libName);
+		if(libName == null) NativeUtils.loadLibrary(OPENCV_NATIVE_LIBNAME);
+		else NativeUtils.loadLibrary(libName);
 	}
 	
 	@SuppressWarnings("rawtypes")

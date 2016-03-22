@@ -1,19 +1,17 @@
 package nl.tno.stormcv.util;
 
+import nl.tno.stormcv.model.Frame;
+import org.opencv.core.Mat;
+import org.opencv.core.MatOfByte;
+import org.opencv.imgcodecs.Imgcodecs;
+
+import javax.imageio.ImageIO;
 import java.awt.color.ColorSpace;
 import java.awt.image.BufferedImage;
 import java.awt.image.ColorConvertOp;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-
-import javax.imageio.ImageIO;
-
-import nl.tno.stormcv.model.Frame;
-
-import org.opencv.core.Mat;
-import org.opencv.core.MatOfByte;
-import org.opencv.highgui.Highgui;
 
 /**
  * A utility class to convert images to bytes and vice-versa which is primarily used
@@ -77,7 +75,7 @@ public class ImageUtils {
 	 */
 	public static Mat Image2Mat(BufferedImage image, String imageType) throws IOException{
 		MatOfByte mob = new MatOfByte( ImageUtils.imageToBytes(image, imageType) );
-		return Highgui.imdecode(mob, Highgui.CV_LOAD_IMAGE_COLOR);
+		return Imgcodecs.imdecode(mob, Imgcodecs.CV_LOAD_IMAGE_COLOR);
 	}
 	
 	/**
@@ -87,7 +85,7 @@ public class ImageUtils {
 	 */
 	public static Mat bytes2Mat(byte[] bytes){
 		MatOfByte mob = new MatOfByte( bytes );
-		return Highgui.imdecode(mob, Highgui.CV_LOAD_IMAGE_COLOR);
+		return Imgcodecs.imdecode(mob, Imgcodecs.CV_LOAD_IMAGE_COLOR);
 	}
 	
 	/**
@@ -98,7 +96,7 @@ public class ImageUtils {
 	 */
 	public static byte[] Mat2ImageBytes(Mat mat, String imageType){
 		MatOfByte buffer = new MatOfByte();
-		Highgui.imencode("."+imageType, mat, buffer);
+		Imgcodecs.imencode("."+imageType, mat, buffer);
 		return buffer.toArray();
 	}
 }

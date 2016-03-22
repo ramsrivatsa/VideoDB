@@ -1,5 +1,16 @@
 package nl.tno.stormcv.util.connector;
 
+import backtype.storm.utils.Utils;
+import nl.tno.stormcv.StormCVConfig;
+import org.apache.commons.net.ftp.FTP;
+import org.apache.commons.net.ftp.FTPClient;
+import org.apache.commons.net.ftp.FTPFile;
+import org.apache.commons.net.ftp.FTPReply;
+import org.apache.storm.shade.org.yaml.snakeyaml.util.UriEncoder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.xml.datatype.DatatypeConfigurationException;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -8,20 +19,6 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-
-import javax.xml.datatype.DatatypeConfigurationException;
-
-import org.apache.commons.net.ftp.FTP;
-import org.apache.commons.net.ftp.FTPClient;
-import org.apache.commons.net.ftp.FTPFile;
-import org.apache.commons.net.ftp.FTPReply;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.yaml.snakeyaml.util.UriEncoder;
-
-import backtype.storm.utils.Utils;
-import nl.tno.stormcv.StormCVConfig;
-import nl.tno.stormcv.util.connector.FileConnector;
 
 /**
  * A {@link FileConnector} implementation used to access FTP sites. The FTP_USERNAME and FTP_PASSWORD fields must be

@@ -24,11 +24,11 @@ public class MatFeatureUtils {
         Map<String, Object> metadata = feature.getMetadata();
         if (metadata == null) return new Mat();
 
-        int cols = (Integer) metadata.getOrDefault("cols", -1);
-        int rows = (Integer) metadata.getOrDefault("rows", -1);
-        int type = (Integer) metadata.getOrDefault("type", -1);
+        Integer cols = (Integer) metadata.get("cols");
+        Integer rows = (Integer) metadata.get("rows");
+        Integer type = (Integer) metadata.get("type");
 
-        if (cols == -1 || rows == -1 || type == -1) return new Mat();
+        if (cols == null || rows == null || type == null) return new Mat();
 
         Descriptor desc = feature.getSparseDescriptors().get(index);
         float[] data = desc.getValues();

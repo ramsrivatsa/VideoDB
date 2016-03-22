@@ -133,8 +133,8 @@ model {
 
             binaries.all {
                 if (toolChain in Gcc || toolChain in Clang) {
-                    cppCompiler.args '-Wall', '-Wextra', '-Werror', '-std=c++11'
-                    linker.args '-lopencv_core', '-lopencv_dnn', '-lopencv_imgproc'
+                    cppCompiler.args '-Wall', '-Wextra', '-Werror', '-std=c++11', '-isystem/home/peifeng/.local/include'
+                    linker.args '-L/home/peifeng/.local/lib', '-lopencv_core', '-lopencv_dnn', '-lopencv_imgproc'
                 }
             }
         }
@@ -147,6 +147,7 @@ model {
                 task.dependsOn generateJNIHeaders
                 task.includes generateJNIHeaders.outputs
                 task.inputs.dir generateJNIHeaders.outputs
+
             }
         }
         withType(SharedLibraryBinarySpec) {

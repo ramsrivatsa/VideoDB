@@ -113,7 +113,7 @@ public class CVParticleSpout implements IRichSpout {
             collector.emit(values, id);
 
             if (profiling)
-                logger.info("[Timing] StreamID: {} Sequence Nr: {} Leaving '{}': {}",
+                logger.info("[Timing] StreamID: {} SequenceNr: {} Leaving {}: {}",
                     particle.getStreamId(), particle.getSequenceNr(), spoutName, System.currentTimeMillis());
         } catch (IOException e) {
             logger.warn("Unable to fetch next frame from queue due to: " + e.getMessage());

@@ -134,7 +134,8 @@ model {
             binaries.all {
                 if (toolChain in Gcc || toolChain in Clang) {
                     cppCompiler.args '-Wall', '-Wextra', '-Werror', '-std=c++11', '-isystem/home/peifeng/.local/include'
-                    linker.args '-L/home/peifeng/.local/lib', '-lopencv_core', '-lopencv_dnn', '-lopencv_imgproc'
+                    linker.args '-L/home/peifeng/.local/lib', '-lopencv_core', '-lopencv_dnn',
+                    '-lopencv_imgproc', '-ltbb'
                 }
             }
         }

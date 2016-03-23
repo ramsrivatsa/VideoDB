@@ -167,7 +167,7 @@ public class StreamReader extends MediaListenerAdapter implements Runnable {
             Frame newFrame = new Frame(streamId, frameNr, imageType, buffer, timestamp, new Rectangle(0, 0, frame.getWidth(), frame.getHeight()));
             newFrame.getMetadata().put("uri", streamLocation);
 
-            logger.info("[Timing] StreamID: {} Sequence Nr: {} entering queue: {}",
+            logger.info("[Timing] StreamID: {} Sequence Nr: {} Entering queue: {}",
                     streamId, frameNr, System.currentTimeMillis());
 
             frameQueue.put(newFrame);

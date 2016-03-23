@@ -2,6 +2,7 @@ package nl.tno.stormcv.deploy;
 
 import backtype.storm.Config;
 import backtype.storm.LocalCluster;
+import backtype.storm.StormSubmitter;
 import backtype.storm.topology.TopologyBuilder;
 import backtype.storm.tuple.Fields;
 import backtype.storm.utils.Utils;
@@ -21,7 +22,7 @@ import java.util.List;
 /**
  * Created by Aetf (aetf at unlimitedcodeworks dot xyz) on 16-3-19.
  */
-public class E5_DNNTopology {
+public class DNNTopology {
     public static void main(String[] args) {
 
         // first some global (topology configuration)
@@ -73,11 +74,11 @@ public class E5_DNNTopology {
 
         // 'fat' bolts containing a SequentialFrameOperation will will emit a Frame object containing the detected features
         builder.setBolt("fat_features", new SingleInputBolt(
-                        new SequentialFrameOp(operations).outputFrame(true).retainImage(true)), 1)
+                        new SequentialFrameOp(operations).outputFrame(true).retainImage(true)), 30)
                 .shuffleGrouping("scale");
 
         // simple bolt that draws Features (i.e. locations of features) into the frame
-        builder.setBolt("drawer", new SingleInputBolt(new DrawFeaturesOp().drawMetadata(true)), 1)
+        builder.setBolt("drawer", new SingleInputBolt(new DrawFeaturesOp().drawMetadata(true)), 30)
                 .shuffleGrouping("fat_features");
 
         // add bolt that creates a webservice on port 8558 enabling users to view the result
@@ -90,13 +91,13 @@ public class E5_DNNTopology {
         try {
 
             // run in local mode
-            LocalCluster cluster = new LocalCluster();
-            cluster.submitTopology("dnn_classification", conf, builder.createTopology());
-            Utils.sleep(120 * 1000); // run for two minutes and then kill the topology
-            cluster.shutdown();
+            //LocalCluster cluster = new LocalCluster();
+            //cluster.submitTopology("dnn_classification", conf, builder.createTopology());
+            //Utils.sleep(120 * 1000); // run for two minutes and then kill the topology
+            //cluster.shutdown();
 
             // run on a storm cluster
-            //StormSubmitter.submitTopology("dnn_classification", conf, builder.createTopology());
+            StormSubmitter.submitTopology("dnn_classification", conf, builder.createTopology());
         } catch (Exception e) {
             e.printStackTrace();
         }

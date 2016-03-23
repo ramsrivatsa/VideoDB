@@ -130,7 +130,7 @@ public class MjpegStreamingOp extends Application implements IBatchOperation<Fra
 			//System.err.println("Add frame ["+frame.getSequenceNr()+"] after "+(System.currentTimeMillis() - prevAdd)+" ms");
 			prevAdd = System.currentTimeMillis();
 			*/
-			logger.info("Time to start execute : " + " Sequence Nr - " + frame.getSequenceNr() + " System Time - " + System.currentTimeMillis());
+			logger.info("Inserting Images into stream : " + " Sequence Nr - " + frame.getSequenceNr() + " System Time - " + System.currentTimeMillis());
 			break;
 		}
 		return result;

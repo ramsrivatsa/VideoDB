@@ -140,7 +140,7 @@ public class CVParticleSpout implements IRichSpout{
 	@Override
 	public void fail(Object msgId) {
 		logger.debug("Fail of: "+msgId);
-		logger.info("Tuple failed please print this" + msgId );
+		logger.info("Tuple failed " + " msgid " + msgId + " System Time - " + System.currentTimeMillis());
 		if(faultTolerant && tupleCache != null && tupleCache.getIfPresent(msgId) != null){
 			collector.emit((Values)tupleCache.getIfPresent(msgId), msgId);
 		}

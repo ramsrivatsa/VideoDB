@@ -78,7 +78,7 @@ public class E3_MultipleFeaturesTopology {
 			.fieldsGrouping("face", new Fields(FrameSerializer.STREAMID));
 		
 		// simple bolt that draws Features (i.e. locations of features) into the frame
-		builder.setBolt("drawer", new SingleInputBolt(new DrawFeaturesOp()), 1)
+		builder.setBolt("drawer", new SingleInputBolt(new DrawFeaturesOp()), 4)
 			.shuffleGrouping("combiner");
 		
 		// add bolt that creates a webservice on port 8558 enabling users to view the result

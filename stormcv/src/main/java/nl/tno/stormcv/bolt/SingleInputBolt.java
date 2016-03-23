@@ -3,8 +3,8 @@ package nl.tno.stormcv.bolt;
 import java.util.List;
 import java.util.Map;
 
-//import org.slf4j.Logger;
-//import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import nl.tno.stormcv.model.CVParticle;
 import nl.tno.stormcv.operation.ISingleInputOperation;
@@ -23,7 +23,7 @@ import backtype.storm.topology.OutputFieldsDeclarer;
 public class SingleInputBolt extends CVParticleBolt {
 	
 	private static final long serialVersionUID = 8954087163234223475L;
-	//private final Logger slf4jLogger = LoggerFactory.getLogger(SingleInputBolt.class);
+	private final Logger slf4jLogger = LoggerFactory.getLogger(SingleInputBolt.class);
 
 	private ISingleInputOperation<? extends CVParticle> operation;
 
@@ -53,7 +53,7 @@ public class SingleInputBolt extends CVParticleBolt {
 
 	@Override
 	List<? extends CVParticle> execute(CVParticle input) throws Exception{
-		//slf4jLogger.info("time in nanoseconds" + System.nanoTime());
+		slf4jLogger.info("operation start : " + operation + " input : " + input + " System Time - " + System.currentTimeMillis());
 		List<? extends CVParticle> result = operation.execute(input);
 		// copy metadata from input to output if configured to do so
 		for(CVParticle s : result){

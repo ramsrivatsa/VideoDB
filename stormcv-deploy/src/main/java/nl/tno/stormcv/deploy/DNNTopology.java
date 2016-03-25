@@ -1,11 +1,9 @@
 package nl.tno.stormcv.deploy;
 
 import backtype.storm.Config;
-import backtype.storm.LocalCluster;
 import backtype.storm.StormSubmitter;
 import backtype.storm.topology.TopologyBuilder;
 import backtype.storm.tuple.Fields;
-import backtype.storm.utils.Utils;
 import nl.tno.stormcv.StormCVConfig;
 import nl.tno.stormcv.batcher.SlidingWindowBatcher;
 import nl.tno.stormcv.bolt.BatchInputBolt;
@@ -38,10 +36,16 @@ public class DNNTopology {
         conf.put(Config.TOPOLOGY_ENABLE_MESSAGE_TIMEOUTS, true);
         // The maximum amount of time given to the topology to fully process a message emitted by a spout (default = 30)
         conf.put(Config.TOPOLOGY_MESSAGE_TIMEOUT_SECS, 10);
-        // indicates if the spout must be fault tolerant; i.e. spouts do NOT! replay tuples on fail
-        conf.put(StormCVConfig.STORMCV_SPOUT_FAULTTOLERANT, false);
+        // indicates if the spout must be fault tolerant
+        conf.put(StormCVConfig.STORMCV_SPOUT_FAULTTOLERANT, true);
         // TTL (seconds) for all elements in all caches throughout the topology (avoids memory overload)
         conf.put(StormCVConfig.STORMCV_CACHES_TIMEOUT_SEC, 30);
+
+        // Internal message buffers
+        //conf.put(Config.TOPOLOGY_TRANSFER_BUFFER_SIZE,            32);
+        //conf.put(Config.TOPOLOGY_EXECUTOR_RECEIVE_BUFFER_SIZE, 16384);
+        //conf.put(Config.TOPOLOGY_EXECUTOR_SEND_BUFFER_SIZE,    16384);
+
 
         // Enable time profiling for spout and bolt
         conf.put(StormCVConfig.STORMCV_LOG_PROFILING, true);
@@ -54,14 +58,13 @@ public class DNNTopology {
         }
 
         // specify the list with SingleInputOperations to be executed sequentially by the 'fat' bolt
-        @SuppressWarnings("rawtypes")
         List<ISingleInputOperation> operations = new ArrayList<>();
-        operations.add(new HaarCascadeOp("face", "lbpcascade_frontalface.xml"));
+        operations.add(new HaarCascadeOp("face", "haarcascade_frontalface_default.xml"));
         operations.add(new DnnForwardOp("classprob", "/data/bvlc_googlenet.prototxt", "/data/bvlc_googlenet.caffemodel").outputFrame(true));
         operations.add(new DnnClassifyOp("classprob", "/data/synset_words.txt").addMetadata(true).outputFrame(true));
         //operations.add(new FeatureExtractionOp("sift", FeatureDetector.SIFT, DescriptorExtractor.SIFT));
 
-        int frameSkip = 13;
+        int frameSkip = 1;
         // now create the topology itself
         // (spout -> scale -> fat[face detection & dnn] -> drawer -> streamer)
         TopologyBuilder builder = new TopologyBuilder();

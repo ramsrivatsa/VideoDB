@@ -47,6 +47,11 @@ public class FeatureCombinerOp implements IBatchOperation<Frame> {
 
 	@Override
 	public List<Frame> execute(List<CVParticle> input) throws Exception {
+		//logger.info("Feature Combiner start : " +  " Input - " + input + " System Time - " + System.currentTimeMillis());
+		for ( int ele = 0; ele < input.size(); ele++) {
+			logger.info("Feature Combiner start : " +  " Sequence Nr - " + input.get(ele).getSequenceNr() + " System Time - " + System.currentTimeMillis());
+		}
+		//logger.info("Feature Combiner start : " + " System Time - " + System.currentTimeMillis());
 		Frame frame = null;
 		List<Feature> features = new ArrayList<Feature>();
 		for(CVParticle particle : input){
@@ -57,6 +62,8 @@ public class FeatureCombinerOp implements IBatchOperation<Frame> {
 			}
 		}
 		if(frame == null) frame = new Frame(input.get(0).getStreamId(), input.get(0).getSequenceNr(), Frame.NO_IMAGE, (byte[])null, 0L, new Rectangle());
+		logger.info("Feature Combiner middle : " + " Sequence Nr - " + frame.getSequenceNr() + " System Time - " + System.currentTimeMillis());
+		//logger.info("Feature Combiner middle : " + " Sequence Nr - " + frame.getSequenceNr() + " Input - " + input + " System Time - " + System.currentTimeMillis());
 		
 		// merge new features with already existing features in the Frame
 		f1 : for(Feature newF : features){
@@ -69,7 +76,7 @@ public class FeatureCombinerOp implements IBatchOperation<Frame> {
 			frame.getFeatures().add(newF);
 		}
 		List<Frame> result = new ArrayList<Frame>();
-		logger.info("Feature Combiner : " + " Sequence Nr - " + frame.getSequenceNr() + " System Time - " + System.currentTimeMillis());
+		logger.info("Feature Combiner end : " + " Sequence Nr - " + frame.getSequenceNr() + " System Time - " + System.currentTimeMillis());
 		result.add(frame);
 		return result;
 		

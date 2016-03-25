@@ -8,6 +8,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import nl.tno.stormcv.StormCVConfig;
 import nl.tno.stormcv.batcher.IBatcher;
 import nl.tno.stormcv.model.CVParticle;
@@ -65,6 +68,7 @@ import backtype.storm.tuple.Tuple;
 public class BatchInputBolt extends CVParticleBolt implements RemovalListener<CVParticle, String>{
 
 	private static final long serialVersionUID = -2394218774274388493L;
+	private final Logger logger = LoggerFactory.getLogger(BatchInputBolt.class);
 
 	private IBatchOperation<? extends CVParticle> operation;
 	private IBatcher batcher;
@@ -167,6 +171,7 @@ public class BatchInputBolt extends CVParticleBolt implements RemovalListener<CV
 	 */
 	@Override
 	public void execute(Tuple input) {
+		//logger.info("batch operation start : " + operation + " input : " + input + " System Time - " + System.currentTimeMillis());
 		String group = generateKey(input);
 		if(group == null){
 			collector.fail(input);
@@ -192,6 +197,7 @@ public class BatchInputBolt extends CVParticleBolt implements RemovalListener<CV
 			logger.warn("Unable to deserialize Tuple", e1);
 		}
 		idleTimestamp = System.currentTimeMillis();
+		//logger.info("batch operation end : " + operation + " input : " + input + " System Time - " + System.currentTimeMillis());
 	}
 	
 	@Override

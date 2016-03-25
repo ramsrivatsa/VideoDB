@@ -23,7 +23,7 @@ import backtype.storm.topology.OutputFieldsDeclarer;
 public class SingleInputBolt extends CVParticleBolt {
 	
 	private static final long serialVersionUID = 8954087163234223475L;
-	private final Logger slf4jLogger = LoggerFactory.getLogger(SingleInputBolt.class);
+	private final Logger logger = LoggerFactory.getLogger(SingleInputBolt.class);
 
 	private ISingleInputOperation<? extends CVParticle> operation;
 
@@ -53,7 +53,7 @@ public class SingleInputBolt extends CVParticleBolt {
 
 	@Override
 	List<? extends CVParticle> execute(CVParticle input) throws Exception{
-		slf4jLogger.info("operation start : " + operation + " input : " + input + " System Time - " + System.currentTimeMillis());
+		//logger.info("single operation start : " + operation + " input : " + input + " System Time - " + System.currentTimeMillis());
 		List<? extends CVParticle> result = operation.execute(input);
 		// copy metadata from input to output if configured to do so
 		for(CVParticle s : result){
@@ -63,6 +63,7 @@ public class SingleInputBolt extends CVParticleBolt {
 				}
 			}
 		}
+		//logger.info("single operation end : " + operation + " input : " + input + " System Time - " + System.currentTimeMillis());
 		return result;
 	}
 

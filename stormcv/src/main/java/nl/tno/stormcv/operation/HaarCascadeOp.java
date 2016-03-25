@@ -121,6 +121,7 @@ public class HaarCascadeOp extends OpenCVOp<CVParticle> implements ISingleInputO
 	
 	@Override
 	public List<CVParticle> execute(CVParticle input) throws Exception {
+		logger.info("Haar Classifier start: " + " Sequence Nr - " + input.getSequenceNr() + " System Time - " + System.currentTimeMillis());
 		long startTime =System.nanoTime();
 		ArrayList<CVParticle> result = new ArrayList<CVParticle>();
 		Frame frame = (Frame)input;
@@ -154,7 +155,7 @@ public class HaarCascadeOp extends OpenCVOp<CVParticle> implements ISingleInputO
 		long endTime = System.nanoTime();
 		long latency = endTime - startTime;
 		//logger.info("Haar Classifier sequence nr : " + input.getSequenceNr());
-		logger.info("Haar Classifier sequence nr : " + " Sequence Nr - " + input.getSequenceNr() + " System Time - " + System.currentTimeMillis());
+		logger.info("Haar Classifier end: " + " Sequence Nr - " + input.getSequenceNr() + " System Time - " + System.currentTimeMillis());
 		//logger.info("Haar Classifier latency : " + latency);
 		return result;
 	}

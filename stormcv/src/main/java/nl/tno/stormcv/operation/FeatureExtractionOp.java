@@ -88,6 +88,7 @@ public class FeatureExtractionOp extends OpenCVOp<CVParticle> implements ISingle
 	@Override
 	public List<CVParticle> execute(CVParticle particle) throws Exception {
 		//logger.info(" Feature Extraction Op" + System.nanoTime());
+		logger.info("Feature Extraction start: " + " Sequence Nr - " + particle.getSequenceNr() + " System Time - " + System.currentTimeMillis());
 		List<CVParticle> result = new ArrayList<CVParticle>();
 		if(!(particle instanceof Frame)) return result;
 		
@@ -123,7 +124,7 @@ public class FeatureExtractionOp extends OpenCVOp<CVParticle> implements ISingle
 			}else{
 				result.add(feature);
 			}		
-			logger.info("Feature Extraction : " + " Sequence Nr - " + frame.getSequenceNr() + " System Time - " + System.currentTimeMillis());
+			logger.info("Feature Extraction end: " + " Sequence Nr - " + frame.getSequenceNr() + " System Time - " + System.currentTimeMillis());
 		}catch(Exception e){
 			// catching exception at this point will prevent the sent of a fail! 
 			logger.warn("Unable to extract features for frame!", e);

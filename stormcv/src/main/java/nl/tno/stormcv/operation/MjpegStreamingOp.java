@@ -116,6 +116,11 @@ public class MjpegStreamingOp extends Application implements IBatchOperation<Fra
 
 	@Override
 	public List<Frame> execute(List<CVParticle> input) throws Exception {
+		//logger.info("Inserting Images into stream start : " + " System Time - " + System.currentTimeMillis());
+		//logger.info("Inserting Images into stream start : " + " Input - " + input + " System Time - " + System.currentTimeMillis());
+		for ( int ele = 0; ele < input.size(); ele++) {
+			logger.info("MjpegStreamingOp start : " +  " Sequence Nr - " + input.get(ele).getSequenceNr() + " System Time - " + System.currentTimeMillis());
+		}
 		List<Frame> result = new ArrayList<Frame>();
 		for(int i=0; i<input.size(); i++){
 			CVParticle s = input.get(i);
@@ -130,7 +135,8 @@ public class MjpegStreamingOp extends Application implements IBatchOperation<Fra
 			//System.err.println("Add frame ["+frame.getSequenceNr()+"] after "+(System.currentTimeMillis() - prevAdd)+" ms");
 			prevAdd = System.currentTimeMillis();
 			*/
-			logger.info("Inserting Images into stream : " + " Sequence Nr - " + frame.getSequenceNr() + " System Time - " + System.currentTimeMillis());
+			//logger.info("Inserting Images into stream end : " + " Sequence Nr - " + frame.getSequenceNr() + " Input - " + input + " System Time - " + System.currentTimeMillis());
+			logger.info("MjpegStreamingOp end : " + " Sequence Nr - " + frame.getSequenceNr() + " System Time - " + System.currentTimeMillis());
 			break;
 		}
 		return result;

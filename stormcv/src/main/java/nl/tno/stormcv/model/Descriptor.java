@@ -1,8 +1,8 @@
 package nl.tno.stormcv.model;
 
-import java.awt.Rectangle;
-
 import backtype.storm.tuple.Tuple;
+
+import java.awt.*;
 
 /**
  * This {@link CVParticle} implementation represents a sparse descriptor which is part of a {@link Feature} and has the following fields:
@@ -74,5 +74,10 @@ public class Descriptor extends CVParticle {
 	
 	public String toString(){
 		return "Descriptor {stream:"+getStreamId()+", nr:"+getSequenceNr()+", box:"+boundingBox+" duration: "+duration+"}";
+	}
+
+	@Override
+    public long estimatedByteSize() {
+		return super.estimatedByteSize() + 8 + 4*8 + values.length * 4;
 	}
 }

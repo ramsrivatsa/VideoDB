@@ -43,5 +43,9 @@ public class VideoChunk extends CVParticle {
 	public String getContainer() {
 		return container;
 	}
-	
+
+	@Override
+	public long estimatedByteSize() {
+		return super.estimatedByteSize() + 8 + video.length + container.getBytes().length;
+	}
 }

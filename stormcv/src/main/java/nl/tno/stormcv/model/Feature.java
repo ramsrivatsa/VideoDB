@@ -1,10 +1,10 @@
 package nl.tno.stormcv.model;
 
+import backtype.storm.tuple.Tuple;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-
-import backtype.storm.tuple.Tuple;
 
 /**
  * This {@link CVParticle} implementation represents a single feature calculated for {@link Frame} and has the following fields:
@@ -25,7 +25,7 @@ public class Feature extends CVParticle{
 
 	private String name;
 	private long duration;
-	private List<Descriptor> sparseDescriptors = new ArrayList<Descriptor>();
+	private List<Descriptor> sparseDescriptors = new ArrayList<>();
 	private float[][][] denseDescriptors = new float[0][0][0];
 	
 	public Feature(String streamId, long sequenceNr, String name, long duration, List<Descriptor> sparseDescriptors, float[][][] denseDescriptors) {
@@ -91,5 +91,22 @@ public class Feature extends CVParticle{
 	
 	public String toString(){
 		return "Feature {stream:"+getStreamId()+", nr:"+getSequenceNr()+", name: "+name+", descriptors: "+sparseDescriptors+"}";
+	}
+
+	@Override
+	public long estimatedByteSize() {
+		long size = super.estimatedByteSize() + name.getBytes().length + 8;
+        for (Descriptor desc : sparseDescriptors) {
+            size += desc.estimatedByteSize();
+        }
+        for (float[][] d2 : denseDescriptors) {
+            if (d2 != null) {
+                for (float[] d3 : d2) {
+                    if (d3 != null)
+                        size += d3.length * 8;
+                }
+            }
+        }
+        return size;
 	}
 }

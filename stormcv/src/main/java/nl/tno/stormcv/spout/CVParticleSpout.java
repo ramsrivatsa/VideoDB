@@ -112,9 +112,11 @@ public class CVParticleSpout implements IRichSpout {
             if (faultTolerant && tupleCache != null) tupleCache.put(id, values);
             collector.emit(values, id);
 
-            if (profiling)
-                logger.info("[Timing] StreamID: {} SequenceNr: {} Leaving {}: {}",
-                    particle.getStreamId(), particle.getSequenceNr(), spoutName, System.currentTimeMillis());
+            if (profiling) {
+                logger.info("[Timing] StreamID: {} SequenceNr: {} Leaving {}: {} Size: {}",
+                            particle.getStreamId(), particle.getSequenceNr(), spoutName,
+                            System.currentTimeMillis(), particle.estimatedByteSize());
+            }
         } catch (IOException e) {
             logger.warn("Unable to fetch next frame from queue due to: " + e.getMessage());
         }

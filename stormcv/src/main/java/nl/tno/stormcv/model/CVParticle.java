@@ -4,6 +4,7 @@ import backtype.storm.tuple.Tuple;
 import nl.tno.stormcv.model.serializer.CVParticleSerializer;
 
 import java.util.HashMap;
+import java.util.Map;
 
 /**
  * An abstract Computer Vision Particle superclass which contains the information required
@@ -27,7 +28,7 @@ public abstract class CVParticle implements Comparable<CVParticle>{
 	private long requestId = -1;
 	private String streamId;
 	private long sequenceNr;
-	private HashMap<String, Object> metadata = new HashMap<String, Object>();
+	private HashMap<String, Object> metadata = new HashMap<>();
 	
 	/**
 	 * Constructs a generic type based on the provided tuple. The tuple must contain streamID and sequenceNR
@@ -93,5 +94,16 @@ public abstract class CVParticle implements Comparable<CVParticle>{
 		return (int)(getSequenceNr() - other.getSequenceNr());
 	}
 
-
+	public long estimatedByteSize() {
+        long size = 16 + streamId.getBytes().length;
+        for (Map.Entry<String, Object> entry : metadata.entrySet()) {
+            size += entry.getKey().getBytes().length;
+            if (entry.getValue() instanceof  String) {
+                size += ((String) entry.getValue()).getBytes().length;
+            } else {
+                size += 8;
+            }
+        }
+        return size;
+	}
 }

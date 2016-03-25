@@ -1,14 +1,13 @@
 package nl.tno.stormcv.model;
 
-import java.awt.Rectangle;
+import backtype.storm.tuple.Tuple;
+import nl.tno.stormcv.util.ImageUtils;
+
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-
-import nl.tno.stormcv.util.ImageUtils;
-
-import backtype.storm.tuple.Tuple;
 
 /**
  * A {@link CVParticle} object representing a frame from a video stream (or part of a frame called a Tile). Additional to the fields inherited from
@@ -40,7 +39,7 @@ public class Frame extends CVParticle {
 	private byte[] imageBytes;
 	private BufferedImage image;
 	private Rectangle boundingBox;
-	private List<Feature> features = new ArrayList<Feature>();
+	private List<Feature> features = new ArrayList<>();
 	
 	public Frame(String streamId, long sequenceNr, String imageType, BufferedImage image, long timeStamp, Rectangle boundingBox, List<Feature> features) throws IOException {
 		this(streamId, sequenceNr, imageType, image, timeStamp, boundingBox);
@@ -146,6 +145,15 @@ public class Frame extends CVParticle {
 		String result= "Frame : {streamId:"+getStreamId()+", sequenceNr:"+getSequenceNr()+", timestamp:"+getTimestamp()+", imageType:"+imageType+", features:[ ";
 		for(Feature f : features) result += f.getName()+" = "+f.getSparseDescriptors().size()+", ";
 		return result + "] }";
+	}
+
+	@Override
+	public long estimatedByteSize() {
+		long size = super.estimatedByteSize() + 8 + imageType.getBytes().length + imageBytes.length + 4*8;
+        for (Feature f : features) {
+            size += f.estimatedByteSize();
+        }
+        return size;
 	}
 }
 

@@ -71,10 +71,12 @@ public abstract class CVParticleBolt extends BaseRichBolt {
             }
 
             List<? extends CVParticle> results = execute(cvt);
+            long totalEstimatedSize = 0;
             for (CVParticle output : results) {
                 output.setRequestId(cvt.getRequestId());
                 CVParticleSerializer serializer = serializers.get(output.getClass().getName());
                 if (serializer != null) {
+                    if (profiling) totalEstimatedSize += output.estimatedByteSize();
                     collector.emit(input, serializer.toTuple(output));
                 } else {
                     logger.error("Can't get serializer " + output.getClass().getName());
@@ -85,8 +87,9 @@ public abstract class CVParticleBolt extends BaseRichBolt {
 
             if (profiling) {
                 endExecute = System.currentTimeMillis();
-                logger.info("[Timing] StreamID: {} SequenceNr: {} Leaving {}: {} (latency {})",
-                        cvt.getStreamId(), cvt.getSequenceNr(), boltName, endExecute, endExecute - beginExecute);
+                logger.info("[Timing] StreamID: {} SequenceNr: {} Leaving {}: {} Size: {}",
+                        cvt.getStreamId(), cvt.getSequenceNr(), boltName,
+                        endExecute, totalEstimatedSize);
             }
         } catch (Exception e) {
             logger.warn("Unable to process input", e);

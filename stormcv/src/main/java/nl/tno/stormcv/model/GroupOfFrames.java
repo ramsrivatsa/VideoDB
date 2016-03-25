@@ -1,8 +1,8 @@
 package nl.tno.stormcv.model;
 
-import java.util.List;
-
 import backtype.storm.tuple.Tuple;
+
+import java.util.List;
 
 /**
  * This {@link CVParticle} implementation represents a group (1 or more) of {@link Frame} objects and can be used
@@ -33,4 +33,12 @@ public class GroupOfFrames extends CVParticle{
 		return frames.size();
 	}
 
+	@Override
+	public long estimatedByteSize() {
+        long size = super.estimatedByteSize();
+        for (Frame f : frames) {
+            size += f.estimatedByteSize();
+        }
+        return size;
+    }
 }

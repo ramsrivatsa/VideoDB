@@ -149,9 +149,25 @@ public class CVParticleSpout implements IRichSpout {
 
     @Override
     public void fail(Object msgId) {
-        logger.debug("Fail of: " + msgId);
-        if (faultTolerant && tupleCache != null && tupleCache.getIfPresent(msgId) != null) {
-            collector.emit((Values) tupleCache.getIfPresent(msgId), msgId);
+        if (faultTolerant && tupleCache != null) {
+            if (tupleCache.getIfPresent(msgId) != null) {
+                if (profiling) {
+                    int idx = msgId.toString().lastIndexOf('_');
+                    String streamId = msgId.toString().substring(0, idx);
+                    String sequenceNr = msgId.toString().substring(idx+1);
+                    logger.info("[Timing] StreamID: {} SequenceNr: {} Retry {}: {} Size: {}",
+                            streamId, sequenceNr, spoutName, System.currentTimeMillis(), 0);
+                }
+                collector.emit((Values) tupleCache.getIfPresent(msgId), msgId);
+            } else {
+                if (profiling) {
+                    int idx = msgId.toString().lastIndexOf('_');
+                    String streamId = msgId.toString().substring(0, idx);
+                    String sequenceNr = msgId.toString().substring(idx+1);
+                    logger.info("[Timing] StreamID: {} SequenceNr: {} Failed {}: {} Size: {}",
+                            streamId, sequenceNr, spoutName, System.currentTimeMillis(), 0);
+                }
+            }
         }
     }
 

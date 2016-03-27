@@ -35,7 +35,7 @@ public class DNNTopology {
         // True if Storm should timeout messages or not.
         conf.put(Config.TOPOLOGY_ENABLE_MESSAGE_TIMEOUTS, true);
         // The maximum amount of time given to the topology to fully process a message emitted by a spout (default = 30)
-        conf.put(Config.TOPOLOGY_MESSAGE_TIMEOUT_SECS, 10);
+        conf.put(Config.TOPOLOGY_MESSAGE_TIMEOUT_SECS, 25);
         // indicates if the spout must be fault tolerant
         conf.put(StormCVConfig.STORMCV_SPOUT_FAULTTOLERANT, true);
         // TTL (seconds) for all elements in all caches throughout the topology (avoids memory overload)
@@ -77,11 +77,11 @@ public class DNNTopology {
 
         // 'fat' bolts containing a SequentialFrameOperation will will emit a Frame object containing the detected features
         builder.setBolt("fat_features", new SingleInputBolt(
-                        new SequentialFrameOp(operations).outputFrame(true).retainImage(true)), 30)
+                        new SequentialFrameOp(operations).outputFrame(true).retainImage(true)), 56)
                 .shuffleGrouping("scale");
 
         // simple bolt that draws Features (i.e. locations of features) into the frame
-        builder.setBolt("drawer", new SingleInputBolt(new DrawFeaturesOp().drawMetadata(true)), 30)
+        builder.setBolt("drawer", new SingleInputBolt(new DrawFeaturesOp().drawMetadata(true)), 5)
                 .shuffleGrouping("fat_features");
 
         // add bolt that creates a webservice on port 8558 enabling users to view the result

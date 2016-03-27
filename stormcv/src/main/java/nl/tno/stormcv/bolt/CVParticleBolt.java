@@ -66,8 +66,8 @@ public abstract class CVParticleBolt extends BaseRichBolt {
             CVParticle cvt = deserialize(input);
 
             if (profiling) {
-                logger.info("[Timing] StreamID: {} SequenceNr: {} Entering {}: {}",
-                        cvt.getStreamId(), cvt.getSequenceNr(), boltName, beginExecute);
+                logger.info("[Timing] RequestID: {} StreamID: {} SequenceNr: {} Entering {}: {}",
+                        cvt.getRequestId(), cvt.getStreamId(), cvt.getSequenceNr(), boltName, beginExecute);
             }
 
             List<? extends CVParticle> results = execute(cvt);
@@ -87,8 +87,8 @@ public abstract class CVParticleBolt extends BaseRichBolt {
 
             if (profiling) {
                 endExecute = System.currentTimeMillis();
-                logger.info("[Timing] StreamID: {} SequenceNr: {} Leaving {}: {} Size: {}",
-                        cvt.getStreamId(), cvt.getSequenceNr(), boltName,
+                logger.info("[Timing] RequestID: {} StreamID: {} SequenceNr: {} Leaving {}: {} Size: {}",
+                        cvt.getRequestId(), cvt.getStreamId(), cvt.getSequenceNr(), boltName,
                         endExecute, totalEstimatedSize);
             }
         } catch (Exception e) {

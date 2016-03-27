@@ -113,8 +113,8 @@ public class CVParticleSpout implements IRichSpout {
             collector.emit(values, id);
 
             if (profiling) {
-                logger.info("[Timing] StreamID: {} SequenceNr: {} Leaving {}: {} Size: {}",
-                            particle.getStreamId(), particle.getSequenceNr(), spoutName,
+                logger.info("[Timing] RequestID: {} StreamID: {} SequenceNr: {} Leaving {}: {} Size: {}",
+                            particle.getRequestId(), particle.getStreamId(), particle.getSequenceNr(), spoutName,
                             System.currentTimeMillis(), particle.estimatedByteSize());
             }
         } catch (IOException e) {
@@ -151,21 +151,25 @@ public class CVParticleSpout implements IRichSpout {
     public void fail(Object msgId) {
         if (faultTolerant && tupleCache != null) {
             if (tupleCache.getIfPresent(msgId) != null) {
+                Values v = (Values) tupleCache.getIfPresent(msgId);
+                long requestId = (Long) v.get(0);
+                requestId++;
+                v.set(0, requestId);
                 if (profiling) {
                     int idx = msgId.toString().lastIndexOf('_');
                     String streamId = msgId.toString().substring(0, idx);
                     String sequenceNr = msgId.toString().substring(idx+1);
-                    logger.info("[Timing] StreamID: {} SequenceNr: {} Retry {}: {} Size: {}",
-                            streamId, sequenceNr, spoutName, System.currentTimeMillis(), 0);
+                    logger.info("[Timing] RequestID: {} StreamID: {} SequenceNr: {} Retry {}: {} Size: {}",
+                            requestId, streamId, sequenceNr, spoutName, System.currentTimeMillis(), 0);
                 }
-                collector.emit((Values) tupleCache.getIfPresent(msgId), msgId);
+                collector.emit(v, msgId);
             } else {
                 if (profiling) {
                     int idx = msgId.toString().lastIndexOf('_');
                     String streamId = msgId.toString().substring(0, idx);
                     String sequenceNr = msgId.toString().substring(idx+1);
-                    logger.info("[Timing] StreamID: {} SequenceNr: {} Failed {}: {} Size: {}",
-                            streamId, sequenceNr, spoutName, System.currentTimeMillis(), 0);
+                    logger.info("[Timing] RequestID: {} StreamID: {} SequenceNr: {} Failed {}: {} Size: {}",
+                            -1, streamId, sequenceNr, spoutName, System.currentTimeMillis(), 0);
                 }
             }
         }

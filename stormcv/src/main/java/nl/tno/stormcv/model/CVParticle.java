@@ -25,7 +25,7 @@ import java.util.Map;
 public abstract class CVParticle implements Comparable<CVParticle>{
 	
 	private Tuple tuple;
-	private long requestId = -1;
+	private long requestId = 0;
 	private String streamId;
 	private long sequenceNr;
 	private HashMap<String, Object> metadata = new HashMap<>();

@@ -77,7 +77,7 @@ public class DNNTopology {
 
         // 'fat' bolts containing a SequentialFrameOperation will will emit a Frame object containing the detected features
         builder.setBolt("fat_features", new SingleInputBolt(
-                        new SequentialFrameOp(operations).outputFrame(true).retainImage(true)), 56)
+                        new SequentialFrameOp(operations).outputFrame(true).retainImage(true)), 52)
                 .shuffleGrouping("scale");
 
         // simple bolt that draws Features (i.e. locations of features) into the frame

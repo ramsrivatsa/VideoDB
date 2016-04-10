@@ -1,12 +1,19 @@
 package nl.tno.stormcv.operation;
 
+import backtype.storm.task.TopologyContext;
+import nl.tno.stormcv.StormCVConfig;
+import nl.tno.stormcv.model.CVParticle;
+import nl.tno.stormcv.model.Feature;
+import nl.tno.stormcv.model.Frame;
+import nl.tno.stormcv.model.serializer.CVParticleSerializer;
+import nl.tno.stormcv.model.serializer.FeatureSerializer;
+import nl.tno.stormcv.model.serializer.FrameSerializer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-
-import backtype.storm.task.TopologyContext;
-import nl.tno.stormcv.model.*;
-import nl.tno.stormcv.model.serializer.*;
 
 /**
  *  An operation that executes a provided set of {@link ISingleInputOperation}&lt;{@link Frame}&gt; sequentially for each
@@ -26,11 +33,13 @@ import nl.tno.stormcv.model.serializer.*;
 @SuppressWarnings("rawtypes")
 public class SequentialFrameOp implements ISingleInputOperation<CVParticle>{
 
+    protected Logger logger = LoggerFactory.getLogger(SequentialFrameOp.class);
 	private static final long serialVersionUID = 2683627961856783279L;
 	private List<ISingleInputOperation> extractors;
 	private CVParticleSerializer serializer = new FeatureSerializer();
 	private boolean retainImage = false;
 	private boolean outputFrame = false;
+	private boolean profiling = false;
 	//private Logger logger = LoggerFactory.getLogger(getClass());
 
 	/**
@@ -72,6 +81,10 @@ public class SequentialFrameOp implements ISingleInputOperation<CVParticle>{
 	
 	@Override
 	public void prepare(Map stormConf, TopologyContext context) throws Exception {
+		if (stormConf.containsKey(StormCVConfig.STORMCV_LOG_PROFILING)) {
+			profiling = (Boolean) stormConf.get(StormCVConfig.STORMCV_LOG_PROFILING);
+		}
+
 		for(ISingleInputOperation extractor : extractors){
 			extractor.prepare(stormConf, context);
 		}
@@ -93,13 +106,29 @@ public class SequentialFrameOp implements ISingleInputOperation<CVParticle>{
 	@SuppressWarnings("unchecked")
 	@Override
 	public List<CVParticle> execute(CVParticle particle) throws Exception {
-		List<CVParticle> result = new ArrayList<CVParticle>();
+		List<CVParticle> result = new ArrayList<>();
 		if(!(particle instanceof Frame)) return result;
 		
 		Frame frame = (Frame)particle;
-		
+
+        long beginExecute;
+        long endExecute;
 		for(ISingleInputOperation extractor : extractors){
+            if (profiling) {
+                beginExecute = System.currentTimeMillis();
+                logger.info("[Timing] RequestID: {} StreamID: {} SequenceNr: {} OpBegin {}: {}",
+                        particle.getRequestId(), particle.getStreamId(), particle.getSequenceNr(),
+                        extractor.getClass().getName(), beginExecute);
+            }
+
 			List<CVParticle> output = extractor.execute(frame);
+
+            if (profiling) {
+                endExecute = System.currentTimeMillis();
+                logger.info("[Timing] RequestID: {} StreamID: {} SequenceNr: {} OpEnd {}: {}",
+                        particle.getRequestId(), particle.getStreamId(), particle.getSequenceNr(),
+                        extractor.getClass().getName(), endExecute);
+            }
 			
 			if(output.size() == 0) continue;
 			

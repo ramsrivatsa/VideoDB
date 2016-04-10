@@ -108,7 +108,10 @@ public class CVParticleSpout implements IRichSpout {
 
         if (particle != null) try {
             Values values = fetcher.getSerializer().toTuple(particle);
-            String id = particle.getStreamId() + "_" + particle.getSequenceNr();
+            String id = new MessageId(particle.getStreamId(),
+                                      particle.getSequenceNr(),
+                                      particle.getRequestId())
+                        .toString();
             if (faultTolerant && tupleCache != null) tupleCache.put(id, values);
             collector.emit(values, id);
 
@@ -145,31 +148,34 @@ public class CVParticleSpout implements IRichSpout {
         if (faultTolerant && tupleCache != null) {
             tupleCache.invalidate(msgId);
         }
+        MessageId mid = new MessageId(msgId);
+        logger.info("[Timing] RequestID: {} StreamID: {} SequenceNr: {} Ack {}: {} Size: {}",
+                mid.requestId, mid.streamId, mid.sequenceNr,
+                "ack", System.currentTimeMillis(), 0);
     }
 
     @Override
     public void fail(Object msgId) {
+        MessageId mid = new MessageId(msgId);
         if (faultTolerant && tupleCache != null) {
             if (tupleCache.getIfPresent(msgId) != null) {
                 Values v = (Values) tupleCache.getIfPresent(msgId);
                 long requestId = (Long) v.get(0);
                 requestId++;
                 v.set(0, requestId);
+                mid.requestId = requestId;
+
                 if (profiling) {
-                    int idx = msgId.toString().lastIndexOf('_');
-                    String streamId = msgId.toString().substring(0, idx);
-                    String sequenceNr = msgId.toString().substring(idx+1);
                     logger.info("[Timing] RequestID: {} StreamID: {} SequenceNr: {} Retry {}: {} Size: {}",
-                            requestId, streamId, sequenceNr, spoutName, System.currentTimeMillis(), 0);
+                            mid.requestId, mid.streamId, mid.sequenceNr,
+                            spoutName, System.currentTimeMillis(), 0);
                 }
-                collector.emit(v, msgId);
+                collector.emit(v, mid.toString());
             } else {
                 if (profiling) {
-                    int idx = msgId.toString().lastIndexOf('_');
-                    String streamId = msgId.toString().substring(0, idx);
-                    String sequenceNr = msgId.toString().substring(idx+1);
                     logger.info("[Timing] RequestID: {} StreamID: {} SequenceNr: {} Failed {}: {} Size: {}",
-                            -1, streamId, sequenceNr, spoutName, System.currentTimeMillis(), 0);
+                            mid.requestId, mid.streamId, mid.sequenceNr,
+                            spoutName, System.currentTimeMillis(), 0);
                 }
             }
         }
@@ -181,4 +187,31 @@ public class CVParticleSpout implements IRichSpout {
         return null;
     }
 
+    class MessageId {
+        public String streamId = "";
+        public long sequenceNr = 0;
+        public long requestId = 0;
+
+        public MessageId(String streamId, long sequenceNr, long requestId) {
+            this.streamId = streamId;
+            this.sequenceNr = sequenceNr;
+            this.requestId = requestId;
+        }
+
+        public MessageId(Object msgId) {
+            String[] list = msgId.toString().split("\\|");
+            if (list.length != 3) {
+                logger.error(String.format("Invalid message id: {}", msgId));
+                return;
+            }
+
+            streamId = list[0];
+            sequenceNr = Integer.valueOf(list[1]);
+            sequenceNr = Integer.valueOf(list[2]);
+        }
+
+        public String toString() {
+            return streamId + "|" + sequenceNr + "|" + requestId;
+        }
+    }
 }

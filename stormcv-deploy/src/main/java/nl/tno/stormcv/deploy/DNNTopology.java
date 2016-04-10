@@ -22,6 +22,14 @@ import java.util.List;
  */
 public class DNNTopology {
     public static void main(String[] args) {
+        int scaleHint = 1;
+        if (args.length == 1) {
+            try {
+                scaleHint = Integer.parseInt(args[0]);
+            } catch (NumberFormatException ex) {
+                // nothing
+            }
+        }
 
         // first some global (topology configuration)
         StormCVConfig conf = new StormCVConfig();
@@ -72,7 +80,7 @@ public class DNNTopology {
                         new FileFrameFetcher(files).frameSkip(frameSkip)),
                 1);
         // add bolt that scales frames down to 80% of the original size
-        builder.setBolt("scale", new SingleInputBolt(new ScaleImageOp(0.5f)), 1)
+        builder.setBolt("scale", new SingleInputBolt(new ScaleImageOp(0.5f)), scaleHint)
                 .shuffleGrouping("fetcher");
 
         // 'fat' bolts containing a SequentialFrameOperation will will emit a Frame object containing the detected features

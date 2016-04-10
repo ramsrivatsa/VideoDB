@@ -22,12 +22,52 @@ import java.util.List;
  */
 public class SplitDNNTopology {
     public static void main(String[] args) {
+        // process args
+        final String switchKeyword = "--";
         int scaleHint = 1;
-        if (args.length == 1) {
-            try {
-                scaleHint = Integer.parseInt(args[0]);
-            } catch (NumberFormatException ex) {
-                // nothing
+        int faceDetectHint = 17;
+        int dnnForwardHint = 18;
+        int dnnClassifyHint = 17;
+        int maxSpoutPending = 128;
+        int msgTimeout = 25;
+        int cacheTimeout = 30;
+        List<String> files = new ArrayList<>();
+        for (String arg : args) {
+            if (arg.startsWith(switchKeyword)) {
+                String[] kv = arg.substring(switchKeyword.length()).split("=");
+                if (kv.length != 2) continue;
+                int value;
+                try {
+                    value = Integer.parseInt(kv[1]);
+                } catch (NumberFormatException ex) {
+                    continue;
+                }
+                switch (kv[0]) {
+                    case "scale":
+                        scaleHint = value;
+                        break;
+                    case "face-detect":
+                        faceDetectHint = value;
+                        break;
+                    case "dnn-forward":
+                        dnnForwardHint = value;
+                        break;
+                    case "dnn-classify":
+                        dnnClassifyHint = value;
+                        break;
+                    case "max-spout-pending":
+                        maxSpoutPending = value;
+                        break;
+                    case "msg-timeout":
+                        msgTimeout = value;
+                        break;
+                    case "cache-timeout":
+                        cacheTimeout = value;
+                        break;
+                }
+            } else {
+                // Multiple files will be spread over the available spouts
+                files.add("file://" + arg);
             }
         }
 
@@ -37,17 +77,17 @@ public class SplitDNNTopology {
         // number of workers in the topology
         conf.setNumWorkers(4);
         // maximum un-acked/un-failed frames per spout (spout blocks if this number is reached)
-        conf.setMaxSpoutPending(128);
+        conf.setMaxSpoutPending(maxSpoutPending);
         // indicates frames will be encoded as JPG throughout the topology
         conf.put(StormCVConfig.STORMCV_FRAME_ENCODING, Frame.JPG_IMAGE);
         // True if Storm should timeout messages or not.
         conf.put(Config.TOPOLOGY_ENABLE_MESSAGE_TIMEOUTS, true);
         // The maximum amount of time given to the topology to fully process a message emitted by a spout (default = 30)
-        conf.put(Config.TOPOLOGY_MESSAGE_TIMEOUT_SECS, 25);
+        conf.put(Config.TOPOLOGY_MESSAGE_TIMEOUT_SECS, msgTimeout);
         // indicates if the spout must be fault tolerant
         conf.put(StormCVConfig.STORMCV_SPOUT_FAULTTOLERANT, true);
         // TTL (seconds) for all elements in all caches throughout the topology (avoids memory overload)
-        conf.put(StormCVConfig.STORMCV_CACHES_TIMEOUT_SEC, 30);
+        conf.put(StormCVConfig.STORMCV_CACHES_TIMEOUT_SEC, cacheTimeout);
 
         // Internal message buffers
         //conf.put(Config.TOPOLOGY_TRANSFER_BUFFER_SIZE,            32);
@@ -58,17 +98,10 @@ public class SplitDNNTopology {
         // Enable time profiling for spout and bolt
         conf.put(StormCVConfig.STORMCV_LOG_PROFILING, true);
 
-        // create a list with files to be processed, in this case just one.
-        // Multiple files will be spread over the available spouts
-        List<String> files = new ArrayList<>();
-        for (String path : args) {
-            files.add("file://" + path);
-        }
-
         // specify the list with SingleInputOperations to be executed sequentially by the 'fat' bolt
         List<ISingleInputOperation> operations = new ArrayList<>();
         operations.add(new HaarCascadeOp("face", "haarcascade_frontalface_default.xml").outputFrame(true));
-        operations.add(new DnnForwardOp("classprob", "/data/bvlc_googlenet.prototxt", "/data/bvlc_googlenet.caffemodel").outputFrame(true));
+        operations.add(new DnnForwardOp("dnnforward", "/data/bvlc_googlenet.prototxt", "/data/bvlc_googlenet.caffemodel").outputFrame(true));
         operations.add(new DnnClassifyOp("classprob", "/data/synset_words.txt").addMetadata(true).outputFrame(true));
         //operations.add(new FeatureExtractionOp("sift", FeatureDetector.SIFT, DescriptorExtractor.SIFT));
 
@@ -84,11 +117,11 @@ public class SplitDNNTopology {
                 .shuffleGrouping("fetcher");
 
         // 'actual' bolts emit a Frame object containing the detected features
-        builder.setBolt("face_detect", new SingleInputBolt(operations.get(0)), 17)
+        builder.setBolt("face_detect", new SingleInputBolt(operations.get(0)), faceDetectHint)
                 .shuffleGrouping("scale");
-        builder.setBolt("dnn_forward", new SingleInputBolt(operations.get(1)), 18)
+        builder.setBolt("dnn_forward", new SingleInputBolt(operations.get(1)), dnnForwardHint)
                 .shuffleGrouping("face_detect");
-        builder.setBolt("dnn_classify", new SingleInputBolt(operations.get(2)), 17)
+        builder.setBolt("dnn_classify", new SingleInputBolt(operations.get(2)), dnnClassifyHint)
                 .shuffleGrouping("dnn_forward");
 
         // simple bolt that draws Features (i.e. locations of features) into the frame

@@ -2,7 +2,12 @@ package nl.tno.stormcv.deploy;
 
 import backtype.storm.Config;
 import backtype.storm.StormSubmitter;
+import backtype.storm.topology.BasicOutputCollector;
+import backtype.storm.topology.OutputFieldsDeclarer;
 import backtype.storm.topology.TopologyBuilder;
+import backtype.storm.topology.base.BaseBasicBolt;
+import backtype.storm.tuple.Fields;
+import backtype.storm.tuple.Tuple;
 import nl.tno.stormcv.StormCVConfig;
 import nl.tno.stormcv.fetcher.FileFrameFetcher;
 import nl.tno.stormcv.model.Frame;
@@ -94,6 +99,16 @@ public class SpoutOnly {
         builder.setSpout("fetcher", new CVParticleSpout(
                         new FileFrameFetcher(files).frameSkip(frameSkip)),
                 1);
+        builder.setBolt("noop", new BaseBasicBolt() {
+            @Override
+            public void execute(Tuple tuple, BasicOutputCollector basicOutputCollector) {
+            }
+
+            @Override
+            public void declareOutputFields(OutputFieldsDeclarer outputFieldsDeclarer) {
+                outputFieldsDeclarer.declare(new Fields());
+            }
+        });
 
         try {
 

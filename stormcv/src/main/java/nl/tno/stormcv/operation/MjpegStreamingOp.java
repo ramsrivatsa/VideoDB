@@ -119,7 +119,7 @@ public class MjpegStreamingOp extends Application implements IBatchOperation<Fra
 		//logger.info("Inserting Images into stream start : " + " System Time - " + System.currentTimeMillis());
 		//logger.info("Inserting Images into stream start : " + " Input - " + input + " System Time - " + System.currentTimeMillis());
 		for ( int ele = 0; ele < input.size(); ele++) {
-			logger.info("MjpegStreamingOp start : " +  " Sequence Nr - " + input.get(ele).getSequenceNr() + " System Time - " + System.currentTimeMillis());
+			logger.info("MjpegStreamingOp start : " +  " Sequence Nr - " + input.get(ele).getSequenceNr() + " Stream Id - " + input.get(ele).getStreamId() + " System Time - " + System.currentTimeMillis());
 		}
 		List<Frame> result = new ArrayList<Frame>();
 		for(int i=0; i<input.size(); i++){
@@ -136,7 +136,7 @@ public class MjpegStreamingOp extends Application implements IBatchOperation<Fra
 			prevAdd = System.currentTimeMillis();
 			*/
 			//logger.info("Inserting Images into stream end : " + " Sequence Nr - " + frame.getSequenceNr() + " Input - " + input + " System Time - " + System.currentTimeMillis());
-			logger.info("MjpegStreamingOp end : " + " Sequence Nr - " + frame.getSequenceNr() + " System Time - " + System.currentTimeMillis());
+			logger.info("MjpegStreamingOp end : " + " Sequence Nr - " + frame.getSequenceNr() + " Stream Id - " + frame.getStreamId() + " System Time - " + System.currentTimeMillis());
 			break;
 		}
 		return result;

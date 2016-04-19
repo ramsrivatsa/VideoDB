@@ -1,5 +1,6 @@
 # when adding more machines, add ssh free login
-MACHINES=( 'clarity25' 'clarity26'  )
+#MACHINES=( 'clarity25' 'clarity26'  )
+MACHINES=( 'clarity25'  )
 
 GC_LOG_DIR=/home/ramsri/storm_gc_log
 STORM_LOG_DIR=/usr/local/storm/logs

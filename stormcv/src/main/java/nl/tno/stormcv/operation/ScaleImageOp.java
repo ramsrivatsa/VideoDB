@@ -54,7 +54,7 @@ public class ScaleImageOp implements ISingleInputOperation<Frame>{
 	@Override
 	public List<Frame> execute(CVParticle particle) throws Exception {
 		//logger.info(" Scale Op" + System.nanoTime());
-		logger.info("Scale Op start : " + " Sequence Nr - " + particle.getSequenceNr() + " System Time - " + System.currentTimeMillis());
+		logger.info("Scale Op start : " + " Sequence Nr - " + particle.getSequenceNr() + " Stream Id - " + particle.getStreamId() + " System Time - " + System.currentTimeMillis());
 		List<Frame> result = new ArrayList<Frame>();
 		if(!(particle instanceof Frame)) return result;
 		
@@ -65,7 +65,7 @@ public class ScaleImageOp implements ISingleInputOperation<Frame>{
 		if(factor != 1.0) image = ScaleImageOp.scale(image, factor);
 		frame.setImage(image);
 		result.add(frame);
-		logger.info("Scale Op end : " + " Sequence Nr - " + particle.getSequenceNr() + " System Time - " + System.currentTimeMillis());
+		logger.info("Scale Op end : " + " Sequence Nr - " + particle.getSequenceNr() + " Stream Id - " + particle.getStreamId() + " System Time - " + System.currentTimeMillis());
 		return result;
 	}
 	

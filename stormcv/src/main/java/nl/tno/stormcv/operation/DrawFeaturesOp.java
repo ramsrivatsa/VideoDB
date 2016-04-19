@@ -78,7 +78,7 @@ public class DrawFeaturesOp implements ISingleInputOperation<Frame> {
 		if(!(particle instanceof Frame)) return result;
 		Frame sf = (Frame)particle;
 		result.add(sf);
-		logger.info("Draw Features Op start : " + " Sequence Nr - " + sf.getSequenceNr() + " System Time - " + System.currentTimeMillis());
+		logger.info("Draw Features Op start : " + " Sequence Nr - " + sf.getSequenceNr() + " Stream Id - " + sf.getStreamId() + " System Time - " + System.currentTimeMillis());
 		//logger.info("Draw Features Op : " + sf.getSequenceNr());
 		BufferedImage image = sf.getImage();
 		
@@ -127,7 +127,7 @@ public class DrawFeaturesOp implements ISingleInputOperation<Frame> {
 				}
 			}
 		}
-		logger.info("Draw Features Op end : " + " Sequence Nr - " + sf.getSequenceNr() + " System Time - " + System.currentTimeMillis());
+		logger.info("Draw Features Op end : " + " Sequence Nr - " + sf.getSequenceNr() + " Stream Id - " + sf.getSequenceNr() + " System Time - " + System.currentTimeMillis());
 		return result;
 	}
 

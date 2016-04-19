@@ -207,7 +207,7 @@ public class CVParticleSpout implements IRichSpout {
 
             streamId = list[0];
             sequenceNr = Integer.valueOf(list[1]);
-            sequenceNr = Integer.valueOf(list[2]);
+            requestId = Integer.valueOf(list[2]);
         }
 
         public String toString() {

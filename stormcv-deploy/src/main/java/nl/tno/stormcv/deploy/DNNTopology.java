@@ -1,10 +1,9 @@
 package nl.tno.stormcv.deploy;
 
 import backtype.storm.Config;
-import backtype.storm.LocalCluster;
+import backtype.storm.StormSubmitter;
 import backtype.storm.topology.TopologyBuilder;
 import backtype.storm.tuple.Fields;
-import backtype.storm.utils.Utils;
 import nl.tno.stormcv.StormCVConfig;
 import nl.tno.stormcv.batcher.SlidingWindowBatcher;
 import nl.tno.stormcv.bolt.BatchInputBolt;
@@ -136,13 +135,13 @@ public class DNNTopology {
         try {
 
             // run in local mode
-            LocalCluster cluster = new LocalCluster();
-            cluster.submitTopology("dnn_classification", conf, builder.createTopology());
-            Utils.sleep(120 * 1000); // run for two minutes and then kill the topology
-            cluster.shutdown();
+            //LocalCluster cluster = new LocalCluster();
+            //cluster.submitTopology("dnn_classification", conf, builder.createTopology());
+            //Utils.sleep(120 * 1000); // run for two minutes and then kill the topology
+            //cluster.shutdown();
 
             // run on a storm cluster
-            //StormSubmitter.submitTopology("dnn_classification", conf, builder.createTopology());
+            StormSubmitter.submitTopology("dnn_classification", conf, builder.createTopology());
         } catch (Exception e) {
             e.printStackTrace();
         }

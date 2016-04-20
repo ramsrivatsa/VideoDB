@@ -1,27 +1,26 @@
 package nl.tno.stormcv.fetcher;
 
+import backtype.storm.task.TopologyContext;
+import nl.tno.stormcv.StormCVConfig;
+import nl.tno.stormcv.model.CVParticle;
+import nl.tno.stormcv.model.Frame;
+import nl.tno.stormcv.model.GroupOfFrames;
+import nl.tno.stormcv.model.serializer.CVParticleSerializer;
+import nl.tno.stormcv.model.serializer.FrameSerializer;
+import nl.tno.stormcv.model.serializer.GroupOfFramesSerializer;
+import nl.tno.stormcv.operation.GroupOfFramesOp;
+import nl.tno.stormcv.util.StreamReader;
+import nl.tno.stormcv.util.connector.ConnectorHolder;
+import nl.tno.stormcv.util.connector.FileConnector;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.LinkedBlockingQueue;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import backtype.storm.task.TopologyContext;
-import nl.tno.stormcv.StormCVConfig;
-import nl.tno.stormcv.model.GroupOfFrames;
-import nl.tno.stormcv.model.Frame;
-import nl.tno.stormcv.model.CVParticle;
-import nl.tno.stormcv.model.serializer.GroupOfFramesSerializer;
-import nl.tno.stormcv.model.serializer.FrameSerializer;
-import nl.tno.stormcv.model.serializer.CVParticleSerializer;
-import nl.tno.stormcv.operation.GroupOfFramesOp;
-import nl.tno.stormcv.util.StreamReader;
-import nl.tno.stormcv.util.connector.ConnectorHolder;
-import nl.tno.stormcv.util.connector.FileConnector;
 
 /**
  * FileFrameFetcher is responsible for extracting frames from video files. These files can reside on any location as long
@@ -59,6 +58,7 @@ public class FileFrameFetcher implements IFetcher<CVParticle> {
 	private StreamReader streamReader;
 	private LinkedBlockingQueue<Frame> frameQueue = new LinkedBlockingQueue<Frame>(100);
 	private int sleepTime = 0;
+	private boolean autoSleep = false;
 	private ConnectorHolder connectorHolder;
 	private boolean useSingleId = false;
 	private int batchSize = 1;
@@ -102,6 +102,16 @@ public class FileFrameFetcher implements IFetcher<CVParticle> {
 		this.sleepTime = ms;
 		return this;
 	}
+
+    /**
+     * Whether enable auto queue size based sleep
+     * @param auto
+     * @return
+     */
+    public FileFrameFetcher autoSleep(boolean auto) {
+        this.autoSleep = auto;
+        return this;
+    }
 	/**
 	 * Specify if all files read by this fetcher must get the same streamId (default is false). If set to true all files read will get
 	 * the same streamId and frame numbering is continued (as if the files form a continuous stream)
@@ -169,7 +179,7 @@ public class FileFrameFetcher implements IFetcher<CVParticle> {
 		DownloadThread dt = new DownloadThread(locations, videoList, connectorHolder);
 		new Thread(dt).start();
 		
-		streamReader = new StreamReader(videoList, imageType, frameSkip, groupSize, sleepTime, useSingleId,  frameQueue);
+		streamReader = new StreamReader(videoList, imageType, frameSkip, groupSize, sleepTime, useSingleId, autoSleep,  frameQueue);
 		new Thread(streamReader).start();
 	}
 	

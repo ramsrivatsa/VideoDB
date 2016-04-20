@@ -1,9 +1,10 @@
 package nl.tno.stormcv.deploy;
 
 import backtype.storm.Config;
-import backtype.storm.StormSubmitter;
+import backtype.storm.LocalCluster;
 import backtype.storm.topology.TopologyBuilder;
 import backtype.storm.tuple.Fields;
+import backtype.storm.utils.Utils;
 import nl.tno.stormcv.StormCVConfig;
 import nl.tno.stormcv.batcher.SlidingWindowBatcher;
 import nl.tno.stormcv.bolt.BatchInputBolt;
@@ -26,9 +27,11 @@ public class DNNTopology {
         final String switchKeyword = "--";
         int scaleHint = 1;
         int fatfeatureHint = 52;
+        int drawerHint = 5;
         int maxSpoutPending = 128;
         int msgTimeout = 25;
         int cacheTimeout = 30;
+        boolean autoSleep = false;
         List<String> files = new ArrayList<>();
         for (String arg : args) {
             if (arg.startsWith(switchKeyword)) {
@@ -41,6 +44,9 @@ public class DNNTopology {
                     continue;
                 }
                 switch (kv[0]) {
+                    case "drawer":
+                        drawerHint = value;
+                        break;
                     case "scale":
                         scaleHint = value;
                         break;
@@ -55,6 +61,9 @@ public class DNNTopology {
                         break;
                     case "cache-timeout":
                         cacheTimeout = value;
+                        break;
+                    case "auto-sleep":
+                        autoSleep = value != 0;
                         break;
                 }
             } else {
@@ -102,7 +111,7 @@ public class DNNTopology {
         // (spout -> scale -> fat[face detection & dnn] -> drawer -> streamer)
         TopologyBuilder builder = new TopologyBuilder();
         builder.setSpout("fetcher", new CVParticleSpout(
-                        new FileFrameFetcher(files).frameSkip(frameSkip)),
+                        new FileFrameFetcher(files).frameSkip(frameSkip).autoSleep(autoSleep)),
                 1);
         // add bolt that scales frames down to 80% of the original size
         builder.setBolt("scale", new SingleInputBolt(new ScaleImageOp(0.5f)), scaleHint)
@@ -114,7 +123,7 @@ public class DNNTopology {
                 .shuffleGrouping("scale");
 
         // simple bolt that draws Features (i.e. locations of features) into the frame
-        builder.setBolt("drawer", new SingleInputBolt(new DrawFeaturesOp().drawMetadata(true)), 5)
+        builder.setBolt("drawer", new SingleInputBolt(new DrawFeaturesOp().drawMetadata(true)), drawerHint)
                 .shuffleGrouping("fat_features");
 
         // add bolt that creates a webservice on port 8558 enabling users to view the result
@@ -127,13 +136,13 @@ public class DNNTopology {
         try {
 
             // run in local mode
-            //LocalCluster cluster = new LocalCluster();
-            //cluster.submitTopology("dnn_classification", conf, builder.createTopology());
-            //Utils.sleep(120 * 1000); // run for two minutes and then kill the topology
-            //cluster.shutdown();
+            LocalCluster cluster = new LocalCluster();
+            cluster.submitTopology("dnn_classification", conf, builder.createTopology());
+            Utils.sleep(120 * 1000); // run for two minutes and then kill the topology
+            cluster.shutdown();
 
             // run on a storm cluster
-            StormSubmitter.submitTopology("dnn_classification", conf, builder.createTopology());
+            //StormSubmitter.submitTopology("dnn_classification", conf, builder.createTopology());
         } catch (Exception e) {
             e.printStackTrace();
         }

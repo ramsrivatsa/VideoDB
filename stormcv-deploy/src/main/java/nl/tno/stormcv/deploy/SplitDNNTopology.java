@@ -28,9 +28,11 @@ public class SplitDNNTopology {
         int faceDetectHint = 17;
         int dnnForwardHint = 18;
         int dnnClassifyHint = 17;
+        int drawerHint = 5;
         int maxSpoutPending = 128;
         int msgTimeout = 25;
         int cacheTimeout = 30;
+        boolean autoSleep = false;
         List<String> files = new ArrayList<>();
         for (String arg : args) {
             if (arg.startsWith(switchKeyword)) {
@@ -43,6 +45,9 @@ public class SplitDNNTopology {
                     continue;
                 }
                 switch (kv[0]) {
+                    case "drawer":
+                        drawerHint = value;
+                        break;
                     case "scale":
                         scaleHint = value;
                         break;
@@ -63,6 +68,9 @@ public class SplitDNNTopology {
                         break;
                     case "cache-timeout":
                         cacheTimeout = value;
+                        break;
+                    case "auto-sleep":
+                        autoSleep = value != 0;
                         break;
                 }
             } else {
@@ -110,7 +118,7 @@ public class SplitDNNTopology {
         // (spout -> scale -> fat[face detection & dnn] -> drawer -> streamer)
         TopologyBuilder builder = new TopologyBuilder();
         builder.setSpout("fetcher", new CVParticleSpout(
-                        new FileFrameFetcher(files).frameSkip(frameSkip)),
+                        new FileFrameFetcher(files).frameSkip(frameSkip).autoSleep(autoSleep)),
                 1);
         // add bolt that scales frames down to 80% of the original size
         builder.setBolt("scale", new SingleInputBolt(new ScaleImageOp(0.5f)), scaleHint)
@@ -125,7 +133,7 @@ public class SplitDNNTopology {
                 .shuffleGrouping("dnn_forward");
 
         // simple bolt that draws Features (i.e. locations of features) into the frame
-        builder.setBolt("drawer", new SingleInputBolt(new DrawFeaturesOp().drawMetadata(true)), 5)
+        builder.setBolt("drawer", new SingleInputBolt(new DrawFeaturesOp().drawMetadata(true)), drawerHint)
                 .shuffleGrouping("dnn_classify");
 
         // add bolt that creates a webservice on port 8558 enabling users to view the result

@@ -39,6 +39,7 @@ public class StreamReader extends MediaListenerAdapter implements Runnable {
     private LinkedBlockingQueue<Frame> frameQueue; // queue used to store frames
     private long lastRead = -1; // used to determine if the EOF was reached if Xuggler does not detect it
     private int sleepTime;
+    private boolean queueBasedSleep;
     private boolean useSingleID = false;
     private String tmpDir;
     private int frameMs = -1;
@@ -47,12 +48,13 @@ public class StreamReader extends MediaListenerAdapter implements Runnable {
     private LinkedBlockingQueue<String> videoList = null;
     private String imageType = Frame.JPG_IMAGE;
 
-    public StreamReader(LinkedBlockingQueue<String> videoList, String imageType, int frameSkip, int groupSize, int sleepTime, boolean uniqueIdPerFile, LinkedBlockingQueue<Frame> frameQueue) {
+    public StreamReader(LinkedBlockingQueue<String> videoList, String imageType, int frameSkip, int groupSize, int sleepTime, boolean uniqueIdPerFile, boolean queueBasedSleep, LinkedBlockingQueue<Frame> frameQueue) {
         this.videoList = videoList;
         this.imageType = imageType;
         this.frameSkip = Math.max(1, frameSkip);
         this.groupSize = Math.max(1, groupSize);
         this.sleepTime = sleepTime;
+        this.queueBasedSleep = queueBasedSleep;
         this.frameQueue = frameQueue;
         this.useSingleID = uniqueIdPerFile;
         this.streamId = "" + this.hashCode(); // give a default streamId
@@ -63,12 +65,13 @@ public class StreamReader extends MediaListenerAdapter implements Runnable {
         }
     }
 
-    public StreamReader(String streamId, String streamLocation, String imageType, int frameSkip, int groupSize, int sleepTime, LinkedBlockingQueue<Frame> frameQueue) {
+    public StreamReader(String streamId, String streamLocation, String imageType, int frameSkip, int groupSize, int sleepTime, boolean queueBasedSleep, LinkedBlockingQueue<Frame> frameQueue) {
         this.streamLocation = streamLocation;
         this.imageType = imageType;
         this.frameSkip = Math.max(1, frameSkip);
         this.groupSize = Math.max(1, groupSize);
         this.sleepTime = sleepTime;
+        this.queueBasedSleep = queueBasedSleep;
         this.frameQueue = frameQueue;
         this.streamId = streamId;
         lastRead = System.currentTimeMillis() + 10000;
@@ -174,7 +177,7 @@ public class StreamReader extends MediaListenerAdapter implements Runnable {
             // enforced throttling
             if (sleepTime > 0) Utils.sleep(sleepTime);
             // queue based throttling
-            if (frameQueue.size() > 20) {
+            if (frameQueue.size() > 20 && queueBasedSleep) {
                 logger.info("Sleeping : " + " System Time - " + System.currentTimeMillis());
                 Utils.sleep(frameQueue.size());
             }

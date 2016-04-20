@@ -30,6 +30,7 @@ public class SpoutOnly {
         int maxSpoutPending = 128;
         int msgTimeout = 25;
         int cacheTimeout = 30;
+        boolean autoSleep = false;
         List<String> files = new ArrayList<>();
         for (String arg : args) {
             if (arg.startsWith(switchKeyword)) {
@@ -50,6 +51,9 @@ public class SpoutOnly {
                         break;
                     case "cache-timeout":
                         cacheTimeout = value;
+                        break;
+                    case "auto-sleep":
+                        autoSleep = value != 0;
                         break;
                 }
             } else {
@@ -97,7 +101,7 @@ public class SpoutOnly {
         // (spout -> scale -> fat[face detection & dnn] -> drawer -> streamer)
         TopologyBuilder builder = new TopologyBuilder();
         builder.setSpout("fetcher", new CVParticleSpout(
-                        new FileFrameFetcher(files).frameSkip(frameSkip)),
+                        new FileFrameFetcher(files).frameSkip(frameSkip).autoSleep(autoSleep)),
                 1);
         builder.setBolt("noop", new BaseBasicBolt() {
             @Override

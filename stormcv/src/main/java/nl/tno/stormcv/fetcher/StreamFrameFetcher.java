@@ -1,21 +1,21 @@
 package nl.tno.stormcv.fetcher;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.LinkedBlockingQueue;
-
 import backtype.storm.task.TopologyContext;
 import nl.tno.stormcv.StormCVConfig;
 import nl.tno.stormcv.model.CVParticle;
 import nl.tno.stormcv.model.Frame;
 import nl.tno.stormcv.model.GroupOfFrames;
-import nl.tno.stormcv.model.serializer.FrameSerializer;
 import nl.tno.stormcv.model.serializer.CVParticleSerializer;
+import nl.tno.stormcv.model.serializer.FrameSerializer;
 import nl.tno.stormcv.model.serializer.GroupOfFramesSerializer;
 import nl.tno.stormcv.operation.GroupOfFramesOp;
 import nl.tno.stormcv.util.StreamReader;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.LinkedBlockingQueue;
 
 /**
  * A {@link IFetcher} implementation that reads video streams (either live or not). The StreamFrameFetcher is initialized
@@ -47,6 +47,7 @@ public class StreamFrameFetcher implements IFetcher<CVParticle>{
 	protected LinkedBlockingQueue<Frame> frameQueue = new LinkedBlockingQueue<Frame>(20);
 	protected Map<String, StreamReader> streamReaders;
 	private int sleepTime = 0;
+	private boolean autoSleep = false;
 	private String imageType;
 	private int batchSize = 1;
 	private List<Frame> frameGroup;
@@ -75,6 +76,11 @@ public class StreamFrameFetcher implements IFetcher<CVParticle>{
 		this.sleepTime = ms;
 		return this;
 	}
+
+    public StreamFrameFetcher autoSleep(boolean auto) {
+        this.autoSleep = auto;
+        return this;
+    }
 	
 	/**
 	 * Specifies the number of frames to be send at once. If set to 1 (default value) this Fetcher will emit
@@ -125,7 +131,7 @@ public class StreamFrameFetcher implements IFetcher<CVParticle>{
 			if(location.contains("/")){
 				streamId = id+"_"+location.substring(location.lastIndexOf("/")+1) + "_" + streamId;
 			}
-			StreamReader reader = new StreamReader(streamId, location, imageType, frameSkip, groupSize, sleepTime, frameQueue);
+			StreamReader reader = new StreamReader(streamId, location, imageType, frameSkip, groupSize, sleepTime, autoSleep, frameQueue);
 			streamReaders.put(location, reader);
 			new Thread(reader).start();
 		}

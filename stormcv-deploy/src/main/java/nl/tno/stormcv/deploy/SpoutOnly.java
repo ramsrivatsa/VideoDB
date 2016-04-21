@@ -31,6 +31,7 @@ public class SpoutOnly {
         int msgTimeout = 25;
         int cacheTimeout = 30;
         boolean autoSleep = false;
+        int frameSkip = 1;
         List<String> files = new ArrayList<>();
         for (String arg : args) {
             if (arg.startsWith(switchKeyword)) {
@@ -43,6 +44,9 @@ public class SpoutOnly {
                     continue;
                 }
                 switch (kv[0]) {
+                    case "frame-skip":
+                        frameSkip = value;
+                        break;
                     case "max-spout-pending":
                         maxSpoutPending = value;
                         break;
@@ -96,7 +100,6 @@ public class SpoutOnly {
         operations.add(new DnnClassifyOp("classprob", "/data/synset_words.txt").addMetadata(true).outputFrame(true));
         //operations.add(new FeatureExtractionOp("sift", FeatureDetector.SIFT, DescriptorExtractor.SIFT));
 
-        int frameSkip = 1;
         // now create the topology itself
         // (spout -> scale -> fat[face detection & dnn] -> drawer -> streamer)
         TopologyBuilder builder = new TopologyBuilder();

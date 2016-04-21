@@ -32,6 +32,7 @@ public class SplitDNNTopology {
         int maxSpoutPending = 128;
         int msgTimeout = 25;
         int cacheTimeout = 30;
+        int frameSkip = 1;
         boolean autoSleep = false;
         List<String> files = new ArrayList<>();
         for (String arg : args) {
@@ -45,6 +46,9 @@ public class SplitDNNTopology {
                     continue;
                 }
                 switch (kv[0]) {
+                    case "frame-skip":
+                        frameSkip = value;
+                        break;
                     case "drawer":
                         drawerHint = value;
                         break;
@@ -109,11 +113,12 @@ public class SplitDNNTopology {
         // specify the list with SingleInputOperations to be executed sequentially by the 'fat' bolt
         List<ISingleInputOperation> operations = new ArrayList<>();
         operations.add(new HaarCascadeOp("face", "haarcascade_frontalface_default.xml").outputFrame(true));
-        operations.add(new DnnForwardOp("dnnforward", "/data/bvlc_googlenet.prototxt", "/data/bvlc_googlenet.caffemodel").outputFrame(true));
-        operations.add(new DnnClassifyOp("classprob", "/data/synset_words.txt").addMetadata(true).outputFrame(true));
+        operations.add(new DnnForwardOp("dnnforward", "/data/bvlc_googlenet.prototxt",
+                                        "/data/bvlc_googlenet.caffemodel").outputFrame(true));
+        operations.add(new DnnClassifyOp("classprob", "/data/synset_words.txt")
+                       .addMetadata(true).outputFrame(true));
         //operations.add(new FeatureExtractionOp("sift", FeatureDetector.SIFT, DescriptorExtractor.SIFT));
 
-        int frameSkip = 1;
         // now create the topology itself
         // (spout -> scale -> fat[face detection & dnn] -> drawer -> streamer)
         TopologyBuilder builder = new TopologyBuilder();

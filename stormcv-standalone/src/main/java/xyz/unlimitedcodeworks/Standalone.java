@@ -39,7 +39,7 @@ public class Standalone {
     public static void main(String[] args) {
         // spout
         List<String> files = new ArrayList<>();
-        files.add(args[0]);
+        files.add("file://" + args[0]);
         IFetcher<CVParticle> fetcher = new FileFrameFetcher(files).autoSleep(false);
 
         // scale

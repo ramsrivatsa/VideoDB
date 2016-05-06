@@ -149,17 +149,23 @@ public class FileFrameFetcher implements IFetcher<CVParticle> {
 		for(String dir : original){
 			locations.addAll(expand(dir));
 		}
-		
-		int nrTasks = context.getComponentTasks(context.getThisComponentId()).size();
-		
-		// change the list based on the number of tasks working on it
-		List<String> filesToFetch = new ArrayList<String>();
-		int i = context.getThisTaskIndex();
-		while(i < locations.size()){
-			filesToFetch.add(locations.get(i));
-			i += nrTasks;
-		}
-		this.locations = filesToFetch;
+
+        boolean standalone = false;
+        if (conf.containsKey(StormCVConfig.STORMCV_STANDALONE)) {
+            standalone = (Boolean) conf.get(StormCVConfig.STORMCV_STANDALONE);
+        }
+        if (!standalone) {
+            int nrTasks = context.getComponentTasks(context.getThisComponentId()).size();
+
+            // change the list based on the number of tasks working on it
+            List<String> filesToFetch = new ArrayList<String>();
+            int i = context.getThisTaskIndex();
+            while(i < locations.size()){
+                filesToFetch.add(locations.get(i));
+                i += nrTasks;
+            }
+            this.locations = filesToFetch;
+        }
 	}
 	
 	@SuppressWarnings({ "unchecked", "rawtypes" })

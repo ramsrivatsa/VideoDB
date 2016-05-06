@@ -67,8 +67,12 @@ public class StormCVConfig extends Config{
      * <b>Boolean (default = false)</b> configuration parameter setting whether enable logging output for profiling
      */
 	public static final String STORMCV_LOG_PROFILING = "stormcv.log.profiling";
-	
-	
+
+	/**
+	 * <b>Boolean (default = false)</b> configuration parameter setting whether we are running outside of storm, thus context is not available in prepare/open
+	 */
+	public static final String STORMCV_STANDALONE = "stormcv.debug.standalone";
+
 	/**
 	 * Creates a specific Configuration for StormCV.
 	 * <ul>
@@ -85,7 +89,8 @@ public class StormCVConfig extends Config{
 		put(Config.TOPOLOGY_TRANSFER_BUFFER_SIZE, 2); // sets the size of the output queue for each worker.
 		put(STORMCV_FRAME_ENCODING, Frame.JPG_IMAGE); // sets the encoding of frames which determines both serialization speed and tuple size
         put(STORMCV_LOG_PROFILING, false);
-		
+		put(STORMCV_STANDALONE, false);
+
 		// register the basic set Kryo serializers
 		registerSerialization(VideoChunk.class, VideoChunkSerializer.class);
 		registerSerialization(GroupOfFrames.class, GroupOfFramesSerializer.class);

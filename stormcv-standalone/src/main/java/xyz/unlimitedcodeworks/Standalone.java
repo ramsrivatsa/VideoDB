@@ -68,6 +68,7 @@ public class Standalone {
             fat_feature.prepare(stormConf, null);
         } catch (Exception ex) {
             ex.printStackTrace();
+            return;
         }
 
 

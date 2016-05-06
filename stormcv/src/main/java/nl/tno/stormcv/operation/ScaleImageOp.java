@@ -54,11 +54,17 @@ public class ScaleImageOp implements ISingleInputOperation<Frame>{
 	public List<Frame> execute(CVParticle particle) throws Exception {
 		//logger.info(" Scale Op" + System.nanoTime());
 		List<Frame> result = new ArrayList<Frame>();
-		if(!(particle instanceof Frame)) return result;
+		if(!(particle instanceof Frame)) {
+            logger.error("particle not instance of Frame");
+			return result;
+		}
 		
 		Frame frame = (Frame) particle;
 		BufferedImage image = frame.getImage();
-		if(image == null) return result;
+		if(image == null) {
+            logger.error("frame doesn't contains an image");
+            return result;
+        }
 		
 		if(factor != 1.0) image = ScaleImageOp.scale(image, factor);
 		frame.setImage(image);

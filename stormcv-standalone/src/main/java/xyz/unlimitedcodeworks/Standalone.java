@@ -14,14 +14,14 @@ import java.util.List;
  * Created by Aetf (aetf at unlimitedcodeworks dot xyz) on 16-5-5.
  */
 public class Standalone {
-    public static List<CVParticle> bench(ISingleInputOperation stage, List<CVParticle> input) {
-        List<CVParticle> output = new ArrayList<>();
+    public static List<Frame> bench(ISingleInputOperation stage, List<Frame> input) {
+        List<Frame> output = new ArrayList<>();
 
         long start = 0, end = 0;
         try {
             start = System.currentTimeMillis();
-            for (CVParticle frame : input) {
-                output.add((CVParticle) stage.execute(frame).get(0));
+            for (Frame frame : input) {
+                output.add((Frame) stage.execute(frame).get(0));
             }
             end = System.currentTimeMillis();
         } catch (Exception ex) {
@@ -73,15 +73,15 @@ public class Standalone {
 
 
         // retrive all frames first
-        List<CVParticle> frames = new ArrayList<>();
+        List<Frame> frames = new ArrayList<>();
         fetcher.activate();
         while (frames.size() <= 1500) {
-            frames.add(fetcher.fetchData());
+            frames.add((Frame) fetcher.fetchData());
         }
         fetcher.deactivate();
 
         // run through all stages
-        List<CVParticle> results;
+        List<Frame> results;
 
         System.out.println("Begin scale");
         results = bench(scale, frames);

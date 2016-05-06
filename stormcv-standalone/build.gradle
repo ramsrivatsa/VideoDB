@@ -1,0 +1,24 @@
+plugins {
+    id 'java'
+    id 'com.github.johnrengelman.shadow' version '1.2.3' // for build shadow jar
+}
+group 'xyz.unlimitedcodeworks'
+version '1.0-SNAPSHOT'
+
+sourceCompatibility = 1.7
+targetCompatibility = 1.7
+
+wrapper.gradleVersion = 2.11
+
+repositories {
+    jcenter()
+    mavenLocal()
+}
+
+dependencies {
+    compile group: 'org.apache.storm', name: 'storm-core', version:'0.10.0'
+    compile group: 'nl.tno', name: 'stormcv', version: '0.8.2-SNAPSHOT'
+    compile group: 'org.opencv', name: 'opencv', version:'3.1.0'
+
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+}

@@ -80,6 +80,7 @@ public class Standalone {
             Frame frame = (Frame) fetcher.fetchData();
             if (frame != null) {
                 frames.add(frame);
+                System.out.println("Added " + frames.size());
             } else {
                 Utils.sleep(10);
             }

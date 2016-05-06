@@ -56,6 +56,7 @@ public class ScaleImageOp implements ISingleInputOperation<Frame>{
 		List<Frame> result = new ArrayList<Frame>();
 		if(!(particle instanceof Frame)) {
             logger.error("particle not instance of Frame");
+            logger.error("It is {}", particle.getClass().getName());
 			return result;
 		}
 		

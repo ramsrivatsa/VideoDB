@@ -21,7 +21,7 @@ public class Standalone {
         try {
             start = System.currentTimeMillis();
             for (CVParticle frame : input) {
-                output.addAll(stage.execute(frame));
+                output.add((CVParticle) stage.execute(frame).get(0));
             }
             end = System.currentTimeMillis();
         } catch (Exception ex) {
@@ -83,9 +83,13 @@ public class Standalone {
         // run through all stages
         List<CVParticle> results;
 
+        System.out.println("Begin scale");
         results = bench(scale, frames);
+        System.out.println("Begin fat_feature");
         results = bench(fat_feature, results);
+        System.out.println("Begin drawer");
         results = bench(drawer, results);
+        System.out.println("Done");
 
         return;
     }

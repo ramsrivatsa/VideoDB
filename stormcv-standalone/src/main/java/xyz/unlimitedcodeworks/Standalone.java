@@ -76,7 +76,7 @@ public class Standalone {
         List<CVParticle> frames = new ArrayList<>();
         fetcher.activate();
         while (frames.size() <= 1500) {
-            fetcher.fetchData();
+            frames.add(fetcher.fetchData());
         }
         fetcher.deactivate();
 

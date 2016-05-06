@@ -1,5 +1,6 @@
 package xyz.unlimitedcodeworks;
 
+import backtype.storm.utils.Utils;
 import nl.tno.stormcv.StormCVConfig;
 import nl.tno.stormcv.fetcher.FileFrameFetcher;
 import nl.tno.stormcv.fetcher.IFetcher;
@@ -76,7 +77,12 @@ public class Standalone {
         List<Frame> frames = new ArrayList<>();
         fetcher.activate();
         while (frames.size() <= 1500) {
-            frames.add((Frame) fetcher.fetchData());
+            Frame frame = (Frame) fetcher.fetchData();
+            if (frame != null) {
+                frames.add(frame);
+            } else {
+                Utils.sleep(10);
+            }
         }
         fetcher.deactivate();
 

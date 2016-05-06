@@ -157,8 +157,7 @@ public class CVParticleSpout implements IRichSpout {
     @Override
     public void fail(Object msgId) {
         MessageId mid = new MessageId(msgId);
-        if (faultTolerant && tupleCache != null) {
-            if (tupleCache.getIfPresent(msgId) != null) {
+        if (faultTolerant && tupleCache != null && tupleCache.getIfPresent(msgId) != null) {
                 Values v = (Values) tupleCache.getIfPresent(msgId);
                 long requestId = (Long) v.get(0);
                 requestId++;
@@ -171,12 +170,11 @@ public class CVParticleSpout implements IRichSpout {
                             spoutName, System.currentTimeMillis(), 0);
                 }
                 collector.emit(v, mid.toString());
-            } else {
-                if (profiling) {
-                    logger.info("[Timing] RequestID: {} StreamID: {} SequenceNr: {} Failed {}: {} Size: {}",
-                            mid.requestId, mid.streamId, mid.sequenceNr,
-                            spoutName, System.currentTimeMillis(), 0);
-                }
+        } else {
+            if (profiling) {
+                logger.info("[Timing] RequestID: {} StreamID: {} SequenceNr: {} Failed {}: {} Size: {}",
+                        mid.requestId, mid.streamId, mid.sequenceNr,
+                        spoutName, System.currentTimeMillis(), 0);
             }
         }
     }

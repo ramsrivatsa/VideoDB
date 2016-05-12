@@ -142,6 +142,10 @@ public class RefreshingImageFetcher implements IFetcher<Frame> {
 					byte[] buffer = ImageUtils.imageToBytes(image, imageType);
 					Frame frame = new Frame( url.getFile().substring(1), sequenceNr, imageType, buffer, System.currentTimeMillis(), new Rectangle(image.getWidth(), image.getHeight()));
 					frame.getMetadata().put("uri", url);
+
+                    logger.info("[Timing] RequestID: {} StreamID: {} SequenceNr: {} Entering queue: {}",
+                                0, frame.getStreamId(), sequenceNr, System.currentTimeMillis());
+
 					frameQueue.put(frame);
 					sequenceNr++;
 					if(autoSleep && frameQueue.size() > 20)

@@ -33,6 +33,7 @@ public class SplitDNNTopology {
         int msgTimeout = 25;
         int cacheTimeout = 30;
         int frameSkip = 1;
+        int numWorkers = 1;
         boolean autoSleep = false;
         List<String> files = new ArrayList<>();
         for (String arg : args) {
@@ -46,6 +47,9 @@ public class SplitDNNTopology {
                     continue;
                 }
                 switch (kv[0]) {
+                    case "num-workers":
+                        numWorkers = value;
+                        break;
                     case "frame-skip":
                         frameSkip = value;
                         break;
@@ -87,7 +91,7 @@ public class SplitDNNTopology {
         StormCVConfig conf = new StormCVConfig();
 
         // number of workers in the topology
-        conf.setNumWorkers(4);
+        conf.setNumWorkers(numWorkers);
         // maximum un-acked/un-failed frames per spout (spout blocks if this number is reached)
         conf.setMaxSpoutPending(maxSpoutPending);
         // indicates frames will be encoded as JPG throughout the topology

@@ -32,6 +32,7 @@ public class SpoutOnly {
         int cacheTimeout = 30;
         boolean autoSleep = false;
         int frameSkip = 1;
+        int numWorkers = 1;
         List<String> files = new ArrayList<>();
         for (String arg : args) {
             if (arg.startsWith(switchKeyword)) {
@@ -44,6 +45,9 @@ public class SpoutOnly {
                     continue;
                 }
                 switch (kv[0]) {
+                    case "num-workers":
+                        numWorkers = value;
+                        break;
                     case "frame-skip":
                         frameSkip = value;
                         break;
@@ -70,7 +74,7 @@ public class SpoutOnly {
         StormCVConfig conf = new StormCVConfig();
 
         // number of workers in the topology
-        conf.setNumWorkers(2);
+        conf.setNumWorkers(numWorkers);
         // maximum un-acked/un-failed frames per spout (spout blocks if this number is reached)
         conf.setMaxSpoutPending(maxSpoutPending);
         // indicates frames will be encoded as JPG throughout the topology

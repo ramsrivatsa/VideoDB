@@ -129,10 +129,12 @@ public class DNNTopology {
         IFetcher fetcher;
         switch(fetcherType) {
             case "video":
+                System.err.print("!!!!!!!!!!!!!Using video fetcher!!!");
                 fetcher = new FileFrameFetcher(files).frameSkip(frameSkip).autoSleep(autoSleep);
                 break;
             default:
             case "image":
+                System.err.print("!!!!!!!!!!!!!Using image fetcher!!!");
                 fetcher = new RefreshingImageFetcher(files).sleep(sleepMs).autoSleep(autoSleep);
         }
         builder.setSpout("fetcher", new CVParticleSpout(fetcher), 1);

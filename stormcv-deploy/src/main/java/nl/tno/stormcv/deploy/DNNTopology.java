@@ -42,11 +42,11 @@ public class DNNTopology {
             if (arg.startsWith(switchKeyword)) {
                 String[] kv = arg.substring(switchKeyword.length()).split("=");
                 if (kv.length != 2) continue;
-                int value;
+                int value = 1;
                 try {
                     value = Integer.parseInt(kv[1]);
                 } catch (NumberFormatException ex) {
-                    continue;
+                    // nothing
                 }
                 switch (kv[0]) {
                     case "fps":

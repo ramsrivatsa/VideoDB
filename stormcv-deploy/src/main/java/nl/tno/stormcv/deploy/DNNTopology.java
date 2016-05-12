@@ -9,6 +9,8 @@ import nl.tno.stormcv.batcher.SlidingWindowBatcher;
 import nl.tno.stormcv.bolt.BatchInputBolt;
 import nl.tno.stormcv.bolt.SingleInputBolt;
 import nl.tno.stormcv.fetcher.FileFrameFetcher;
+import nl.tno.stormcv.fetcher.IFetcher;
+import nl.tno.stormcv.fetcher.RefreshingImageFetcher;
 import nl.tno.stormcv.model.Frame;
 import nl.tno.stormcv.model.serializer.FrameSerializer;
 import nl.tno.stormcv.operation.*;
@@ -33,6 +35,8 @@ public class DNNTopology {
         boolean autoSleep = false;
         int frameSkip = 1;
         int numWorkers = 1;
+        int sleepMs = 40;
+        String fetcherType = "video";
         List<String> files = new ArrayList<>();
         for (String arg : args) {
             if (arg.startsWith(switchKeyword)) {
@@ -45,6 +49,12 @@ public class DNNTopology {
                     continue;
                 }
                 switch (kv[0]) {
+                    case "fps":
+                        sleepMs = 1000 / value;
+                        break;
+                    case "fetcher":
+                        fetcherType = kv[1];
+                        break;
                     case "num-workers":
                         numWorkers = value;
                         break;
@@ -116,9 +126,16 @@ public class DNNTopology {
         // now create the topology itself
         // (spout -> scale -> fat[face detection & dnn] -> drawer -> streamer)
         TopologyBuilder builder = new TopologyBuilder();
-        builder.setSpout("fetcher", new CVParticleSpout(
-                        new FileFrameFetcher(files).frameSkip(frameSkip).autoSleep(autoSleep)),
-                1);
+        IFetcher fetcher;
+        switch(fetcherType) {
+            case "video":
+                fetcher = new FileFrameFetcher(files).frameSkip(frameSkip).autoSleep(autoSleep);
+                break;
+            default:
+            case "image":
+                fetcher = new RefreshingImageFetcher(files).sleep(sleepMs).autoSleep(autoSleep);
+        }
+        builder.setSpout("fetcher", new CVParticleSpout(fetcher), 1);
         // add bolt that scales frames down to 80% of the original size
         builder.setBolt("scale", new SingleInputBolt(new ScaleImageOp(0.5f)), scaleHint)
                 .shuffleGrouping("fetcher");

@@ -1,6 +1,17 @@
 package nl.tno.stormcv.fetcher;
 
-import java.awt.Rectangle;
+import backtype.storm.task.TopologyContext;
+import backtype.storm.utils.Utils;
+import nl.tno.stormcv.StormCVConfig;
+import nl.tno.stormcv.model.Frame;
+import nl.tno.stormcv.model.serializer.CVParticleSerializer;
+import nl.tno.stormcv.model.serializer.FrameSerializer;
+import nl.tno.stormcv.util.ImageUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.imageio.ImageIO;
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -8,19 +19,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.LinkedBlockingQueue;
-
-import javax.imageio.ImageIO;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import backtype.storm.task.TopologyContext;
-import backtype.storm.utils.Utils;
-import nl.tno.stormcv.StormCVConfig;
-import nl.tno.stormcv.model.Frame;
-import nl.tno.stormcv.model.serializer.FrameSerializer;
-import nl.tno.stormcv.model.serializer.CVParticleSerializer;
-import nl.tno.stormcv.util.ImageUtils;
 
 /**
  * This {@link IFetcher} implementation reads images that refresh constantly. Each url provided will be read
@@ -39,6 +37,7 @@ public class RefreshingImageFetcher implements IFetcher<Frame> {
 	private List<String> locations;
 	private List<ImageReader> readers;
 	private String imageType;
+	private boolean autoSleep = false;
 
 	public RefreshingImageFetcher(List<String> locations){
 		this.locations = locations;
@@ -54,7 +53,17 @@ public class RefreshingImageFetcher implements IFetcher<Frame> {
 		this.sleep = ms;
 		return this;
 	}
-	
+
+	/**
+	 * Whether enable auto queue size based sleep
+	 * @param auto
+	 * @return
+	 */
+	public RefreshingImageFetcher autoSleep(boolean auto) {
+		this.autoSleep = auto;
+		return this;
+	}
+
 	@SuppressWarnings("rawtypes")
 	@Override
 	public void prepare(Map stormConf, TopologyContext context) throws Exception {
@@ -85,7 +94,7 @@ public class RefreshingImageFetcher implements IFetcher<Frame> {
 	public void activate() {
 		for(String location : locations){
 			try {
-				ImageReader ir = new ImageReader(new URL(location), sleep, frameQueue);
+				ImageReader ir = new ImageReader(new URL(location), sleep, autoSleep, frameQueue);
 				new Thread(ir).start();
 				readers.add(ir);
 			} catch (MalformedURLException e) {
@@ -116,10 +125,12 @@ public class RefreshingImageFetcher implements IFetcher<Frame> {
 		private int sleep;
 		private int sequenceNr;
 		private boolean running = true;
+        private boolean autoSleep = false;
 		
-		public ImageReader(URL url, int sleep, LinkedBlockingQueue<Frame> frameQueue){
+		public ImageReader(URL url, int sleep, boolean autoSleep, LinkedBlockingQueue<Frame> frameQueue){
 			this.url = url;
 			this.sleep = sleep;
+            this.autoSleep = autoSleep;
 			this.frameQueue = frameQueue;
 		}
 		
@@ -133,7 +144,8 @@ public class RefreshingImageFetcher implements IFetcher<Frame> {
 					frame.getMetadata().put("uri", url);
 					frameQueue.put(frame);
 					sequenceNr++;
-					if(frameQueue.size() > 20) Utils.sleep(frameQueue.size());
+					if(autoSleep && frameQueue.size() > 20)
+                        Utils.sleep(frameQueue.size());
 				}catch(Exception e){
 					logger.warn("Exception while reading "+url+" : "+e.getMessage());
 				}

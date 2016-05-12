@@ -8,6 +8,7 @@ import nl.tno.stormcv.model.CVParticle;
 import nl.tno.stormcv.model.Frame;
 import nl.tno.stormcv.operation.*;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -76,7 +77,7 @@ public class Standalone {
         // retrive all frames first
         List<Frame> frames = new ArrayList<>();
         fetcher.activate();
-        while (frames.size() <= 1500) {
+        while (frames.size() <= 1) {
             Frame frame = (Frame) fetcher.fetchData();
             if (frame != null) {
                 frames.add(frame);
@@ -86,6 +87,14 @@ public class Standalone {
             }
         }
         fetcher.deactivate();
+
+        try {
+            int h = frames.get(0).getImage().getHeight();
+            int w = frames.get(0).getImage().getWidth();
+            System.out.println("H=" + h + " W=" + w);
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
 
         // run through all stages
         List<Frame> results;

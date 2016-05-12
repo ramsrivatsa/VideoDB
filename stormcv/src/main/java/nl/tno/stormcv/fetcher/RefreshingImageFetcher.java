@@ -136,10 +136,10 @@ public class RefreshingImageFetcher implements IFetcher<Frame> {
 		
 		@Override
 		public void run() {
-			while(running){
-				try{
-					BufferedImage image = ImageIO.read(url);
-					byte[] buffer = ImageUtils.imageToBytes(image, imageType);
+            try{
+                BufferedImage image = ImageIO.read(url);
+                byte[] buffer = ImageUtils.imageToBytes(image, imageType);
+                while(running){
 					Frame frame = new Frame( url.getFile().substring(1), sequenceNr, imageType, buffer, System.currentTimeMillis(), new Rectangle(image.getWidth(), image.getHeight()));
 					frame.getMetadata().put("uri", url);
 
@@ -150,11 +150,12 @@ public class RefreshingImageFetcher implements IFetcher<Frame> {
 					sequenceNr++;
 					if(autoSleep && frameQueue.size() > 20)
                         Utils.sleep(frameQueue.size());
-				}catch(Exception e){
-					logger.warn("Exception while reading "+url+" : "+e.getMessage());
-				}
-				Utils.sleep(sleep);
-			}
+                    if (sleep > 0)
+                        Utils.sleep(sleep);
+                }
+            }catch(Exception e){
+                logger.warn("Exception while reading "+url+" : "+e.getMessage());
+            }
 		}
 		
 		public void stop(){

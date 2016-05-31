@@ -10,6 +10,7 @@ import com.xuggle.xuggler.IContainer;
 import nl.tno.stormcv.model.Frame;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import xyz.unlimitedcodeworks.utils.Timing;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
@@ -171,7 +172,7 @@ public class StreamReader extends MediaListenerAdapter implements Runnable {
             newFrame.getMetadata().put("uri", streamLocation);
 
             logger.info("[Timing] RequestID: {} StreamID: {} SequenceNr: {} Entering queue: {}",
-                    0, streamId, frameNr, System.currentTimeMillis());
+                    0, streamId, frameNr, Timing.currentTimeMillis());
 
             frameQueue.put(newFrame);
             // enforced throttling

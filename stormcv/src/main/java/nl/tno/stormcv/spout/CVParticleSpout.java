@@ -12,6 +12,7 @@ import nl.tno.stormcv.fetcher.IFetcher;
 import nl.tno.stormcv.model.CVParticle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import xyz.unlimitedcodeworks.utils.Timing;
 
 import java.io.IOException;
 import java.util.Map;
@@ -118,7 +119,7 @@ public class CVParticleSpout implements IRichSpout {
             if (profiling) {
                 logger.info("[Timing] RequestID: {} StreamID: {} SequenceNr: {} Leaving {}: {} Size: {}",
                             particle.getRequestId(), particle.getStreamId(), particle.getSequenceNr(), spoutName,
-                            System.currentTimeMillis(), particle.estimatedByteSize());
+                            Timing.currentTimeMillis(), particle.estimatedByteSize());
             }
         } catch (IOException e) {
             logger.warn("Unable to fetch next frame from queue due to: " + e.getMessage());
@@ -151,7 +152,7 @@ public class CVParticleSpout implements IRichSpout {
         MessageId mid = new MessageId(msgId);
         logger.info("[Timing] RequestID: {} StreamID: {} SequenceNr: {} Ack {}: {} Size: {}",
                 mid.requestId, mid.streamId, mid.sequenceNr,
-                "ack", System.currentTimeMillis(), 0);
+                "ack", Timing.currentTimeMillis(), 0);
     }
 
     @Override
@@ -167,14 +168,14 @@ public class CVParticleSpout implements IRichSpout {
                 if (profiling) {
                     logger.info("[Timing] RequestID: {} StreamID: {} SequenceNr: {} Retry {}: {} Size: {}",
                             mid.requestId, mid.streamId, mid.sequenceNr,
-                            spoutName, System.currentTimeMillis(), 0);
+                            spoutName, Timing.currentTimeMillis(), 0);
                 }
                 collector.emit(v, mid.toString());
         } else {
             if (profiling) {
                 logger.info("[Timing] RequestID: {} StreamID: {} SequenceNr: {} Failed {}: {} Size: {}",
                         mid.requestId, mid.streamId, mid.sequenceNr,
-                        spoutName, System.currentTimeMillis(), 0);
+                        spoutName, Timing.currentTimeMillis(), 0);
             }
         }
     }

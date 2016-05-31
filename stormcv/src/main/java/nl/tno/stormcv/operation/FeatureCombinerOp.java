@@ -1,17 +1,21 @@
 package nl.tno.stormcv.operation;
 
-import java.awt.Rectangle;
+import backtype.storm.task.TopologyContext;
+import nl.tno.stormcv.batcher.SequenceNrBatcher;
+import nl.tno.stormcv.model.CVParticle;
+import nl.tno.stormcv.model.Descriptor;
+import nl.tno.stormcv.model.Feature;
+import nl.tno.stormcv.model.Frame;
+import nl.tno.stormcv.model.serializer.CVParticleSerializer;
+import nl.tno.stormcv.model.serializer.FrameSerializer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import xyz.unlimitedcodeworks.utils.Timing;
+
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-
-import backtype.storm.task.TopologyContext;
-import nl.tno.stormcv.batcher.SequenceNrBatcher;
-import nl.tno.stormcv.model.*;
-import nl.tno.stormcv.model.serializer.*;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * A batch operation that wraps multiple {@link Feature} objects from multiple bolts in a single {@link Frame} without an image.
@@ -69,7 +73,7 @@ public class FeatureCombinerOp implements IBatchOperation<Frame> {
 			frame.getFeatures().add(newF);
 		}
 		List<Frame> result = new ArrayList<Frame>();
-		logger.info("Feature Combiner : " + " Sequence Nr - " + frame.getSequenceNr() + " System Time - " + System.currentTimeMillis());
+		logger.info("Feature Combiner : " + " Sequence Nr - " + frame.getSequenceNr() + " System Time - " + Timing.currentTimeMillis());
 		result.add(frame);
 		return result;
 		

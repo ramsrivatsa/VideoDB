@@ -11,6 +11,7 @@ import nl.tno.stormcv.model.CVParticle;
 import nl.tno.stormcv.model.serializer.CVParticleSerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import xyz.unlimitedcodeworks.utils.Timing;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -60,7 +61,7 @@ public abstract class CVParticleBolt extends BaseRichBolt {
     @Override
     public void execute(Tuple input) {
         boolean hadError = false;
-        long beginExecute = System.currentTimeMillis();
+        long beginExecute = Timing.currentTimeMillis();
         long endExecute;
         try {
             CVParticle cvt = deserialize(input);
@@ -86,7 +87,7 @@ public abstract class CVParticleBolt extends BaseRichBolt {
             }
 
             if (profiling) {
-                endExecute = System.currentTimeMillis();
+                endExecute = Timing.currentTimeMillis();
                 logger.info("[Timing] RequestID: {} StreamID: {} SequenceNr: {} Leaving {}: {} Size: {}",
                         cvt.getRequestId(), cvt.getStreamId(), cvt.getSequenceNr(), boltName,
                         endExecute, totalEstimatedSize);

@@ -10,6 +10,7 @@ import nl.tno.stormcv.model.serializer.FeatureSerializer;
 import nl.tno.stormcv.model.serializer.FrameSerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import xyz.unlimitedcodeworks.utils.Timing;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -115,7 +116,7 @@ public class SequentialFrameOp implements ISingleInputOperation<CVParticle>{
         long endExecute;
 		for(ISingleInputOperation extractor : extractors){
             if (profiling) {
-                beginExecute = System.currentTimeMillis();
+                beginExecute = Timing.currentTimeMillis();
                 logger.info("[Timing] RequestID: {} StreamID: {} SequenceNr: {} OpBegin {}: {}",
                         particle.getRequestId(), particle.getStreamId(), particle.getSequenceNr(),
                         extractor.getClass().getName(), beginExecute);
@@ -124,7 +125,7 @@ public class SequentialFrameOp implements ISingleInputOperation<CVParticle>{
 			List<CVParticle> output = extractor.execute(frame);
 
             if (profiling) {
-                endExecute = System.currentTimeMillis();
+                endExecute = Timing.currentTimeMillis();
                 logger.info("[Timing] RequestID: {} StreamID: {} SequenceNr: {} OpEnd {}: {}",
                         particle.getRequestId(), particle.getStreamId(), particle.getSequenceNr(),
                         extractor.getClass().getName(), endExecute);

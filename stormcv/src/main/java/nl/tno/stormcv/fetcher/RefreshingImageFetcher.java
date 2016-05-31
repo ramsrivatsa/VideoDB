@@ -9,6 +9,7 @@ import nl.tno.stormcv.model.serializer.FrameSerializer;
 import nl.tno.stormcv.util.ImageUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import xyz.unlimitedcodeworks.utils.Timing;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -144,7 +145,7 @@ public class RefreshingImageFetcher implements IFetcher<Frame> {
 					frame.getMetadata().put("uri", url);
 
                     logger.info("[Timing] RequestID: {} StreamID: {} SequenceNr: {} Entering queue: {}",
-                                0, frame.getStreamId(), sequenceNr, System.currentTimeMillis());
+                                0, frame.getStreamId(), sequenceNr, Timing.currentTimeMillis());
 
 					frameQueue.put(frame);
 					sequenceNr++;

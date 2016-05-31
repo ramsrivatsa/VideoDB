@@ -9,7 +9,8 @@ public class Timing {
     }
 
     public static long currentTimeMillis() {
-        return millisFromNano() + adjustment;
+        //return millisFromNano() + adjustment;
+        return millisFromSys();
     }
 
     static long millisFromNano() {

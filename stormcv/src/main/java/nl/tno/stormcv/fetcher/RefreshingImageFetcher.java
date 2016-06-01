@@ -39,6 +39,7 @@ public class RefreshingImageFetcher implements IFetcher<Frame> {
 	private List<ImageReader> readers;
 	private String imageType;
 	private boolean autoSleep = false;
+	private int startDelay = 0;
 
 	public RefreshingImageFetcher(List<String> locations){
 		this.locations = locations;
@@ -54,6 +55,16 @@ public class RefreshingImageFetcher implements IFetcher<Frame> {
 		this.sleep = ms;
 		return this;
 	}
+
+    /**
+     * Delay before sending out the first frame after activated. The default delay is 0 ms.
+     * @param ms
+     * @return
+     */
+    public RefreshingImageFetcher startDelay(int ms) {
+        this.startDelay = ms;
+        return this;
+    }
 
 	/**
 	 * Whether enable auto queue size based sleep
@@ -95,7 +106,8 @@ public class RefreshingImageFetcher implements IFetcher<Frame> {
 	public void activate() {
 		for(String location : locations){
 			try {
-				ImageReader ir = new ImageReader(new URL(location), sleep, autoSleep, frameQueue);
+				ImageReader ir = new ImageReader(new URL(location), sleep, autoSleep,
+                                                 startDelay, frameQueue);
 				new Thread(ir).start();
 				readers.add(ir);
 			} catch (MalformedURLException e) {
@@ -118,7 +130,7 @@ public class RefreshingImageFetcher implements IFetcher<Frame> {
 		return frameQueue.poll();
 	}
 	
-	private class ImageReader implements Runnable{
+	private class ImageReader implements Runnable {
 
 		private Logger logger = LoggerFactory.getLogger(getClass());
 		private LinkedBlockingQueue<Frame> frameQueue;
@@ -127,11 +139,13 @@ public class RefreshingImageFetcher implements IFetcher<Frame> {
 		private int sequenceNr;
 		private boolean running = true;
         private boolean autoSleep = false;
+        private int startDelay = 0;
 		
-		public ImageReader(URL url, int sleep, boolean autoSleep, LinkedBlockingQueue<Frame> frameQueue){
+		public ImageReader(URL url, int sleep, boolean autoSleep, int startDelay, LinkedBlockingQueue<Frame> frameQueue){
 			this.url = url;
 			this.sleep = sleep;
             this.autoSleep = autoSleep;
+            this.startDelay = startDelay;
 			this.frameQueue = frameQueue;
 		}
 		
@@ -140,6 +154,9 @@ public class RefreshingImageFetcher implements IFetcher<Frame> {
             try{
                 BufferedImage image = ImageIO.read(url);
                 byte[] buffer = ImageUtils.imageToBytes(image, imageType);
+                if (startDelay != 0) {
+                    Utils.sleep(startDelay);
+                }
                 while(running){
 					Frame frame = new Frame( url.getFile().substring(1), sequenceNr, imageType, buffer, System.currentTimeMillis(), new Rectangle(image.getWidth(), image.getHeight()));
 					frame.getMetadata().put("uri", url);

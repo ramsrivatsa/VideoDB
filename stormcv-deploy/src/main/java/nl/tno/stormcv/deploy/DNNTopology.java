@@ -36,6 +36,7 @@ public class DNNTopology {
         int frameSkip = 1;
         int numWorkers = 1;
         int sleepMs = 40;
+        int startDelay = 0;
         String fetcherType = "video";
         List<String> files = new ArrayList<>();
         for (String arg : args) {
@@ -49,6 +50,9 @@ public class DNNTopology {
                     // nothing
                 }
                 switch (kv[0]) {
+                    case "start-delay":
+                        startDelay = value;
+                        break;
                     case "fps":
                         sleepMs = 1000 / value;
                         break;
@@ -129,13 +133,11 @@ public class DNNTopology {
         IFetcher fetcher;
         switch(fetcherType) {
             case "video":
-                System.err.print("!!!!!!!!!!!!!Using video fetcher!!!");
                 fetcher = new FileFrameFetcher(files).frameSkip(frameSkip).autoSleep(autoSleep);
                 break;
             default:
             case "image":
-                System.err.print("!!!!!!!!!!!!!Using image fetcher!!!");
-                fetcher = new RefreshingImageFetcher(files).sleep(sleepMs).autoSleep(autoSleep);
+                fetcher = new RefreshingImageFetcher(files).sleep(sleepMs).autoSleep(autoSleep).startDelay(startDelay);
         }
         builder.setSpout("fetcher", new CVParticleSpout(fetcher), 1);
         // add bolt that scales frames down to 80% of the original size

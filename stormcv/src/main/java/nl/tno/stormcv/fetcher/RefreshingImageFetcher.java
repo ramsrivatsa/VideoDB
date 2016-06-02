@@ -40,6 +40,7 @@ public class RefreshingImageFetcher implements IFetcher<Frame> {
 	private String imageType;
 	private boolean autoSleep = false;
 	private int startDelay = 0;
+    private int sendingFps = 0;
 
 	public RefreshingImageFetcher(List<String> locations){
 		this.locations = locations;
@@ -51,10 +52,21 @@ public class RefreshingImageFetcher implements IFetcher<Frame> {
 	 * @param ms
 	 * @return
 	 */
-	public RefreshingImageFetcher sleep(int ms){
+	public RefreshingImageFetcher sleep(int ms) {
 		this.sleep = ms;
 		return this;
 	}
+
+    /**
+     * Try to send frames at FPS `fps`. Note sleeping interferences with this, you can't
+     * use these two in the same time.
+     * @param fps
+     * @return
+     */
+    public RefreshingImageFetcher sendingFps(int fps) {
+        this.sendingFps = fps;
+        return this;
+    }
 
     /**
      * Delay before sending out the first frame after activated. The default delay is 0 ms.
@@ -107,7 +119,7 @@ public class RefreshingImageFetcher implements IFetcher<Frame> {
 		for(String location : locations){
 			try {
 				ImageReader ir = new ImageReader(new URL(location), sleep, autoSleep,
-                                                 startDelay, frameQueue);
+                                                 startDelay, sendingFps, frameQueue);
 				new Thread(ir).start();
 				readers.add(ir);
 			} catch (MalformedURLException e) {
@@ -140,13 +152,26 @@ public class RefreshingImageFetcher implements IFetcher<Frame> {
 		private boolean running = true;
         private boolean autoSleep = false;
         private int startDelay = 0;
+
+        private int stepRatio = 0;
+        private int stepFps = 0;
+        private int remainFps = 0;
+        private long binSize = 0;
 		
-		public ImageReader(URL url, int sleep, boolean autoSleep, int startDelay, LinkedBlockingQueue<Frame> frameQueue){
+		public ImageReader(URL url, int sleep, boolean autoSleep, int startDelay, int sendingFps, LinkedBlockingQueue<Frame> frameQueue){
 			this.url = url;
 			this.sleep = sleep;
             this.autoSleep = autoSleep;
             this.startDelay = startDelay;
 			this.frameQueue = frameQueue;
+
+            // Pre-compute some values
+            if (sendingFps != 0) {
+                this.stepRatio = 5;
+                this.stepFps = sendingFps / stepRatio;
+                this.remainFps = sendingFps - stepFps * stepRatio;
+                this.binSize = 1000 / stepRatio;
+            }
 		}
 		
 		@Override
@@ -157,8 +182,34 @@ public class RefreshingImageFetcher implements IFetcher<Frame> {
                 if (startDelay != 0) {
                     Utils.sleep(startDelay);
                 }
+
+                long prevBin = -1;
+                int currStepFps = 0;
+
                 while(running){
-					Frame frame = new Frame( url.getFile().substring(1), sequenceNr, imageType, buffer, System.currentTimeMillis(), new Rectangle(image.getWidth(), image.getHeight()));
+					long currentTimeMs = Timing.currentTimeMillis();
+
+                    if (stepRatio > 0) {
+                        long currBin = currentTimeMs / binSize;
+                        if (currBin != prevBin) {
+                            prevBin = currBin;
+                            currStepFps = 0;
+                            continue;
+                        }
+
+                        int limit = stepFps;
+                        if ((currBin % stepRatio) < remainFps)
+                            ++limit;
+                        if (currStepFps == limit) {
+                            Utils.sleep(1);
+                            continue;
+                        }
+
+                        ++currStepFps;
+                    }
+
+					Frame frame = new Frame(url.getFile().substring(1), sequenceNr, imageType, buffer, currentTimeMs,
+                                            new Rectangle(image.getWidth(), image.getHeight()));
 					frame.getMetadata().put("uri", url);
 
                     logger.info("[Timing] RequestID: {} StreamID: {} SequenceNr: {} Entering queue: {}",

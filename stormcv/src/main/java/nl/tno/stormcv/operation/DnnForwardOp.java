@@ -82,6 +82,7 @@ public class DnnForwardOp extends OpenCVOp<CVParticle> implements ISingleInputOp
             File modelTxtFile = NativeUtils.getAsLocalFile(modelTxt);
             File modelBinFile = NativeUtils.getAsLocalFile(modelBin);
             net = new ForwardNet(modelTxtFile.getAbsolutePath(), modelBinFile.getAbsolutePath());
+            net.setThreadPriority(99);
         } catch (Exception e) {
             logger.error("Unable to instantiate DnnForwardOp due to: " + e.getMessage(), e);
             throw e;
@@ -90,6 +91,10 @@ public class DnnForwardOp extends OpenCVOp<CVParticle> implements ISingleInputOp
 
     @Override
     public List<CVParticle> execute(CVParticle input) throws Exception {
+        // TODO: verify that prepareOpenCVOp is always called in the same kernel thread as execute,
+        // and won't change during the whole run. Then we can remove this call.
+        net.setThreadPriority(99);
+
         List<CVParticle> result = new ArrayList<>();
         if (!(input instanceof Frame)) return result;
 

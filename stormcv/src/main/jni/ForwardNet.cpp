@@ -1,10 +1,19 @@
 #include "ForwardNet.h"
 
+#include <string>
 #include <sstream>
 #include <stdexcept>
 
 #include <opencv2/dnn.hpp>
 #include <opencv2/imgproc.hpp>
+
+#include <errno.h>
+#include <sched.h>
+#include <string.h>
+#include <unistd.h>
+#include <sys/syscall.h>
+#include <sys/types.h>
+
 
 using namespace std;
 using namespace cv;
@@ -51,6 +60,28 @@ Mat ForwardNet::forward(const cv::Mat &input)
     auto outputBlob = net.getBlob("prob");   //gather output of "prob" layer
 
     return outputBlob.matRefConst().reshape(1, 1);
+}
+
+void ForwardNet::setPriority(int priority)
+{
+    static char buf[512];
+    sched_param param;
+    param.sched_priority = priority;
+    pid_t tid;
+
+    tid = syscall(SYS_gettid);
+
+    if (sched_setscheduler(tid, SCHED_RR, &param) == -1) {
+        int errsv = errno;
+        const char *msg = strerror_r(errsv, buf, 512);
+        throw runtime_error(msg);
+    }
+}
+
+long ForwardNet::getCurrentTid()
+{
+    pid_t tid = syscall(SYS_gettid);
+    return tid;
 }
 
 } // namespace ucw

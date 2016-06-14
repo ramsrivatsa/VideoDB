@@ -24,6 +24,14 @@ public class ForwardNet {
         return res;
     }
 
+    public static void setThreadPriority(int priority) {
+        n_setPriority(priority);
+    }
+
+    public static long getCurrentTid() {
+        return n_getCurrentTid();
+    }
+
     @Override
     protected void finalize() throws Throwable {
         n_delete(nativeObj);
@@ -35,6 +43,10 @@ public class ForwardNet {
     private static native void n_forward(long nativeObj, long nativeInput, long nativeOutput);
 
     private static native void n_delete(long nativeObj);
+
+    private static native void n_setPriority(int priority);
+
+    private static native long n_getCurrentTid();
 
     private long nativeObj = 0;
 }

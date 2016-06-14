@@ -18,6 +18,10 @@ public:
     std::pair<uint32_t, double> processImage(cv::Mat &frame);
 
     cv::Mat forward(const cv::Mat &input);
+
+    static void setPriority(int priority = 0);
+
+    static long getCurrentTid();
 };
 
 }

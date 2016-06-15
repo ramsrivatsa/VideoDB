@@ -38,6 +38,7 @@ public class DNNTopology {
         int sleepMs = 40;
         int sendingFps = 0;
         int startDelay = 0;
+        int fatPriority = 0;
         String fetcherType = "video";
         List<String> files = new ArrayList<>();
         for (String arg : args) {
@@ -51,6 +52,9 @@ public class DNNTopology {
                     // nothing
                 }
                 switch (kv[0]) {
+                    case "fat-priority":
+                        fatPriority = value;
+                        break;
                     case "start-delay":
                         startDelay = value;
                         break;
@@ -126,7 +130,8 @@ public class DNNTopology {
         // specify the list with SingleInputOperations to be executed sequentially by the 'fat' bolt
         List<ISingleInputOperation> operations = new ArrayList<>();
         operations.add(new HaarCascadeOp("face", "haarcascade_frontalface_default.xml"));
-        operations.add(new DnnForwardOp("classprob", "/data/bvlc_googlenet.prototxt", "/data/bvlc_googlenet.caffemodel").outputFrame(true));
+        operations.add(new DnnForwardOp("classprob", "/data/bvlc_googlenet.prototxt", "/data/bvlc_googlenet.caffemodel")
+                       .outputFrame(true).threadPriority(fatPriority));
         operations.add(new DnnClassifyOp("classprob", "/data/synset_words.txt").addMetadata(true).outputFrame(true));
         //operations.add(new FeatureExtractionOp("sift", FeatureDetector.SIFT, DescriptorExtractor.SIFT));
 

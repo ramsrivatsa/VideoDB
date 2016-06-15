@@ -71,7 +71,12 @@ void ForwardNet::setPriority(int priority)
 
     tid = syscall(SYS_gettid);
 
-    if (sched_setscheduler(tid, SCHED_RR, &param) == -1) {
+    int sched_policy = SCHED_RR;
+    if (priority == 0) {
+        sched_policy = SCHED_OTHER;
+    }
+
+    if (sched_setscheduler(tid, sched_policy, &param) == -1) {
         int errsv = errno;
         const char *msg = strerror_r(errsv, buf, 512);
         throw runtime_error(msg);

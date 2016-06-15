@@ -33,9 +33,11 @@ public class DnnForwardOp extends OpenCVOp<CVParticle> implements ISingleInputOp
     private static final long serialVersionUID = 1672563550721443006L;
     private Logger logger = LoggerFactory.getLogger(HaarCascadeOp.class);
     private String name;
-    private ForwardNet net;
     private String modelTxt;
     private String modelBin;
+    private int kernelThreadPriority = 0;
+
+    private ForwardNet net;
     private long kernelThreadId;
     private int thisTaskIndex;
 
@@ -78,6 +80,24 @@ public class DnnForwardOp extends OpenCVOp<CVParticle> implements ISingleInputOp
         return this;
     }
 
+    /**
+     * Sets the kernel thread priority of this Operation
+     * Default value after construction is 0, which implies SCHED_OTHER
+     * Other values implies SCHED_RR, and the value is bounded to range [1,99]
+     * Changes only take effect before prepare.
+     *
+     * @param priority new value
+     * @return this instance for chaining
+     */
+    public DnnForwardOp threadPriority(int priority) {
+        kernelThreadPriority = priority;
+        if (kernelThreadPriority < 0)
+            kernelThreadPriority = 0;
+        if (kernelThreadPriority > 99)
+            kernelThreadPriority = 99;
+        return this;
+    }
+
     @Override
     protected void prepareOpenCVOp(Map stormConf, TopologyContext context) throws Exception {
         kernelThreadId = ForwardNet.getCurrentTid();
@@ -88,7 +108,7 @@ public class DnnForwardOp extends OpenCVOp<CVParticle> implements ISingleInputOp
             File modelTxtFile = NativeUtils.getAsLocalFile(modelTxt);
             File modelBinFile = NativeUtils.getAsLocalFile(modelBin);
             net = new ForwardNet(modelTxtFile.getAbsolutePath(), modelBinFile.getAbsolutePath());
-            net.setThreadPriority(99);
+            net.setThreadPriority(kernelThreadPriority);
         } catch (Exception e) {
             logger.error("Unable to instantiate DnnForwardOp due to: " + e.getMessage(), e);
             throw e;
@@ -104,7 +124,7 @@ public class DnnForwardOp extends OpenCVOp<CVParticle> implements ISingleInputOp
             logger.warn("DnnForwardOp[{}] got moved to a different kernel thread: {} -> {}",
                         thisTaskIndex, kernelThreadId, currentTid);
             kernelThreadId = currentTid;
-            net.setThreadPriority(99);
+            net.setThreadPriority(kernelThreadPriority);
         }
 
         List<CVParticle> result = new ArrayList<>();

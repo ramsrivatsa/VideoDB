@@ -36,6 +36,8 @@ public class DnnForwardOp extends OpenCVOp<CVParticle> implements ISingleInputOp
     private ForwardNet net;
     private String modelTxt;
     private String modelBin;
+    private long kernelThreadId;
+    private int thisTaskIndex;
 
     private boolean outputFrame;
     @SuppressWarnings("rawtypes")
@@ -78,6 +80,10 @@ public class DnnForwardOp extends OpenCVOp<CVParticle> implements ISingleInputOp
 
     @Override
     protected void prepareOpenCVOp(Map stormConf, TopologyContext context) throws Exception {
+        kernelThreadId = ForwardNet.getCurrentTid();
+        thisTaskIndex = context.getThisTaskIndex();
+
+        logger.info("Preparing DnnForwardOp[{}] on thread {}", context.getThisTaskIndex(), kernelThreadId);
         try {
             File modelTxtFile = NativeUtils.getAsLocalFile(modelTxt);
             File modelBinFile = NativeUtils.getAsLocalFile(modelBin);
@@ -93,7 +99,13 @@ public class DnnForwardOp extends OpenCVOp<CVParticle> implements ISingleInputOp
     public List<CVParticle> execute(CVParticle input) throws Exception {
         // TODO: verify that prepareOpenCVOp is always called in the same kernel thread as execute,
         // and won't change during the whole run. Then we can remove this call.
-        net.setThreadPriority(99);
+        long currentTid = ForwardNet.getCurrentTid();
+        if (currentTid != kernelThreadId) {
+            logger.warn("DnnForwardOp[{}] got moved to a different kernel thread: {} -> {}",
+                        thisTaskIndex, kernelThreadId, currentTid);
+            kernelThreadId = currentTid;
+            net.setThreadPriority(99);
+        }
 
         List<CVParticle> result = new ArrayList<>();
         if (!(input instanceof Frame)) return result;

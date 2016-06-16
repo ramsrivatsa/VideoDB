@@ -1,28 +1,60 @@
 #ifndef FORWARDNET_H
 #define FORWARDNET_H
 
-#include <string>
+#include <opencv2/core/core.hpp>
+#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
 
-#include <opencv2/core.hpp>
-#include <opencv2/dnn.hpp>
+#include <caffe/caffe.hpp>
+
+#include <algorithm>
+#include <iosfwd>
+#include <memory>
+#include <utility>
+#include <vector>
+#include <stdexcept>
+
+#include <errno.h>
+#include <sched.h>
+#include <unistd.h>
+#include <sys/syscall.h>
+#include <sys/types.h>
+
+using std::string;
+using namespace caffe;  // NOLINT(build/namespaces)
 
 namespace ucw {
+    class ForwardNet {
+    public:
+      ForwardNet(const string& model_file,
+                 const string& trained_file,
+                 const string& mean_file,
+                 const string& label_file, const bool CPU = true);
 
-class ForwardNet
-{
-    cv::dnn::Net net;
+      void SetMean(const string& mean_file);
 
-public:
-    ForwardNet(const std::string &modelTxt, const std::string &modelBin);
+      void setGPU();
 
-    std::pair<uint32_t, double> processImage(cv::Mat &frame);
+      std::vector<cv::Mat> forward(const std::vector<cv::Mat>& imgs);
 
-    cv::Mat forward(const cv::Mat &input);
+      cv::Mat forward(const cv::Mat &input);
 
-    static void setPriority(int priority = 0);
+      void WrapInputLayer(std::vector<cv::Mat>* input_channels, int n);
 
-    static long getCurrentTid();
-};
+      void Preprocess(const cv::Mat& img,
+                      std::vector<cv::Mat>* input_channels);
 
+      static void setPriority(int priority = 0);
+
+      static long getCurrentTid();
+
+    private:
+      shared_ptr<Net<float> > net_;
+      cv::Size input_geometry_;
+      int num_channels_;
+      cv::Mat mean_;
+      std::vector<string> labels_;
+    };
 }
-#endif // FORWARDNET_H
+
+#endif

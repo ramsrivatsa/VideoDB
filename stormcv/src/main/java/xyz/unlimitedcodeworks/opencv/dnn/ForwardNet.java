@@ -18,8 +18,8 @@ public class ForwardNet {
         this(modelTxt, modelBin, "", false, false);
     }
 
-    public ForwardNet(String modelTxt, String modelBin, String meanBin, boolean useCVOrCaffe, boolean caffeOnCPU) {
-        if (useCVOrCaffe) {
+    public ForwardNet(String modelTxt, String modelBin, String meanBin, boolean useCaffe, boolean caffeOnCPU) {
+        if (!useCaffe) {
             nativeObj = create(modelTxt, modelBin);
         } else {
             nativeObj = create(modelTxt, modelBin, meanBin, caffeOnCPU);

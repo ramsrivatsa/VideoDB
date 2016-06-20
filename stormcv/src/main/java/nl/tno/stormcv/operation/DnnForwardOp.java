@@ -33,11 +33,15 @@ public class DnnForwardOp extends OpenCVOp<CVParticle> implements ISingleInputOp
     private static final long serialVersionUID = 1672563550721443006L;
     private Logger logger = LoggerFactory.getLogger(HaarCascadeOp.class);
     private String name;
+    private ForwardNet net;
+
     private String modelTxt;
     private String modelBin;
-    private int kernelThreadPriority = 0;
+    private String meanBin;
+    private boolean caffeOnCPU;
+    private boolean useCaffe;
 
-    private ForwardNet net;
+    private int kernelThreadPriority = 0;
     private long kernelThreadId;
     private int thisTaskIndex;
 
@@ -55,11 +59,24 @@ public class DnnForwardOp extends OpenCVOp<CVParticle> implements ISingleInputOp
      */
     public DnnForwardOp(String name, String modelTxt, String modelBin) {
         this.name = name;
+        this.useCaffe = false;
         this.modelTxt = modelTxt;
         this.modelBin = modelBin;
 
         if (modelTxt.charAt(0) != '/') this.modelTxt = OPENCV_RES_HOME + modelTxt;
         if (modelBin.charAt(0) != '/') this.modelBin = OPENCV_RES_HOME + modelBin;
+    }
+
+    public DnnForwardOp(String name, String modelTxt, String modelBin, String meanBin, boolean caffeOnCPU) {
+        this.name = name;
+        this.useCaffe = true;
+        this.modelTxt = modelTxt;
+        this.modelBin = modelBin;
+        this.caffeOnCPU = caffeOnCPU;
+
+        if (modelTxt.charAt(0) != '/') this.modelTxt = OPENCV_RES_HOME + modelTxt;
+        if (modelBin.charAt(0) != '/') this.modelBin = OPENCV_RES_HOME + modelBin;
+        if (meanBin.charAt(0) != '/') this.meanBin = OPENCV_RES_HOME + meanBin;
     }
 
     /**
@@ -107,7 +124,13 @@ public class DnnForwardOp extends OpenCVOp<CVParticle> implements ISingleInputOp
         try {
             File modelTxtFile = NativeUtils.getAsLocalFile(modelTxt);
             File modelBinFile = NativeUtils.getAsLocalFile(modelBin);
-            net = new ForwardNet(modelTxtFile.getAbsolutePath(), modelBinFile.getAbsolutePath());
+            if (useCaffe) {
+                File meanBinFile = NativeUtils.getAsLocalFile(meanBin);
+                net = new ForwardNet(modelTxtFile.getAbsolutePath(), modelBinFile.getAbsolutePath(),
+                                     meanBinFile.getAbsolutePath(), useCaffe, caffeOnCPU);
+            } else {
+                net = new ForwardNet(modelTxtFile.getAbsolutePath(), modelBinFile.getAbsolutePath());
+            }
             net.setThreadPriority(kernelThreadPriority);
         } catch (Exception e) {
             logger.error("Unable to instantiate DnnForwardOp due to: " + e.getMessage(), e);

@@ -8,7 +8,7 @@ plugins {
 }
 
 group = 'nl.tno'
-version = '0.8.2-SNAPSHOT'
+version = '0.8.3-SNAPSHOT'
 
 description = """StormCV
 This is a fork of original [StormCV](https://github.com/sensorstorm/StormCV) with OpenCV upgraded to
@@ -59,14 +59,6 @@ if (plugins.hasPlugin('com.github.johnrengelman.shadow')) {
     }
 }
 
-task gatherNativeLibraries(type: Copy) {
-    ext.outputPath = "$buildDir/generated-resources"
-
-    sourceSets.main.output.dir outputPath, builtBy: gatherNativeLibraries
-
-    into "$outputPath/native/x64"
-}
-
 task generateJNIHeaders(dependsOn: compileJava) {
     ext.inputClasses = ["xyz.unlimitedcodeworks.opencv.dnn.ForwardNet"]
     ext.outputDir = file("$buildDir/native-headers")
@@ -94,66 +86,15 @@ task generateJNIHeaders(dependsOn: compileJava) {
     }
 }
 
-model {
-    platforms {
-        linux_x64 {
-            architecture 'x86_64'
-            operatingSystem 'linux'
-        }
-    }
+task compileJNILibraries(type: Exec) {
+    ext.outputPath = "$buildDir/generated-resources"
 
-    repositories {
-        prebuiltlibs(PrebuiltLibraries) {
-            jdk {
-                headers.srcDirs "${org.gradle.internal.jvm.Jvm.current().javaHome}/include",
-                        "${org.gradle.internal.jvm.Jvm.current().javaHome}/include/win32",
-                        "${org.gradle.internal.jvm.Jvm.current().javaHome}/include/darwin",
-                        "${org.gradle.internal.jvm.Jvm.current().javaHome}/include/linux"
-            }
+    dependsOn generateJNIHeaders
 
-            jni {
-                headers.srcDirs generateJNIHeaders.outputs
-            }
-        }
-    }
+    sourceSets.main.output.dir outputPath, builtBy: compileJNILibraries
 
-    components {
-        ForwardNet(NativeLibrarySpec) {
-            targetPlatform 'linux_x64'
-            shared
-
-            sources.cpp {
-                source {
-                    lib library: 'jdk', linkage: 'api'
-
-                    srcDir 'src/main/jni'
-                    include '**/*.cpp'
-                }
-            }
-
-            binaries.all {
-                if (toolChain in Gcc || toolChain in Clang) {
-                    cppCompiler.args '-Wall', '-Wextra', '-Werror', '-std=c++11', "-isystem${projectDir}/thirdparty/opencv/include"
-                    linker.args "-L${projectDir}/thirdparty/opencv/lib", '-lopencv_core', '-lopencv_dnn',
-                    '-lopencv_imgproc', '-ltbb'
-                }
-            }
-        }
-    }
-
-    binaries {
-        all { binary ->
-            logger.quiet('binary tasks are ' + tasks)
-            binary.tasks.withType(CppCompile) { task ->
-                task.dependsOn generateJNIHeaders
-                task.includes generateJNIHeaders.outputs
-                task.inputs.dir generateJNIHeaders.outputs
-
-            }
-        }
-        withType(SharedLibraryBinarySpec) {
-            gatherNativeLibraries.dependsOn it.buildTask
-            gatherNativeLibraries.from it.sharedLibraryFile
-        }
-    }
+    workingDir "$buildDir"
+    executable "$projectDir/src/main/jni/resources/compile.sh"
+    args = ["native-builds", outputPath, generateJNIHeaders.outputDir,
+            "$projectDir/src/main/jni"]
 }

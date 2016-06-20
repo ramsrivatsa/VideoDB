@@ -8,11 +8,17 @@ import org.opencv.core.Mat;
  */
 public class ForwardNet {
     static {
-        NativeUtils.loadLibrary("opencv_core");
-        NativeUtils.loadLibrary("opencv_imgproc");
-        NativeUtils.loadLibrary("opencv_dnn");
-        NativeUtils.loadLibrary("caffe", true);
-        NativeUtils.loadLibrary("stormcv");
+        try {
+            NativeUtils.loadLibrary("opencv_core");
+            NativeUtils.loadLibrary("opencv_imgproc");
+            NativeUtils.loadLibrary("opencv_dnn");
+            NativeUtils.loadLibrary("caffe", true);
+            NativeUtils.loadLibrary("stormcv");
+        } catch (Exception ex) {
+            System.err.println("Error loading ForwardNet native libraries");
+            ex.printStackTrace();
+            throw ex;
+        }
     }
 
     public ForwardNet(String modelTxt, String modelBin) {

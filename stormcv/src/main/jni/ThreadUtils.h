@@ -1,4 +1,4 @@
-##ifndef THREADUTILS_H
+#ifndef THREADUTILS_H
 #define THREADUTILS_H
 
 namespace ucw {

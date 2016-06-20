@@ -48,10 +48,10 @@ JNIEXPORT jlong JNICALL Java_xyz_unlimitedcodeworks_opencv_dnn_ForwardNet_create
 {
     try
     {
-        IForwardNet *net = new CVForwardNet(fromJString(env, jModelTxt),
-                                           fromJString(env, jModelBin),
-                                           fromJString(env, jMeanBin),
-                                           jCaffeOnCPU);
+        IForwardNet *net = new CaffeForwardNet(fromJString(env, jModelTxt),
+                                               fromJString(env, jModelBin),
+                                               fromJString(env, jMeanBin),
+                                               jCaffeOnCPU);
         return reinterpret_cast<jlong>(net);
     }
     catch (runtime_error *e)

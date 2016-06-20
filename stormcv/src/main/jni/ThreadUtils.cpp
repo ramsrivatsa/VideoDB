@@ -9,6 +9,8 @@
 #include <sys/syscall.h>
 #include <sys/types.h>
 
+using namespace std;
+
 namespace ucw {
 
 void setPriority(int priority)

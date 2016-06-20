@@ -54,7 +54,7 @@ namespace ucw { namespace opencv {
         return outputBlob.matRefConst().reshape(1, 1);
     }
 
-    vector<Mat> forward(const vector<Mat>& imgs)
+    vector<Mat> ForwardNet::forward(const vector<Mat>& imgs)
     {
         vector<Mat> res;
         res.reserve(imgs.size());

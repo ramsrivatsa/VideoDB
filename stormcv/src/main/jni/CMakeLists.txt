@@ -91,12 +91,18 @@ find_package(Caffe REQUIRED)
 # make sure caffe headers are treaded as system header
 include_directories(SYSTEM ${Caffe_INCLUDE_DIRS})
 # use imported targets
-# this is a hack, caffe should populate imported target with this
-if(Caffe_CPU_ONLY)
-    set_property(TARGET caffe PROPERTY
-        INTERFACE_COMPILE_DEFINITIONS CPU_ONLY
-    )
-endif()
+# this is totally hack, caffe should populate imported target properties
+# with proper definitions
+set(caffe_defs)
+foreach(defpair IN LISTS Caffe_DEFINITIONS)
+    string(REGEX REPLACE "^-D" "" defname ${defpair})
+    list(APPEND caffe_defs ${defname})
+endforeach(defpair)
+set_property(TARGET caffe PROPERTY
+    INTERFACE_COMPILE_DEFINITIONS ${caffe_defs}
+)
+message("Caffe defs: ${caffe_defs}")
+unset(caffe_defs)
 #==============================================================================
 # Actual compile target
 #==============================================================================

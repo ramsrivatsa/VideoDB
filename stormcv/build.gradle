@@ -87,14 +87,17 @@ task generateJNIHeaders(dependsOn: compileJava) {
 }
 
 task compileJNILibraries(type: Exec) {
-    ext.outputPath = "$buildDir/generated-resources"
+    ext.outputDir = "$buildDir/generated-resources"
+    description = "Compile JNI libraries"
 
-    dependsOn generateJNIHeaders
+    inputs.sourceDir "src/main/jni"
+    inputs.file generateJNIHeaders
+    outputs.dir outputDir
 
-    sourceSets.main.output.dir outputPath, builtBy: compileJNILibraries
+    sourceSets.main.output.dir outputDir, builtBy: compileJNILibraries
 
     workingDir "$buildDir"
     executable "$projectDir/src/main/jni/resources/compile.sh"
-    args = ["native-builds", outputPath, generateJNIHeaders.outputDir,
+    args = ["native-builds", outputDir, generateJNIHeaders.outputDir,
             "$projectDir/src/main/jni"]
 }

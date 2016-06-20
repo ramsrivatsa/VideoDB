@@ -72,6 +72,7 @@ public class DnnForwardOp extends OpenCVOp<CVParticle> implements ISingleInputOp
         this.useCaffe = true;
         this.modelTxt = modelTxt;
         this.modelBin = modelBin;
+        this.meanBin = meanBin;
         this.caffeOnCPU = caffeOnCPU;
 
         if (modelTxt.charAt(0) != '/') this.modelTxt = OPENCV_RES_HOME + modelTxt;

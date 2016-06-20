@@ -9,9 +9,9 @@ import org.opencv.core.Mat;
 public class ForwardNet {
     static {
         try {
-            NativeUtils.loadLibrary("opencv_core");
-            NativeUtils.loadLibrary("opencv_imgproc");
-            NativeUtils.loadLibrary("opencv_dnn");
+            NativeUtils.loadLibrary("opencv_core", true);
+            NativeUtils.loadLibrary("opencv_imgproc", true);
+            NativeUtils.loadLibrary("opencv_dnn", true);
             NativeUtils.loadLibrary("caffe", true);
             NativeUtils.loadLibrary("stormcv");
         } catch (Exception ex) {

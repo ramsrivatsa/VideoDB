@@ -93,7 +93,11 @@ find_package(OpenCV 3.1 REQUIRED)
 
 find_package(Caffe REQUIRED)
 # use imported targets
-
+if(Caffe_CPU_ONLY)
+    set_property(TARGET caffe PROPERTY
+        INTERFACE_COMPILE_DEFINITIONS CPU_ONLY
+    )
+endif()
 #==============================================================================
 # Actual compile target
 #==============================================================================

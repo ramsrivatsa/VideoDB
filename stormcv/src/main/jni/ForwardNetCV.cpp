@@ -1,4 +1,4 @@
-#include "ForwardNet.h"
+#include "ForwardNetCV.h"
 
 #include <string>
 #include <sstream>

@@ -1,4 +1,4 @@
-#include "ForwardNet.h"
+#include "ForwardNetCaffe.h"
 
 using namespace cv;
 

@@ -84,12 +84,14 @@ find_package(JNI REQUIRED)
 include_directories(SYSTEM ${JNI_INCLUDE_DIRS})
 
 find_package(OpenCV 3.1 REQUIRED)
+# make sure opencv headers are treaded as system header
 include_directories(SYSTEM ${OpenCV_INCLUDE_DIRS})
-# use imported targets
 
 find_package(Caffe REQUIRED)
+# make sure caffe headers are treaded as system header
 include_directories(SYSTEM ${Caffe_INCLUDE_DIRS})
 # use imported targets
+# this is a hack, caffe should populate imported target with this
 if(Caffe_CPU_ONLY)
     set_property(TARGET caffe PROPERTY
         INTERFACE_COMPILE_DEFINITIONS CPU_ONLY

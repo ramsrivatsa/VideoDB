@@ -3,10 +3,14 @@
 
 #include "jni_helper.h"
 #include "xyz_unlimitedcodeworks_opencv_dnn_ForwardNet.h"
-#include "ForwardNet.h"
+#include "ForwardNetCaffe.h"
+#include "ForwardNetCV.h"
+#include "ThreadUtils.h"
 
 using namespace std;
 using namespace ucw;
+using CVForwardNet = ucw::opencv::ForwardNet;
+using CaffeForwardNet = ucw::caffe::ForwardNet;
 
 /*
  * ==========================================================================================================
@@ -17,13 +21,38 @@ using namespace ucw;
  * Method:    create
  * Signature: (Ljava/lang/String;Ljava/lang/String;)J
  */
-JNIEXPORT jlong JNICALL Java_xyz_unlimitedcodeworks_opencv_dnn_ForwardNet_create
-(JNIEnv *env, jclass, jstring jModelTxt, jstring jModelBin)
+JNIEXPORT jlong JNICALL Java_xyz_unlimitedcodeworks_opencv_dnn_ForwardNet_create__Ljava_lang_String_2Ljava_lang_String_2
+  (JNIEnv *env, jclass, jstring jModelTxt, jstring jModelBin)
 {
     try
     {
-        return reinterpret_cast<jlong>(new ForwardNet(fromJString(env, jModelTxt),
-                                                      fromJString(env, jModelBin)));
+        IForwardNet *net = new CVForwardNet(fromJString(env, jModelTxt),
+                                            fromJString(env, jModelBin));
+        return reinterpret_cast<jlong>(net);
+    }
+    catch (runtime_error *e)
+    {
+        throwJniException(env, e);
+    }
+
+    return 0;
+}
+
+/*
+ * Class:     xyz_unlimitedcodeworks_opencv_dnn_ForwardNet
+ * Method:    create
+ * Signature: (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Z)J
+ */
+JNIEXPORT jlong JNICALL Java_xyz_unlimitedcodeworks_opencv_dnn_ForwardNet_create__Ljava_lang_String_2Ljava_lang_String_2Ljava_lang_String_2Z
+(JNIEnv *env, jclass, jstring jModelTxt, jstring jModelBin, jstring jMeanBin, jboolean jCaffeOnCPU)
+{
+    try
+    {
+        IForwardNet *net = new CVForwardNet(fromJString(env, jModelTxt),
+                                           fromJString(env, jModelBin),
+                                           fromJString(env, jMeanBin),
+                                           jCaffeOnCPU);
+        return reinterpret_cast<jlong>(net);
     }
     catch (runtime_error *e)
     {
@@ -42,7 +71,7 @@ JNIEXPORT void JNICALL Java_xyz_unlimitedcodeworks_opencv_dnn_ForwardNet_n_1forw
 (JNIEnv *env, jclass, jlong nativeObj, jlong inputObj, jlong outputObj)
 {
     if (nativeObj) {
-        auto &fn = *reinterpret_cast<ForwardNet*>(nativeObj);
+        auto &fn = *reinterpret_cast<IForwardNet*>(nativeObj);
         auto &input = *reinterpret_cast<cv::Mat*>(inputObj);
         auto &output = *reinterpret_cast<cv::Mat*>(outputObj);
 
@@ -62,7 +91,7 @@ JNIEXPORT void JNICALL Java_xyz_unlimitedcodeworks_opencv_dnn_ForwardNet_n_1forw
 JNIEXPORT void JNICALL Java_xyz_unlimitedcodeworks_opencv_dnn_ForwardNet_n_1delete
 (JNIEnv *, jclass, jlong nativeObj)
 {
-    auto *fn = reinterpret_cast<ForwardNet*>(nativeObj);
+    auto *fn = reinterpret_cast<IForwardNet*>(nativeObj);
     delete fn;
 }
 
@@ -75,7 +104,7 @@ JNIEXPORT void JNICALL Java_xyz_unlimitedcodeworks_opencv_dnn_ForwardNet_n_1setP
 (JNIEnv *env, jclass, jint priority)
 {
     try {
-        ForwardNet::setPriority(priority);
+        setPriority(priority);
     } catch (runtime_error *e) {
         throwJniException(env, e);
     }
@@ -90,7 +119,7 @@ JNIEXPORT jlong JNICALL Java_xyz_unlimitedcodeworks_opencv_dnn_ForwardNet_n_1get
 (JNIEnv *env, jclass)
 {
     try {
-        return ForwardNet::getCurrentTid();
+        return getCurrentTid();
     } catch (runtime_error *e) {
         throwJniException(env, e);
         return 0; // won't reach here

@@ -2,11 +2,10 @@
 
 using namespace cv;
 
-namespace ucw {
+namespace ucw { namespace caffe {
     ForwardNet::ForwardNet(const string& model_file,
                            const string& trained_file,
                            const string& mean_file,
-                           const string& label_file,
                            const bool CPU) {
 
         if (CPU) Caffe::set_mode(Caffe::CPU);
@@ -36,20 +35,6 @@ namespace ucw {
         SetMean(mean_file);
         meanTime = clock() - meanTime;
         std::cout << "Loading the mean file: " << double(meanTime) / CLOCKS_PER_SEC * 1000 << "ms" << std::endl;
-
-        clock_t labelTime = clock();
-        /*  Load labels. */
-        std::ifstream labels(label_file.c_str());
-        CHECK(labels) << "Unable to open labels file " << label_file;
-        string line;
-        while (std::getline(labels, line))
-          labels_.push_back(string(line));
-        labelTime = clock() - labelTime;
-        std::cout << "Loading the label file: " << double(labelTime) / CLOCKS_PER_SEC * 1000 << "ms" << std::endl;
-
-        Blob<float>* output_layer = net_->output_blobs()[0];
-        CHECK_EQ(labels_.size(), output_layer->channels())
-          << "Number of labels is different from the output layer dimension.";
     }
 
     /*  Load the mean file in binaryproto format. */
@@ -176,29 +161,7 @@ namespace ucw {
         cv::split(sample_normalized, *input_channels);
 
     }
-
-//    void ForwardNet::setPriority(int priority)
-//      {
-//        static char buf[512];
-//        sched_param param;
-//        param.sched_priority = priority;
-//        pid_t tid;
-//
-//        tid = syscall(SYS_gettid);
-//
-//        if (sched_setscheduler(tid, SCHED_RR, &param) == -1) {
-//            int errsv = errno;
-//            const char *msg = strerror_r(errsv, buf, 512);
-//            throw runtime_error(msg);
-//        }
-//      }
-//
-//    long ForwardNet::getCurrentTid()
-//      {
-//        pid_t tid = syscall(SYS_gettid);
-//        return tid;
-//      }
-
+}
 }
 
 //NOTE: comment this block out as a standalone app to test

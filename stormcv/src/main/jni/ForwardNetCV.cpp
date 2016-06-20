@@ -7,19 +7,11 @@
 #include <opencv2/dnn.hpp>
 #include <opencv2/imgproc.hpp>
 
-#include <errno.h>
-#include <sched.h>
-#include <string.h>
-#include <unistd.h>
-#include <sys/syscall.h>
-#include <sys/types.h>
-
-
 using namespace std;
 using namespace cv;
 using namespace cv::dnn;
 
-namespace ucw {
+namespace ucw { namespace opencv {
 
     ForwardNet::ForwardNet(const string &modelTxt, const string &modelBin)
       {
@@ -39,7 +31,7 @@ namespace ucw {
       }
 
     Mat ForwardNet::forward(const cv::Mat &input)
-      {
+    {
         if (input.empty()) {
             return Mat();
         }
@@ -60,28 +52,17 @@ namespace ucw {
         auto outputBlob = net.getBlob("prob");   //gather output of "prob" layer
 
         return outputBlob.matRefConst().reshape(1, 1);
-      }
+    }
 
-    void ForwardNet::setPriority(int priority)
-      {
-        static char buf[512];
-        sched_param param;
-        param.sched_priority = priority;
-        pid_t tid;
-
-        tid = syscall(SYS_gettid);
-
-        if (sched_setscheduler(tid, SCHED_RR, &param) == -1) {
-            int errsv = errno;
-            const char *msg = strerror_r(errsv, buf, 512);
-            throw runtime_error(msg);
+    vector<Mat> forward(const vector<Mat>& imgs)
+    {
+        vector<Mat> res;
+        res.reserve(imgs.size());
+        for (auto img : imgs) {
+            res.push_back(forward(img));
         }
-      }
+        return res;
+    }
 
-    long ForwardNet::getCurrentTid()
-      {
-        pid_t tid = syscall(SYS_gettid);
-        return tid;
-      }
-
+} // namespace opencv
 } // namespace ucw

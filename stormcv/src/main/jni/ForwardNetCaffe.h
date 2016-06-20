@@ -1,5 +1,7 @@
-#ifndef FORWARDNET_H
-#define FORWARDNET_H
+#ifndef FORWARDNET_CAFFE_H
+#define FORWARDNET_CAFFE_H
+
+#include "IForwardNet.h"
 
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
@@ -14,30 +16,25 @@
 #include <vector>
 #include <stdexcept>
 
-#include <errno.h>
-#include <sched.h>
-#include <unistd.h>
-#include <sys/syscall.h>
-#include <sys/types.h>
-
 using std::string;
 using namespace caffe;  // NOLINT(build/namespaces)
 
-namespace ucw {
-    class ForwardNet {
+namespace ucw { namespace caffe {
+    class ForwardNet : public IForwardNet {
     public:
       ForwardNet(const string& model_file,
                  const string& trained_file,
                  const string& mean_file,
-                 const string& label_file, const bool CPU = true);
+                 const bool CPU = true);
+      ~ForwardNet() override {}
 
       void SetMean(const string& mean_file);
 
       void setGPU();
 
-      std::vector<cv::Mat> forward(const std::vector<cv::Mat>& imgs);
+      std::vector<cv::Mat> forward(const std::vector<cv::Mat>& imgs) override;
 
-      cv::Mat forward(const cv::Mat &input);
+      cv::Mat forward(const cv::Mat &input) override;
 
       void WrapInputLayer(std::vector<cv::Mat>* input_channels, int n);
 
@@ -53,8 +50,8 @@ namespace ucw {
       cv::Size input_geometry_;
       int num_channels_;
       cv::Mat mean_;
-      std::vector<string> labels_;
     };
 }
+}
 
-#endif
+#endif // FORWARDNET_CAFFE_H

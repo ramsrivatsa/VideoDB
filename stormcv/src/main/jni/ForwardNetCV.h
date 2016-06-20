@@ -1,28 +1,28 @@
-#ifndef FORWARDNET_H
-#define FORWARDNET_H
+#ifndef FORWARDNET_CV_H
+#define FORWARDNET_CV_H
 
-#include <string>
+#include "IForwardNet.h"
 
 #include <opencv2/core.hpp>
 #include <opencv2/dnn.hpp>
 
-namespace ucw {
+#include <string>
 
-    class ForwardNet
-      {
-        cv::dnn::Net net;
+namespace ucw { namespace opencv {
 
-    public:
-        ForwardNet(const std::string &modelTxt, const std::string &modelBin);
+class ForwardNet : public IForwardNet
+{
+    cv::dnn::Net net;
 
-        std::pair<uint32_t, double> processImage(cv::Mat &frame);
+public:
+    ForwardNet(const std::string &modelTxt, const std::string &modelBin);
+    ~ForwardNet() override {}
 
-        cv::Mat forward(const cv::Mat &input);
+    cv::Mat forward(const cv::Mat &input) override;
 
-        static void setPriority(int priority = 0);
-
-        static long getCurrentTid();
-      };
+    std::vector<cv::Mat> forward(const std::vector<cv::Mat>& imgs) override;
+};
 
 }
-#endif // FORWARDNET_H
+}
+#endif // FORWARDNET_CV_H

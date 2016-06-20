@@ -36,6 +36,9 @@ public class DnnForwardOp extends OpenCVOp<CVParticle> implements ISingleInputOp
     private ForwardNet net;
     private String modelTxt;
     private String modelBin;
+    private String meanBin;
+    private boolean caffeOnCPU;
+    private boolean useCaffe;
     private long kernelThreadId;
     private int thisTaskIndex;
 
@@ -53,11 +56,24 @@ public class DnnForwardOp extends OpenCVOp<CVParticle> implements ISingleInputOp
      */
     public DnnForwardOp(String name, String modelTxt, String modelBin) {
         this.name = name;
+        this.useCaffe = false;
         this.modelTxt = modelTxt;
         this.modelBin = modelBin;
 
         if (modelTxt.charAt(0) != '/') this.modelTxt = OPENCV_RES_HOME + modelTxt;
         if (modelBin.charAt(0) != '/') this.modelBin = OPENCV_RES_HOME + modelBin;
+    }
+
+    public DnnForwardOp(String name, String modelTxt, String modelBin, String meanBin, boolean caffeOnCPU) {
+        this.name = name;
+        this.useCaffe = true;
+        this.modelTxt = modelTxt;
+        this.modelBin = modelBin;
+        this.caffeOnCPU = caffeOnCPU;
+
+        if (modelTxt.charAt(0) != '/') this.modelTxt = OPENCV_RES_HOME + modelTxt;
+        if (modelBin.charAt(0) != '/') this.modelBin = OPENCV_RES_HOME + modelBin;
+        if (meanBin.charAt(0) != '/') this.meanBin = OPENCV_RES_HOME + meanBin;
     }
 
     /**
@@ -87,7 +103,13 @@ public class DnnForwardOp extends OpenCVOp<CVParticle> implements ISingleInputOp
         try {
             File modelTxtFile = NativeUtils.getAsLocalFile(modelTxt);
             File modelBinFile = NativeUtils.getAsLocalFile(modelBin);
-            net = new ForwardNet(modelTxtFile.getAbsolutePath(), modelBinFile.getAbsolutePath());
+            if (useCaffe) {
+                File meanBinFile = NativeUtils.getAsLocalFile(meanBin);
+                net = new ForwardNet(modelTxtFile.getAbsolutePath(), modelBinFile.getAbsolutePath(),
+                                     meanBinFile.getAbsolutePath(), useCaffe, caffeOnCPU);
+            } else {
+                net = new ForwardNet(modelTxtFile.getAbsolutePath(), modelBinFile.getAbsolutePath());
+            }
             net.setThreadPriority(99);
         } catch (Exception e) {
             logger.error("Unable to instantiate DnnForwardOp due to: " + e.getMessage(), e);

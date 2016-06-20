@@ -11,11 +11,19 @@ public class ForwardNet {
         NativeUtils.loadLibrary("opencv_core");
         NativeUtils.loadLibrary("opencv_imgproc");
         NativeUtils.loadLibrary("opencv_dnn");
-        NativeUtils.loadLibrary("ForwardNet");
+        NativeUtils.loadLibrary("stormcv");
     }
 
     public ForwardNet(String modelTxt, String modelBin) {
-        nativeObj = create(modelTxt, modelBin);
+        this(modelTxt, modelBin, "", false, false);
+    }
+
+    public ForwardNet(String modelTxt, String modelBin, String meanBin, boolean useCVOrCaffe, boolean caffeOnCPU) {
+        if (useCVOrCaffe) {
+            nativeObj = create(modelTxt, modelBin);
+        } else {
+            nativeObj = create(modelTxt, modelBin, meanBin, caffeOnCPU);
+        }
     }
 
     public Mat forward(Mat input) {
@@ -39,6 +47,8 @@ public class ForwardNet {
     }
 
     private static native long create(String modelTxt, String modelBin);
+
+    private static native long create(String modelTxt, String modelBin, String meanBin, boolean caffeOnCPU);
 
     private static native void n_forward(long nativeObj, long nativeInput, long nativeOutput);
 

@@ -95,6 +95,6 @@ task compileJNILibraries(type: Exec) {
 
     workingDir "$buildDir"
     executable "$projectDir/src/main/jni/resources/compile.sh"
-    args ["native-builds", outputPath, generateJNIHeaders.outputDir,
+    args = ["native-builds", outputPath, generateJNIHeaders.outputDir,
             "$projectDir/src/main/jni"]
 }

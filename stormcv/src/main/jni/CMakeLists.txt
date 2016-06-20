@@ -81,14 +81,14 @@ include_directories(SYSTEM ${JNI_CLASS_INCLUDE_DIR})
 
 ## Thirdy party packages
 find_package(JNI REQUIRED)
-if(JNI_FOUND)
-    include_directories(SYSTEM ${JNI_INCLUDE_DIRS})
-endif()
+include_directories(SYSTEM ${JNI_INCLUDE_DIRS})
 
 find_package(OpenCV 3.1 REQUIRED)
+include_directories(SYSTEM ${OpenCV_INCLUDE_DIRS})
 # use imported targets
 
 find_package(Caffe REQUIRED)
+include_directories(SYSTEM ${Caffe_INCLUDE_DIRS})
 # use imported targets
 if(Caffe_CPU_ONLY)
     set_property(TARGET caffe PROPERTY

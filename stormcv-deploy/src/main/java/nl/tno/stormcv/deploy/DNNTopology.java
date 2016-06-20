@@ -40,6 +40,8 @@ public class DNNTopology {
         int startDelay = 0;
         int fatPriority = 0;
         String fetcherType = "video";
+        boolean useCaffe = false;
+        boolean useGPU = false;
         List<String> files = new ArrayList<>();
         for (String arg : args) {
             if (arg.startsWith(switchKeyword)) {
@@ -93,6 +95,12 @@ public class DNNTopology {
                     case "auto-sleep":
                         autoSleep = value != 0;
                         break;
+                    case "use-caffe":
+                        useCaffe = value != 0;
+                        break;
+                    case "use-gpu":
+                        useGPU = value != 0;
+                        break;
                 }
             } else {
                 // Multiple files will be spread over the available spouts
@@ -130,8 +138,18 @@ public class DNNTopology {
         // specify the list with SingleInputOperations to be executed sequentially by the 'fat' bolt
         List<ISingleInputOperation> operations = new ArrayList<>();
         operations.add(new HaarCascadeOp("face", "haarcascade_frontalface_default.xml"));
-        operations.add(new DnnForwardOp("classprob", "/data/bvlc_googlenet.prototxt", "/data/bvlc_googlenet.caffemodel")
-                       .outputFrame(true).threadPriority(fatPriority));
+        DnnForwardOp dnnforward;
+        if (useCaffe) {
+            dnnforward = new DnnForwardOp("classprob", "/data/bvlc_googlenet.prototxt",
+                                                       "/data/bvlc_googlenet.caffemodel",
+                                                       "/data/imagenet_mean.binaryproto",
+                                                       !useGPU); // caffeOnCPU == !useGPU
+        } else {
+            dnnforward = new DnnForwardOp("classprob", "/data/bvlc_googlenet.prototxt",
+                                                       "/data/bvlc_googlenet.caffemodel");
+        }
+        dnnforward.outputFrame(true).threadPriority(fatPriority);
+        operations.add(dnnforward);
         operations.add(new DnnClassifyOp("classprob", "/data/synset_words.txt").addMetadata(true).outputFrame(true));
         //operations.add(new FeatureExtractionOp("sift", FeatureDetector.SIFT, DescriptorExtractor.SIFT));
 

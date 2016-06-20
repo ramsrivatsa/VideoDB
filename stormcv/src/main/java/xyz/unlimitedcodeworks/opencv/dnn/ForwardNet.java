@@ -11,7 +11,7 @@ public class ForwardNet {
         NativeUtils.loadLibrary("opencv_core");
         NativeUtils.loadLibrary("opencv_imgproc");
         NativeUtils.loadLibrary("opencv_dnn");
-        NativeUtils.loadLibrary("caffe");
+        NativeUtils.loadLibrary("caffe", true);
         NativeUtils.loadLibrary("stormcv");
     }
 

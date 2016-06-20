@@ -61,6 +61,23 @@ public class NativeUtils {
     }
 
     /**
+     * Loads a native library represented by the given name.
+     * @param libname
+     * @param trySystem if true, try directly pass the libname to System.loadLibrary first
+     */
+    public static void loadLibrary(String libname, boolean trySystem) {
+        if (trySystem) {
+            try {
+                System.loadLibrary(libname);
+            } catch (UnsatisfiedLinkError e) {
+                loadLibrary(libname);
+            }
+        } else {
+            loadLibrary(libname);
+        }
+    }
+
+    /**
      * Determines the OS dependent library file name.
      *
      * @return the proper name of the library

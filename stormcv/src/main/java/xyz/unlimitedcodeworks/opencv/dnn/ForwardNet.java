@@ -11,9 +11,6 @@ public class ForwardNet {
         try {
             NativeUtils.loadLibrary("opencv_core", true);
             NativeUtils.loadLibrary("opencv_imgproc", true);
-            NativeUtils.loadLibrary("opencv_dnn", true);
-            NativeUtils.loadLibrary("caffe", true);
-            NativeUtils.loadLibrary("stormcv");
         } catch (Exception ex) {
             System.err.println("Error loading ForwardNet native libraries");
             ex.printStackTrace();
@@ -26,6 +23,7 @@ public class ForwardNet {
     }
 
     public ForwardNet(String modelTxt, String modelBin, String meanBin, boolean useCaffe, boolean caffeOnCPU) {
+        lazyLoad(useCaffe);
         if (!useCaffe) {
             nativeObj = create(modelTxt, modelBin);
         } else {
@@ -52,6 +50,26 @@ public class ForwardNet {
         n_delete(nativeObj);
         super.finalize();
     }
+
+    private static synchronized void lazyLoad(boolean useCaffe) {
+        if (!lazyLoaded) {
+            try {
+                if (useCaffe) {
+                    NativeUtils.loadLibrary("caffe", true);
+                    NativeUtils.loadLibrary("stormcv_caffe");
+                } else {
+                    NativeUtils.loadLibrary("opencv_dnn", true);
+                    NativeUtils.loadLibrary("stormcv_cv");
+                }
+                lazyLoaded = true;
+            } catch (Exception ex) {
+                System.err.println("Error loading ForwardNet native libraries");
+                ex.printStackTrace();
+                throw ex;
+            }
+        }
+    }
+    private static boolean lazyLoaded = false;
 
     private static native long create(String modelTxt, String modelBin);
 

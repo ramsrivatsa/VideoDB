@@ -3,14 +3,20 @@
 
 #include "jni_helper.h"
 #include "xyz_unlimitedcodeworks_opencv_dnn_ForwardNet.h"
-#include "ForwardNetCaffe.h"
-#include "ForwardNetCV.h"
 #include "ThreadUtils.h"
+
+#ifdef FN_USE_CAFFE
+#include "ForwardNetCaffe.h"
+using CaffeForwardNet = ucw::caffe::ForwardNet;
+#else
+#include "ForwardNetCV.h"
+using CVForwardNet = ucw::opencv::ForwardNet;
+#endif
+
+#define UNUSED(x) (void)(x)
 
 using namespace std;
 using namespace ucw;
-using CVForwardNet = ucw::opencv::ForwardNet;
-using CaffeForwardNet = ucw::caffe::ForwardNet;
 
 /*
  * ==========================================================================================================
@@ -24,6 +30,11 @@ using CaffeForwardNet = ucw::caffe::ForwardNet;
 JNIEXPORT jlong JNICALL Java_xyz_unlimitedcodeworks_opencv_dnn_ForwardNet_create__Ljava_lang_String_2Ljava_lang_String_2
   (JNIEnv *env, jclass, jstring jModelTxt, jstring jModelBin)
 {
+    UNUSED(env);
+    UNUSED(jModelTxt);
+    UNUSED(jModelBin);
+
+#ifndef FN_USE_CAFFE
     try
     {
         IForwardNet *net = new CVForwardNet(fromJString(env, jModelTxt),
@@ -34,6 +45,7 @@ JNIEXPORT jlong JNICALL Java_xyz_unlimitedcodeworks_opencv_dnn_ForwardNet_create
     {
         throwJniException(env, e);
     }
+#endif
 
     return 0;
 }
@@ -46,6 +58,13 @@ JNIEXPORT jlong JNICALL Java_xyz_unlimitedcodeworks_opencv_dnn_ForwardNet_create
 JNIEXPORT jlong JNICALL Java_xyz_unlimitedcodeworks_opencv_dnn_ForwardNet_create__Ljava_lang_String_2Ljava_lang_String_2Ljava_lang_String_2Z
 (JNIEnv *env, jclass, jstring jModelTxt, jstring jModelBin, jstring jMeanBin, jboolean jCaffeOnCPU)
 {
+    UNUSED(env);
+    UNUSED(jModelTxt);
+    UNUSED(jModelBin);
+    UNUSED(jMeanBin);
+    UNUSED(jCaffeOnCPU);
+
+#ifdef FN_USE_CAFFE
     try
     {
         IForwardNet *net = new CaffeForwardNet(fromJString(env, jModelTxt),
@@ -58,7 +77,7 @@ JNIEXPORT jlong JNICALL Java_xyz_unlimitedcodeworks_opencv_dnn_ForwardNet_create
     {
         throwJniException(env, e);
     }
-
+#endif
     return 0;
 }
 

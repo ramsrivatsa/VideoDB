@@ -110,14 +110,37 @@ message("Using Caffe from ${Caffe_INCLUDE_DIRS}")
 #==============================================================================
 # Actual compile target
 #==============================================================================
-aux_source_directory(. SRC_LIST)
+set(stormcv_cv_SRC
+    ForwardNetCV.cpp
+    JniForwardNet.cpp
+    ThreadUtils.cpp
+    jni_helper.cpp
+)
 
-add_library(stormcv SHARED ${SRC_LIST})
-target_link_libraries(stormcv
+set(stormcv_caffe_SRC
+    ForwardNetCaffe.cpp
+    JniForwardNet.cpp
+    ThreadUtils.cpp
+    jni_helper.cpp
+)
+
+add_library(stormcv_cv SHARED ${stormcv_cv_SRC})
+target_link_libraries(stormcv_cv
     opencv_core
     opencv_imgproc
     opencv_dnn
-    caffe
 )
 
-install(TARGETS stormcv DESTINATION native/x64)
+add_library(stormcv_caffe SHARED ${stormcv_caffe_SRC})
+target_link_libraries(stormcv_caffe
+    opencv_core
+    opencv_imgproc
+    caffe
+)
+target_compile_definitions(stormcv_caffe
+    INTERFACE
+    FN_USE_CAFFE)
+
+
+install(TARGETS stormcv_cv DESTINATION native/x64)
+install(TARGETS stormcv_caffe DESTINATION native/x64)

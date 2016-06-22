@@ -103,6 +103,10 @@ set_property(TARGET caffe PROPERTY
 )
 message("Caffe defs: ${caffe_defs}")
 unset(caffe_defs)
+
+message("Using JNI from ${JNI_INCLUDE_DIRS}")
+message("Using OpenCV from ${OpenCV_INCLUDE_DIRS}")
+message("Using Caffe from ${Caffe_INCLUDE_DIRS}")
 #==============================================================================
 # Actual compile target
 #==============================================================================

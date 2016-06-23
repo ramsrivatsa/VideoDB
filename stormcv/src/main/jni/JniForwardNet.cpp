@@ -1,4 +1,5 @@
 #include <string>
+#include <iostream>
 #include <jni.h>
 
 #include "jni_helper.h"
@@ -78,6 +79,7 @@ JNIEXPORT jlong JNICALL Java_xyz_unlimitedcodeworks_opencv_dnn_ForwardNet_create
         throwJniException(env, e);
     }
 #endif
+    throwJniError(env, "Not implemented");
     return 0;
 }
 
@@ -89,6 +91,9 @@ JNIEXPORT jlong JNICALL Java_xyz_unlimitedcodeworks_opencv_dnn_ForwardNet_create
 JNIEXPORT void JNICALL Java_xyz_unlimitedcodeworks_opencv_dnn_ForwardNet_n_1forward
 (JNIEnv *env, jclass, jlong nativeObj, jlong inputObj, jlong outputObj)
 {
+    if (!nativeObj) {
+        throwJniError(env, "Method called on an uninitialized ForwardNet object");
+    }
     if (nativeObj) {
         auto &fn = *reinterpret_cast<IForwardNet*>(nativeObj);
         auto &input = *reinterpret_cast<cv::Mat*>(inputObj);

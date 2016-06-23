@@ -141,7 +141,7 @@ target_link_libraries(stormcv_caffe
     caffe
 )
 target_compile_definitions(stormcv_caffe
-INTERFACE
+PUBLIC
     FN_USE_CAFFE
 )
 

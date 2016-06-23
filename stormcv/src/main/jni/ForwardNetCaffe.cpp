@@ -86,7 +86,6 @@ namespace ucw { namespace caffe {
             std::vector<cv::Mat> input_channels;
             WrapInputLayer(&input_channels, i);
             Preprocess(imgs[i], &input_channels);
-
         }
         net_->ForwardPrefilled();
 
@@ -104,9 +103,6 @@ namespace ucw { namespace caffe {
             cv::Mat mat(result,true);
             Mat probMat = mat.reshape(1,1);
 
-            std::cerr << "ForwardNetCaffe::forward: returned probMat type " << probMat.type()
-                      << " cols " << probMat.cols << " rows " << probMat.rows
-                      << " elemSize " << probMat.elemSize() << std::endl;
             if (probMat.elemSize() * probMat.cols * probMat.rows == 0) {
                 throw std::runtime_error("Caffe forward pass result converted to empty cv::Mat");
             }

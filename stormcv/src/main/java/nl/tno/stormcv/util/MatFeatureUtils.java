@@ -57,6 +57,8 @@ public class MatFeatureUtils {
         int elemSize = (int) mat.elemSize();
         int type = mat.type();
 
+        System.err.println("featureFromMat: type " + type);
+
         float[] data = new float[cols * rows * elemSize];
         mat.get(0, 0, data);
 

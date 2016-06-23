@@ -11,6 +11,7 @@ public class ForwardNet {
         try {
             NativeUtils.loadLibrary("opencv_core", true);
             NativeUtils.loadLibrary("opencv_imgproc", true);
+            NativeUtils.loadLibrary("stormcv_thread", true);
         } catch (Exception ex) {
             System.err.println("Error loading ForwardNet native libraries");
             ex.printStackTrace();

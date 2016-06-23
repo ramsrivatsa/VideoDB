@@ -113,15 +113,18 @@ message("Using Caffe from ${Caffe_INCLUDE_DIRS}")
 set(stormcv_cv_SRC
     ForwardNetCV.cpp
     JniForwardNet.cpp
-    ThreadUtils.cpp
     jni_helper.cpp
 )
 
 set(stormcv_caffe_SRC
     ForwardNetCaffe.cpp
     JniForwardNet.cpp
-    ThreadUtils.cpp
     jni_helper.cpp
+)
+
+set(stormcv_thread_SRC
+    ThreadUtils.cpp
+    JniThreadUtils.cpp
 )
 
 add_library(stormcv_cv SHARED ${stormcv_cv_SRC})
@@ -138,9 +141,13 @@ target_link_libraries(stormcv_caffe
     caffe
 )
 target_compile_definitions(stormcv_caffe
-    INTERFACE
-    FN_USE_CAFFE)
+INTERFACE
+    FN_USE_CAFFE
+)
+
+add_library(stormcv_thread SHARED ${stormcv_thread_SRC})
 
 
 install(TARGETS stormcv_cv DESTINATION native/x64)
 install(TARGETS stormcv_caffe DESTINATION native/x64)
+install(TARGETS stormcv_thread DESTINATION native/x64)

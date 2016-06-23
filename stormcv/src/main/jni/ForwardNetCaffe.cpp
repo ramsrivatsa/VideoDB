@@ -97,12 +97,18 @@ namespace ucw { namespace caffe {
             const float* end = begin + output_layer->channels();
             /*  Copy the output layer to a std::vector */
             std::vector<float> result(begin, end);
+            if (result.size() == 0) {
+                throw runtime_error("Caffe forward pass returned empty result");
+            }
             cv::Mat mat(result,true);
             Mat probMat = mat.reshape(1,1);
 
             std::cerr << "ForwardNetCaffe::forward: returned probMat type " << probMat.type()
                       << " cols " << probMat.cols << " rows " << probMat.rows
                       << " elemSize " << probMat.elemSize() << std::endl;
+            if (probMat.elemSize() * probMat.cols * probMat.rows == 0) {
+                throw runtime_error("Caffe forward pass result converted to empty cv::Mat");
+            }
             outputs.push_back(probMat);
         }
 

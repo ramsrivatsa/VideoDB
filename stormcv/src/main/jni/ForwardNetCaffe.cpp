@@ -99,8 +99,11 @@ namespace ucw { namespace caffe {
             std::vector<float> result(begin, end);
             cv::Mat mat(result,true);
             Mat probMat = mat.reshape(1,1);
-            outputs.push_back(probMat);
 
+            std::cerr << "ForwardNetCaffe::forward: returned probMat type " << probMat.type()
+                      << " cols " << probMat.cols << " rows " << probMat.rows
+                      << " elemSize " << probMat.elemSize() << std::endl;
+            outputs.push_back(probMat);
         }
 
         return outputs;

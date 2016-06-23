@@ -1,4 +1,5 @@
 #include "ForwardNetCaffe.h"
+#include <stdexcept>
 
 using namespace cv;
 

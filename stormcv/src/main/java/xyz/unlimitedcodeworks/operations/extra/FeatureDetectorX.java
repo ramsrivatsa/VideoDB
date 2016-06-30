@@ -16,10 +16,11 @@ public class FeatureDetectorX extends FeatureDetector {
     static {
         try {
             NativeUtils.loadLibrary("opencv_core", true);
+            NativeUtils.loadLibrary("opencv_xfeatures2d", true);
             NativeUtils.loadLibrary("stormcv_common");
             NativeUtils.loadLibrary("stormcv_detectorx");
         } catch (Exception ex) {
-            System.err.println("Error loading ForwardNet native libraries");
+            System.err.println("Error loading FeatureDetectorX native libraries");
             ex.printStackTrace();
             throw ex;
         }
@@ -34,6 +35,7 @@ public class FeatureDetectorX extends FeatureDetector {
         try {
             retVal = FeatureDetector.create(detectorType);
         } catch (CvException ex) {
+            System.err.println("Using native xfeatures2d, you can ignore the previous OpenCV Error: Bad argument");
             retVal = new FeatureDetectorX(n_create(detectorType));
             ((FeatureDetectorX) retVal).patched = true;
         }

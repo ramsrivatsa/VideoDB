@@ -160,6 +160,8 @@ add_library(stormcv_detectorx SHARED
 )
 target_link_libraries(stormcv_detectorx
     stormcv_common
+
+    opencv_xfeatures2d
 )
 
 add_library(stormcv_extractorx SHARED
@@ -168,8 +170,11 @@ add_library(stormcv_extractorx SHARED
 )
 target_link_libraries(stormcv_extractorx
     stormcv_common
+
+    opencv_xfeatures2d
 )
 
+install(TARGETS stormcv_common DESTINATION native/x64)
 install(TARGETS stormcv_cv DESTINATION native/x64)
 install(TARGETS stormcv_caffe DESTINATION native/x64)
 install(TARGETS stormcv_thread DESTINATION native/x64)

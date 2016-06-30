@@ -17,10 +17,11 @@ public class DescriptorExtractorX extends DescriptorExtractor {
     static {
         try {
             NativeUtils.loadLibrary("opencv_core", true);
+            NativeUtils.loadLibrary("opencv_xfeatures2d", true);
             NativeUtils.loadLibrary("stormcv_common");
             NativeUtils.loadLibrary("stormcv_extractorx");
         } catch (Exception ex) {
-            System.err.println("Error loading ForwardNet native libraries");
+            System.err.println("Error loading DescriptorExtractorX native libraries");
             ex.printStackTrace();
             throw ex;
         }
@@ -36,6 +37,7 @@ public class DescriptorExtractorX extends DescriptorExtractor {
         try {
             retVal = DescriptorExtractor.create(extractorType);
         } catch (CvException ex) {
+            System.err.println("Using native xfeatures2d, you can ignore the previous OpenCV Error: Bad argument");
             retVal = new DescriptorExtractorX(n_create(extractorType));
             ((DescriptorExtractorX) retVal).patched = true;
         }

@@ -2,18 +2,18 @@
 #include <jni.h>
 
 #include "jni_helper.h"
-#include "xyz_unlimitedcodeworks_opencv_dnn_ForwardNet.h"
+#include "xyz_unlimitedcodeworks_operations_extra_ForwardNet.h"
 #include "ThreadUtils.h"
 
 using namespace std;
 using namespace ucw;
 
 /*
- * Class:     xyz_unlimitedcodeworks_opencv_dnn_ForwardNet
+ * Class:     xyz_unlimitedcodeworks_operations_extra_ForwardNet
  * Method:    n_setPriority
  * Signature: (I)V
  */
-JNIEXPORT void JNICALL Java_xyz_unlimitedcodeworks_opencv_dnn_ForwardNet_n_1setPriority
+JNIEXPORT void JNICALL Java_xyz_unlimitedcodeworks_operations_extra_ForwardNet_n_1setPriority
 (JNIEnv *env, jclass, jint priority)
 {
     try {
@@ -24,11 +24,11 @@ JNIEXPORT void JNICALL Java_xyz_unlimitedcodeworks_opencv_dnn_ForwardNet_n_1setP
 }
 
 /*
- * Class:     xyz_unlimitedcodeworks_opencv_dnn_ForwardNet
+ * Class:     xyz_unlimitedcodeworks_operations_extra_ForwardNet
  * Method:    n_getCurrentTid
- * Signature: (V)J
+ * Signature: ()J
  */
-JNIEXPORT jlong JNICALL Java_xyz_unlimitedcodeworks_opencv_dnn_ForwardNet_n_1getCurrentTid
+JNIEXPORT jlong JNICALL Java_xyz_unlimitedcodeworks_operations_extra_ForwardNet_n_1getCurrentTid
 (JNIEnv *env, jclass)
 {
     try {

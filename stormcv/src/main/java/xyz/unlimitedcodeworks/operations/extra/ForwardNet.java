@@ -1,4 +1,4 @@
-package xyz.unlimitedcodeworks.opencv.dnn;
+package xyz.unlimitedcodeworks.operations.extra;
 
 import nl.tno.stormcv.util.NativeUtils;
 import org.opencv.core.Mat;
@@ -11,6 +11,7 @@ public class ForwardNet {
         try {
             NativeUtils.loadLibrary("opencv_core", true);
             NativeUtils.loadLibrary("opencv_imgproc", true);
+            NativeUtils.loadLibrary("stormcv_common");
             NativeUtils.loadLibrary("stormcv_thread", true);
         } catch (Exception ex) {
             System.err.println("Error loading ForwardNet native libraries");
@@ -26,8 +27,10 @@ public class ForwardNet {
     public ForwardNet(String modelTxt, String modelBin, String meanBin, boolean useCaffe, boolean caffeOnCPU) {
         lazyLoad(useCaffe);
         if (!useCaffe) {
+            System.out.println("Use OpenCV::DNN as neural network");
             nativeObj = create(modelTxt, modelBin);
         } else {
+            System.out.println("Use Caffe as neural network");
             nativeObj = create(modelTxt, modelBin, meanBin, caffeOnCPU);
         }
     }

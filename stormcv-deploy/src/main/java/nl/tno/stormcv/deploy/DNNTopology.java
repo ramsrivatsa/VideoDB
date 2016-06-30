@@ -140,11 +140,13 @@ public class DNNTopology {
         operations.add(new HaarCascadeOp("face", "haarcascade_frontalface_default.xml"));
         DnnForwardOp dnnforward;
         if (useCaffe) {
+            System.out.println("Using Caffe");
             dnnforward = new DnnForwardOp("classprob", "/data/bvlc_googlenet.prototxt",
                                                        "/data/bvlc_googlenet.caffemodel",
                                                        "/data/imagenet_mean.binaryproto",
                                                        !useGPU); // caffeOnCPU == !useGPU
         } else {
+            System.out.println("Using OpenCV::DNN");
             dnnforward = new DnnForwardOp("classprob", "/data/bvlc_googlenet.prototxt",
                                                        "/data/bvlc_googlenet.caffemodel");
         }

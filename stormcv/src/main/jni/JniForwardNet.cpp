@@ -3,8 +3,7 @@
 #include <jni.h>
 
 #include "jni_helper.h"
-#include "xyz_unlimitedcodeworks_opencv_dnn_ForwardNet.h"
-#include "ThreadUtils.h"
+#include "xyz_unlimitedcodeworks_operations_extra_ForwardNet.h"
 
 #ifdef FN_USE_CAFFE
 #include "ForwardNetCaffe.h"
@@ -24,11 +23,11 @@ using namespace ucw;
  */
 
 /*
- * Class:     xyz_unlimitedcodeworks_opencv_dnn_ForwardNet
+ * Class:     xyz_unlimitedcodeworks_operations_extra_ForwardNet
  * Method:    create
  * Signature: (Ljava/lang/String;Ljava/lang/String;)J
  */
-JNIEXPORT jlong JNICALL Java_xyz_unlimitedcodeworks_opencv_dnn_ForwardNet_create__Ljava_lang_String_2Ljava_lang_String_2
+JNIEXPORT jlong JNICALL Java_xyz_unlimitedcodeworks_operations_extra_ForwardNet_create__Ljava_lang_String_2Ljava_lang_String_2
   (JNIEnv *env, jclass, jstring jModelTxt, jstring jModelBin)
 {
     UNUSED(env);
@@ -47,16 +46,16 @@ JNIEXPORT jlong JNICALL Java_xyz_unlimitedcodeworks_opencv_dnn_ForwardNet_create
         throwJniException(env, e);
     }
 #endif
-
+    throwJniError(env, "Not implemented");
     return 0;
 }
 
 /*
- * Class:     xyz_unlimitedcodeworks_opencv_dnn_ForwardNet
+ * Class:     xyz_unlimitedcodeworks_operations_extra_ForwardNet
  * Method:    create
  * Signature: (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Z)J
  */
-JNIEXPORT jlong JNICALL Java_xyz_unlimitedcodeworks_opencv_dnn_ForwardNet_create__Ljava_lang_String_2Ljava_lang_String_2Ljava_lang_String_2Z
+JNIEXPORT jlong JNICALL Java_xyz_unlimitedcodeworks_operations_extra_ForwardNet_create__Ljava_lang_String_2Ljava_lang_String_2Ljava_lang_String_2Z
 (JNIEnv *env, jclass, jstring jModelTxt, jstring jModelBin, jstring jMeanBin, jboolean jCaffeOnCPU)
 {
     UNUSED(env);
@@ -84,11 +83,11 @@ JNIEXPORT jlong JNICALL Java_xyz_unlimitedcodeworks_opencv_dnn_ForwardNet_create
 }
 
 /*
- * Class:     xyz_unlimitedcodeworks_opencv_dnn_ForwardNet
+ * Class:     xyz_unlimitedcodeworks_operations_extra_ForwardNet
  * Method:    n_forward
  * Signature: (JJJ)V
  */
-JNIEXPORT void JNICALL Java_xyz_unlimitedcodeworks_opencv_dnn_ForwardNet_n_1forward
+JNIEXPORT void JNICALL Java_xyz_unlimitedcodeworks_operations_extra_ForwardNet_n_1forward
 (JNIEnv *env, jclass, jlong nativeObj, jlong inputObj, jlong outputObj)
 {
     if (!nativeObj) {
@@ -108,11 +107,11 @@ JNIEXPORT void JNICALL Java_xyz_unlimitedcodeworks_opencv_dnn_ForwardNet_n_1forw
 }
 
 /*
- * Class:     xyz_unlimitedcodeworks_opencv_dnn_ForwardNet
+ * Class:     xyz_unlimitedcodeworks_operations_extra_ForwardNet
  * Method:    n_delete
  * Signature: (J)V
  */
-JNIEXPORT void JNICALL Java_xyz_unlimitedcodeworks_opencv_dnn_ForwardNet_n_1delete
+JNIEXPORT void JNICALL Java_xyz_unlimitedcodeworks_operations_extra_ForwardNet_n_1delete
 (JNIEnv *, jclass, jlong nativeObj)
 {
     auto *fn = reinterpret_cast<IForwardNet*>(nativeObj);

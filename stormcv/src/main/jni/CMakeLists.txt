@@ -73,8 +73,8 @@ endif()
 ## JNI generated headers
 set(JNI_CLASS_INCLUDE_DIR "" CACHE FILEPATH "Path to generated jni class includes")
 
-if(NOT EXISTS ${JNI_CLASS_INCLUDE_DIR}/xyz_unlimitedcodeworks_opencv_dnn_ForwardNet.h)
-  message(SEND_ERROR "Can't find xyz_unlimitedcodeworks_opencv_dnn_ForwardNet.h in ${JNI_CLASS_INCLUDE_DIR}")
+if(NOT EXISTS ${JNI_CLASS_INCLUDE_DIR}/xyz_unlimitedcodeworks_operations_extra_ForwardNet.h)
+  message(SEND_ERROR "Can't find xyz_unlimitedcodeworks_operations_extra_ForwardNet.h in ${JNI_CLASS_INCLUDE_DIR}")
 endif()
 
 include_directories(SYSTEM ${JNI_CLASS_INCLUDE_DIR})
@@ -110,33 +110,34 @@ message("Using Caffe from ${Caffe_INCLUDE_DIRS}")
 #==============================================================================
 # Actual compile target
 #==============================================================================
-set(stormcv_cv_SRC
+add_library(stormcv_common SHARED 
+    jni_helper.cpp
+    cv/converters.cpp
+    cv/features2d_converters.cpp
+)
+target_link_libraries(stormcv_common
+    PUBLIC
+    opencv_core
+)
+
+add_library(stormcv_cv SHARED
     ForwardNetCV.cpp
     JniForwardNet.cpp
-    jni_helper.cpp
 )
-
-set(stormcv_caffe_SRC
-    ForwardNetCaffe.cpp
-    JniForwardNet.cpp
-    jni_helper.cpp
-)
-
-set(stormcv_thread_SRC
-    ThreadUtils.cpp
-    JniThreadUtils.cpp
-)
-
-add_library(stormcv_cv SHARED ${stormcv_cv_SRC})
 target_link_libraries(stormcv_cv
-    opencv_core
+    stormcv_common
+
     opencv_imgproc
     opencv_dnn
 )
 
-add_library(stormcv_caffe SHARED ${stormcv_caffe_SRC})
+add_library(stormcv_caffe SHARED
+    ForwardNetCaffe.cpp
+    JniForwardNet.cpp
+)
 target_link_libraries(stormcv_caffe
-    opencv_core
+    stormcv_common
+
     opencv_imgproc
     caffe
 )
@@ -145,9 +146,32 @@ PUBLIC
     FN_USE_CAFFE
 )
 
-add_library(stormcv_thread SHARED ${stormcv_thread_SRC})
+add_library(stormcv_thread SHARED
+    ThreadUtils.cpp
+    JniThreadUtils.cpp
+)
+target_link_libraries(stormcv_thread
+    stormcv_common
+)
 
+add_library(stormcv_detectorx SHARED
+    FeatureDetectorX.cpp
+    JniFeatureDetectorX.cpp
+)
+target_link_libraries(stormcv_detectorx
+    stormcv_common
+)
+
+add_library(stormcv_extractorx SHARED
+    DescriptorExtractorX.cpp
+    JniDescriptorExtractorX.cpp
+)
+target_link_libraries(stormcv_extractorx
+    stormcv_common
+)
 
 install(TARGETS stormcv_cv DESTINATION native/x64)
 install(TARGETS stormcv_caffe DESTINATION native/x64)
 install(TARGETS stormcv_thread DESTINATION native/x64)
+install(TARGETS stormcv_detectorx DESTINATION native/x64)
+install(TARGETS stormcv_extractorx DESTINATION native/x64)

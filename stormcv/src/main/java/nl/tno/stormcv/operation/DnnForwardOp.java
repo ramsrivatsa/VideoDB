@@ -14,7 +14,7 @@ import org.opencv.core.MatOfByte;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import xyz.unlimitedcodeworks.opencv.dnn.ForwardNet;
+import xyz.unlimitedcodeworks.operations.extra.ForwardNet;
 
 import java.awt.*;
 import java.io.File;

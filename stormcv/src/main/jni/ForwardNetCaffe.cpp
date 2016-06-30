@@ -82,7 +82,7 @@ namespace ucw { namespace caffe {
         /*  Forward dimension change to all layers. */
         net_->Reshape();
 
-        for (int i = 0; i < imgs.size(); ++i) {
+        for (size_t i = 0; i < imgs.size(); ++i) {
             std::vector<cv::Mat> input_channels;
             WrapInputLayer(&input_channels, i);
             Preprocess(imgs[i], &input_channels);

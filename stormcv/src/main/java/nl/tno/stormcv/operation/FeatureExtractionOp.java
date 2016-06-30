@@ -17,6 +17,8 @@ import org.opencv.features2d.FeatureDetector;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import xyz.unlimitedcodeworks.operations.extra.DescriptorExtractorX;
+import xyz.unlimitedcodeworks.operations.extra.FeatureDetectorX;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -81,8 +83,8 @@ public class FeatureExtractionOp extends OpenCVOp<CVParticle> implements ISingle
     @SuppressWarnings("rawtypes")
     @Override
     protected void prepareOpenCVOp(Map stormConf, TopologyContext context) throws Exception {
-        this.detector = FeatureDetector.create(detectorType);
-        this.extractor = DescriptorExtractor.create(descriptorType);
+        this.detector = FeatureDetectorX.create(detectorType);
+        this.extractor = DescriptorExtractorX.create(descriptorType);
     }
 
     @Override

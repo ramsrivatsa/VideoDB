@@ -13,6 +13,8 @@ using CaffeForwardNet = ucw::caffe::ForwardNet;
 using CVForwardNet = ucw::opencv::ForwardNet;
 #endif
 
+#include "cv/converters.h"
+
 #define UNUSED(x) (void)(x)
 
 using namespace std;
@@ -105,6 +107,34 @@ JNIEXPORT void JNICALL Java_xyz_unlimitedcodeworks_operations_extra_ForwardNet_n
         }
     }
 }
+
+/*
+ * Class:     xyz_unlimitedcodeworks_operations_extra_ForwardNet
+ * Method:    n_forwardBatch
+ * Signature: (JJJ)V
+ */
+JNIEXPORT void JNICALL Java_xyz_unlimitedcodeworks_operations_extra_ForwardNet_n_1forwardBatch
+(JNIEnv *env, jclass, jlong nativeObj, jlong imgs_nativeObj, jlong outputs_nativeObj)
+ {
+    if (nativeObj) {
+        auto &fn = *reinterpret_cast<IForwardNet*>(nativeObj);
+        auto &imgs = *reinterpret_cast<cv::Mat*>(imgs_nativeObj);
+        auto &outputs = *reinterpret_cast<cv::Mat*>(outputs_nativeObj);
+
+        std::vector<cv::Mat> imgs_vec;
+        try {
+            Mat_to_vector_Mat(imgs, imgs_vec);
+
+            auto outputs_vec = fn.forward(imgs_vec);
+
+            vector_Mat_to_Mat(outputs_vec, outputs);
+        } catch (runtime_error *e) {
+            throwJniException(env, e);
+        }
+    } else {
+        throwJniError(env, "Method called on an uninitialized ForwardNet object");
+    }
+ }
 
 /*
  * Class:     xyz_unlimitedcodeworks_operations_extra_ForwardNet

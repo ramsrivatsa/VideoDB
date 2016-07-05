@@ -29,9 +29,10 @@ import java.util.Map;
  * @author Aetf
  * @see <a href="http://docs.opencv.org/3.1.0/d6/d0f/group__dnn.html">OpenCV Documentation</a>
  */
-public class DnnForwardOp extends OpenCVOp<CVParticle> implements ISingleInputOperation<CVParticle> {
+public class DnnForwardOp extends OpenCVOp<CVParticle> implements ISingleInputOperation<CVParticle>,
+        IBatchOperation<CVParticle> {
     private static final long serialVersionUID = 1672563550721443006L;
-    private Logger logger = LoggerFactory.getLogger(HaarCascadeOp.class);
+    private Logger logger = LoggerFactory.getLogger(DnnForwardOp.class);
     private String name;
     private ForwardNet net;
 
@@ -139,17 +140,21 @@ public class DnnForwardOp extends OpenCVOp<CVParticle> implements ISingleInputOp
         }
     }
 
-    @Override
-    public List<CVParticle> execute(CVParticle input) throws Exception {
+    private void ensureThreadPriority() {
         // TODO: verify that prepareOpenCVOp is always called in the same kernel thread as execute,
         // and won't change during the whole run. Then we can remove this call.
         long currentTid = ForwardNet.getCurrentTid();
         if (currentTid != kernelThreadId) {
             logger.warn("DnnForwardOp[{}] got moved to a different kernel thread: {} -> {}",
-                        thisTaskIndex, kernelThreadId, currentTid);
+                    thisTaskIndex, kernelThreadId, currentTid);
             kernelThreadId = currentTid;
             net.setThreadPriority(kernelThreadPriority);
         }
+    }
+
+    @Override
+    public List<CVParticle> execute(CVParticle input) throws Exception {
+        ensureThreadPriority();
 
         List<CVParticle> result = new ArrayList<>();
         if (!(input instanceof Frame)) return result;
@@ -169,9 +174,53 @@ public class DnnForwardOp extends OpenCVOp<CVParticle> implements ISingleInputOp
 
         if (outputFrame) {
             frame.getFeatures().add(f);
+            result.add(frame);
         } else {
             result.add(f);
         }
+        return result;
+    }
+
+    @Override
+    public List<CVParticle> execute(List<CVParticle> input) throws Exception {
+        List<CVParticle> validInput = new ArrayList<>();
+        List<CVParticle> result = new ArrayList<>();
+
+        for (CVParticle cvt : input) {
+            if (!(cvt instanceof Frame)) continue;
+            Frame frame = (Frame) cvt;
+            if (frame.getImageType().equals(Frame.NO_IMAGE)) continue;
+
+            validInput.add(cvt);
+        }
+
+        List<Mat> images = new ArrayList<>();
+        List<Feature> features = new ArrayList<>();
+        for (CVParticle cvt : validInput) {
+            Frame frame = (Frame) cvt;
+            MatOfByte mob = new MatOfByte(frame.getImageBytes());
+            Mat image = Imgcodecs.imdecode(mob, Imgcodecs.CV_LOAD_IMAGE_COLOR);
+            images.add(image);
+        }
+
+        List<Mat> output = net.forward(images);
+
+        for (int i = 0; i!= validInput.size(); ++i) {
+            Frame frame = (Frame) validInput.get(i);
+            Mat image = images.get(i);
+
+            Feature f = MatFeatureUtils.featureFromMat(frame.getStreamId(), frame.getSequenceNr(),
+                    name, 0, new Rectangle(0, 0, (int) image.size().width, (int) image.size().height),
+                    output.get(i));
+
+            if (outputFrame) {
+                frame.getFeatures().add(f);
+                result.add(frame);
+            } else {
+                result.add(f);
+            }
+        }
+
         return result;
     }
 

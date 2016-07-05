@@ -178,7 +178,8 @@ public class BatchDNNTopology {
         builder.setBolt("scale", new SingleInputBolt(new ScaleImageOp(0.5f)), scaleHint)
                 .shuffleGrouping("fetcher");
 
-        builder.setBolt("fat_features", new BatchInputBolt(new DiscreteWindowBatcher(batchSize, 1), dnnforward),
+        builder.setBolt("fat_features", new BatchInputBolt(new DiscreteWindowBatcher(batchSize, 1),
+                                            dnnforward).groupBy(new Fields(FrameSerializer.STREAMID)),
                 fatfeatureHint)
                 .shuffleGrouping("scale");
 

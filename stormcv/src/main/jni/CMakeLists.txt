@@ -110,10 +110,6 @@ message("Using Caffe from ${Caffe_INCLUDE_DIRS}")
 #==============================================================================
 # Actual compile target
 #==============================================================================
-
-# we need PIC
-set(CMAKE_POSITION_INDEPENDENT_CODE TRUE)
-
 add_library(stormcv_common SHARED 
     jni_helper.cpp
     cv/converters.cpp
@@ -152,10 +148,10 @@ PUBLIC
 
 find_package(CUDA QUIET)
 if(CUDA_FOUND)
-    cuda_add_library(gpu_utils STATIC GPUUtils.cu)
+    cuda_add_library(gpu_utils SHARED GPUUtils.cu)
     target_link_libraries(stormcv_caffe gpu_utils)
     target_compile_definitions(stormcv_caffe PUBLIC HAS_CUDA)
-    set_target_properties(gpu_utils PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
+    install(TARGETS gpu_utils DESTINATION native/x64)
 else()
     message("CUDA not found, gpu_utils will only have dummy implementation")
 endif()

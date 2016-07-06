@@ -6,12 +6,10 @@ import backtype.storm.task.TopologyContext;
 import backtype.storm.topology.base.BaseRichBolt;
 import backtype.storm.tuple.Tuple;
 import clojure.lang.PersistentArrayMap;
-import nl.tno.stormcv.StormCVConfig;
 import nl.tno.stormcv.model.CVParticle;
 import nl.tno.stormcv.model.serializer.CVParticleSerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import xyz.unlimitedcodeworks.utils.Timing;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -29,7 +27,6 @@ public abstract class CVParticleBolt extends BaseRichBolt {
     private static final long serialVersionUID = -5421951488628303992L;
 
     protected Logger logger = LoggerFactory.getLogger(CVParticleBolt.class);
-    protected boolean profiling = false;
     protected HashMap<String, CVParticleSerializer<? extends CVParticle>> serializers = new HashMap<>();
     protected OutputCollector collector;
     protected String boltName;
@@ -40,9 +37,6 @@ public abstract class CVParticleBolt extends BaseRichBolt {
     public void prepare(Map conf, TopologyContext context, OutputCollector collector) {
         this.collector = collector;
         this.boltName = context.getThisComponentId();
-        if (conf.containsKey(StormCVConfig.STORMCV_LOG_PROFILING)) {
-            profiling = (Boolean) conf.get(StormCVConfig.STORMCV_LOG_PROFILING);
-        }
 
         try {
             PersistentArrayMap map = (PersistentArrayMap) conf.get(Config.TOPOLOGY_KRYO_REGISTER);
@@ -61,15 +55,8 @@ public abstract class CVParticleBolt extends BaseRichBolt {
     @Override
     public void execute(Tuple input) {
         boolean hadError = false;
-        long beginExecute = Timing.currentTimeMillis();
-        long endExecute;
         try {
             CVParticle cvt = deserialize(input);
-
-            if (profiling) {
-                logger.info("[Timing] RequestID: {} StreamID: {} SequenceNr: {} Entering {}: {}",
-                        cvt.getRequestId(), cvt.getStreamId(), cvt.getSequenceNr(), boltName, beginExecute);
-            }
 
             List<? extends CVParticle> results = execute(cvt);
             long totalEstimatedSize = 0;
@@ -77,20 +64,12 @@ public abstract class CVParticleBolt extends BaseRichBolt {
                 output.setRequestId(cvt.getRequestId());
                 CVParticleSerializer serializer = serializers.get(output.getClass().getName());
                 if (serializer != null) {
-                    if (profiling) totalEstimatedSize += output.estimatedByteSize();
                     collector.emit(input, serializer.toTuple(output));
                 } else {
                     logger.error("Can't get serializer " + output.getClass().getName());
                     hadError = true;
                     break;
                 }
-            }
-
-            if (profiling) {
-                endExecute = Timing.currentTimeMillis();
-                logger.info("[Timing] RequestID: {} StreamID: {} SequenceNr: {} Leaving {}: {} Size: {}",
-                        cvt.getRequestId(), cvt.getStreamId(), cvt.getSequenceNr(), boltName,
-                        endExecute, totalEstimatedSize);
             }
         } catch (Exception e) {
             logger.warn("Unable to process input", e);

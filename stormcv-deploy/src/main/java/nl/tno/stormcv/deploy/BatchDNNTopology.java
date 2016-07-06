@@ -5,6 +5,7 @@ import backtype.storm.StormSubmitter;
 import backtype.storm.topology.TopologyBuilder;
 import backtype.storm.tuple.Fields;
 import nl.tno.stormcv.StormCVConfig;
+import nl.tno.stormcv.batcher.DiscreteWindowBatcher;
 import nl.tno.stormcv.batcher.SlidingWindowBatcher;
 import nl.tno.stormcv.bolt.BatchInputBolt;
 import nl.tno.stormcv.bolt.SingleInputBolt;
@@ -22,7 +23,7 @@ import java.util.List;
 /**
  * Created by Aetf (aetf at unlimitedcodeworks dot xyz) on 16-3-19.
  */
-public class DNNTopology {
+public class BatchDNNTopology {
     public static void main(String[] args) {
         // process args
         final String switchKeyword = "--";
@@ -39,6 +40,7 @@ public class DNNTopology {
         int sendingFps = 0;
         int startDelay = 0;
         int fatPriority = 0;
+        int batchSize = 30;
         String fetcherType = "video";
         boolean useCaffe = false;
         boolean useGPU = false;
@@ -54,6 +56,9 @@ public class DNNTopology {
                     // nothing
                 }
                 switch (kv[0]) {
+                    case "batch-size" :
+                        batchSize = value;
+                        break;
                     case "fat-priority":
                         fatPriority = value;
                         break;
@@ -136,23 +141,23 @@ public class DNNTopology {
         conf.put(StormCVConfig.STORMCV_LOG_PROFILING, true);
 
         // specify the list with SingleInputOperations to be executed sequentially by the 'fat' bolt
-        List<ISingleInputOperation> operations = new ArrayList<>();
-        operations.add(new HaarCascadeOp("face", "haarcascade_frontalface_default.xml"));
         DnnForwardOp dnnforward;
         if (useCaffe) {
             System.out.println("Using Caffe");
             dnnforward = new DnnForwardOp("classprob", "/data/bvlc_googlenet.prototxt",
-                                                       "/data/bvlc_googlenet.caffemodel",
-                                                       "/data/imagenet_mean.binaryproto",
-                                                       !useGPU); // caffeOnCPU == !useGPU
+                    "/data/bvlc_googlenet.caffemodel",
+                    "/data/imagenet_mean.binaryproto",
+                    !useGPU); // caffeOnCPU == !useGPU
         } else {
             System.out.println("Using OpenCV::DNN");
             dnnforward = new DnnForwardOp("classprob", "/data/bvlc_googlenet.prototxt",
-                                                       "/data/bvlc_googlenet.caffemodel");
+                    "/data/bvlc_googlenet.caffemodel");
         }
         dnnforward.outputFrame(true).threadPriority(fatPriority);
-        operations.add(dnnforward);
+
+        List<ISingleInputOperation> operations = new ArrayList<>();
         operations.add(new DnnClassifyOp("classprob", "/data/synset_words.txt").addMetadata(true).outputFrame(true));
+        operations.add(new DrawFeaturesOp().drawMetadata(true));
         //operations.add(new FeatureExtractionOp("sift", FeatureDetector.SIFT, DescriptorExtractor.SIFT));
 
         // now create the topology itself
@@ -166,20 +171,21 @@ public class DNNTopology {
             default:
             case "image":
                 fetcher = new RefreshingImageFetcher(files).sendingFps(sendingFps)
-                          .sleep(sleepMs).autoSleep(autoSleep).startDelay(startDelay);
+                        .sleep(sleepMs).autoSleep(autoSleep).startDelay(startDelay);
         }
         builder.setSpout("fetcher", new CVParticleSpout(fetcher), 1);
         // add bolt that scales frames down to 80% of the original size
         builder.setBolt("scale", new SingleInputBolt(new ScaleImageOp(0.5f)), scaleHint)
                 .shuffleGrouping("fetcher");
 
-        // 'fat' bolts containing a SequentialFrameOperation will will emit a Frame object containing the detected features
-        builder.setBolt("fat_features", new SingleInputBolt(
-                        new SequentialFrameOp(operations).outputFrame(true).retainImage(true)), fatfeatureHint)
+        builder.setBolt("fat_features", new BatchInputBolt(new DiscreteWindowBatcher(batchSize, 1),
+                                            dnnforward).groupBy(new Fields(FrameSerializer.STREAMID)),
+                fatfeatureHint)
                 .shuffleGrouping("scale");
 
         // simple bolt that draws Features (i.e. locations of features) into the frame
-        builder.setBolt("drawer", new SingleInputBolt(new DrawFeaturesOp().drawMetadata(true)), drawerHint)
+        builder.setBolt("drawer", new SingleInputBolt(new SequentialFrameOp(operations).outputFrame(true).retainImage(true)),
+                drawerHint)
                 .shuffleGrouping("fat_features");
 
         // add bolt that creates a webservice on port 8558 enabling users to view the result

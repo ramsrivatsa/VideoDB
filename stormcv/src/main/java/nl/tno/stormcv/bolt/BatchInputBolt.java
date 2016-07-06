@@ -11,6 +11,7 @@ import nl.tno.stormcv.StormCVConfig;
 import nl.tno.stormcv.batcher.IBatcher;
 import nl.tno.stormcv.model.CVParticle;
 import nl.tno.stormcv.operation.IBatchOperation;
+import xyz.unlimitedcodeworks.utils.Timing;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -67,6 +68,8 @@ public class BatchInputBolt extends CVParticleBolt implements RemovalListener<CV
 	private History history;
 	private boolean refreshExperation = true;
     private String currGroupKey;
+
+	protected boolean profiling = false;
 
     /**
 	 * Creates a BatchInputBolt with given Batcher and BatchOperation.
@@ -128,7 +131,11 @@ public class BatchInputBolt extends CVParticleBolt implements RemovalListener<CV
 		if(TTL == 29) TTL = conf.get(StormCVConfig.STORMCV_CACHES_TIMEOUT_SEC) == null ? TTL : ((Long)conf.get(StormCVConfig.STORMCV_CACHES_TIMEOUT_SEC)).intValue();
 		if(maxSize == 256) maxSize = conf.get(StormCVConfig.STORMCV_CACHES_MAX_SIZE) == null ? maxSize : ((Long)conf.get(StormCVConfig.STORMCV_CACHES_MAX_SIZE)).intValue();
 		history = new History(this);
-		
+
+        if (conf.containsKey(StormCVConfig.STORMCV_LOG_PROFILING)) {
+            profiling = (Boolean) conf.get(StormCVConfig.STORMCV_LOG_PROFILING);
+        }
+
 		// IF NO grouping was set THEN select the first grouping registered for the spout as the grouping used within the Spout (usually a good guess)
 		if(groupBy == null){
 			Map<GlobalStreamId, Grouping> sources = context.getSources(context.getThisComponentId());
@@ -177,11 +184,33 @@ public class BatchInputBolt extends CVParticleBolt implements RemovalListener<CV
         history.add(currGroupKey, input);
         List<List<CVParticle>> batches = batcher.partition(history, history.getGroupedItems(currGroupKey));
         for (List<CVParticle> batch : batches) {
+            long beginExecute = Timing.currentTimeMillis();
+            long endExecute;
+            if (profiling) {
+                for (CVParticle cvt : batch) {
+                    logger.info("[Timing] RequestID: {} StreamID: {} SequenceNr: {} Entering {}: {}",
+                            cvt.getRequestId(), cvt.getStreamId(), cvt.getSequenceNr(), boltName, beginExecute);
+                }
+            }
+
             try{
                 List<? extends CVParticle> batchResults = operation.execute(batch);
                 result.addAll(batchResults);
             }catch(Exception e){
                 logger.warn("Unable to to process batch due to ", e);
+            }
+
+            if (profiling) {
+                endExecute = Timing.currentTimeMillis();
+                long totalEstimatedSize = 0;
+                for (CVParticle cvt : result) {
+                    totalEstimatedSize += cvt.estimatedByteSize();
+                }
+                for (CVParticle cvt : batch) {
+                    logger.info("[Timing] RequestID: {} StreamID: {} SequenceNr: {} Leaving {}: {} Size: {}",
+                            cvt.getRequestId(), cvt.getStreamId(), cvt.getSequenceNr(), boltName,
+                            endExecute, totalEstimatedSize);
+                }
             }
         }
 		return result;

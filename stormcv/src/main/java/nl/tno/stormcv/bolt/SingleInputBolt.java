@@ -2,8 +2,10 @@ package nl.tno.stormcv.bolt;
 
 import backtype.storm.task.TopologyContext;
 import backtype.storm.topology.OutputFieldsDeclarer;
+import nl.tno.stormcv.StormCVConfig;
 import nl.tno.stormcv.model.CVParticle;
 import nl.tno.stormcv.operation.ISingleInputOperation;
+import xyz.unlimitedcodeworks.utils.Timing;
 
 import java.util.List;
 import java.util.Map;
@@ -22,6 +24,8 @@ public class SingleInputBolt extends CVParticleBolt {
 
     private ISingleInputOperation<? extends CVParticle> operation;
 
+    protected boolean profiling = false;
+
     /**
      * Constructs a SingleInputOperation
      *
@@ -34,6 +38,9 @@ public class SingleInputBolt extends CVParticleBolt {
     @SuppressWarnings("rawtypes")
     @Override
     void prepare(Map stormConf, TopologyContext context) {
+        if (stormConf.containsKey(StormCVConfig.STORMCV_LOG_PROFILING)) {
+            profiling = (Boolean) stormConf.get(StormCVConfig.STORMCV_LOG_PROFILING);
+        }
         try {
             operation.prepare(stormConf, context);
         } catch (Exception e) {
@@ -48,15 +55,33 @@ public class SingleInputBolt extends CVParticleBolt {
 
     @Override
     List<? extends CVParticle> execute(CVParticle input) throws Exception {
-        logger.debug("Execution in {} with input {}-{}", boltName, input.getStreamId(), input.getSequenceNr());
+
+        long beginExecute = Timing.currentTimeMillis();
+        long endExecute;
+        long totalEstimatedSize = 0;
+        if (profiling) {
+            logger.info("[Timing] RequestID: {} StreamID: {} SequenceNr: {} Entering {}: {}",
+                    input.getRequestId(), input.getStreamId(), input.getSequenceNr(),
+                    boltName, beginExecute);
+        }
+
         List<? extends CVParticle> result = operation.execute(input);
+
         // copy metadata from input to output if configured to do so
         for (CVParticle s : result) {
+            if (profiling) totalEstimatedSize += s.estimatedByteSize();
             for (String key : input.getMetadata().keySet()) {
                 if (!s.getMetadata().containsKey(key)) {
                     s.getMetadata().put(key, input.getMetadata().get(key));
                 }
             }
+        }
+
+        if (profiling) {
+            endExecute = Timing.currentTimeMillis();
+            logger.info("[Timing] RequestID: {} StreamID: {} SequenceNr: {} Leaving {}: {} Size: {}",
+                    input.getRequestId(), input.getStreamId(), input.getSequenceNr(), boltName,
+                    endExecute, totalEstimatedSize);
         }
         return result;
     }

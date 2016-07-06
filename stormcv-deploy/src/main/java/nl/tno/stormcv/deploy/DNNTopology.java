@@ -139,7 +139,7 @@ public class DNNTopology {
 
         // specify the list with SingleInputOperations to be executed sequentially by the 'fat' bolt
         List<ISingleInputOperation> operations = new ArrayList<>();
-        operations.add(new HaarCascadeOp("face", "haarcascade_frontalface_default.xml"));
+        //operations.add(new HaarCascadeOp("face", "haarcascade_frontalface_default.xml"));
         DnnForwardOp dnnforward;
         if (useCaffe) {
             System.out.println("Using Caffe");

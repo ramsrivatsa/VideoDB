@@ -25,12 +25,10 @@ namespace ucw { namespace caffe {
       ForwardNet(const string& model_file,
                  const string& trained_file,
                  const string& mean_file,
-                 const bool CPU = true);
+                 bool CPU = true);
       ~ForwardNet() override {}
 
       void SetMean(const string& mean_file);
-
-      void setGPU();
 
       std::vector<cv::Mat> forward(const std::vector<cv::Mat>& imgs) override;
 

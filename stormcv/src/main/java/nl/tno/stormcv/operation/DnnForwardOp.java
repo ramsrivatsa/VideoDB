@@ -46,6 +46,8 @@ public class DnnForwardOp extends OpenCVOp<CVParticle> implements ISingleInputOp
     private long kernelThreadId;
     private int thisTaskIndex;
 
+    private int maxGPUNum = -1;
+
     private boolean outputFrame;
     @SuppressWarnings("rawtypes")
     private CVParticleSerializer serializer = new FeatureSerializer();
@@ -117,6 +119,16 @@ public class DnnForwardOp extends OpenCVOp<CVParticle> implements ISingleInputOp
         return this;
     }
 
+    /**
+     * How many GPU devices to use when using Caffe on GPU. Use -1 to indicate maximum available number
+     * @param num
+     * @return
+     */
+    public DnnForwardOp maxGPUNum(int num) {
+        maxGPUNum = num;
+        return this;
+    }
+
     @Override
     protected void prepareOpenCVOp(Map stormConf, TopologyContext context) throws Exception {
         kernelThreadId = ForwardNet.getCurrentTid();
@@ -129,7 +141,8 @@ public class DnnForwardOp extends OpenCVOp<CVParticle> implements ISingleInputOp
             if (useCaffe) {
                 File meanBinFile = NativeUtils.getAsLocalFile(meanBin);
                 net = new ForwardNet(modelTxtFile.getAbsolutePath(), modelBinFile.getAbsolutePath(),
-                                     meanBinFile.getAbsolutePath(), useCaffe, caffeOnCPU);
+                                     meanBinFile.getAbsolutePath(), useCaffe, caffeOnCPU,
+                                     thisTaskIndex, maxGPUNum);
             } else {
                 net = new ForwardNet(modelTxtFile.getAbsolutePath(), modelBinFile.getAbsolutePath());
             }

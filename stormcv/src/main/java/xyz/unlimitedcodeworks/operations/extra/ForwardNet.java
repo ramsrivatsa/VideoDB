@@ -25,17 +25,28 @@ public class ForwardNet {
     }
 
     public ForwardNet(String modelTxt, String modelBin) {
-        this(modelTxt, modelBin, "", false, false);
+        this(modelTxt, modelBin, "", false, false, -1, -1);
     }
 
-    public ForwardNet(String modelTxt, String modelBin, String meanBin, boolean useCaffe, boolean caffeOnCPU) {
+    /**
+     *
+     * @param modelTxt
+     * @param modelBin
+     * @param meanBin
+     * @param useCaffe true to use caffe, otherwise use OpenCV::DNN
+     * @param caffeOnCPU CPU or GPU to do computation, only takes effect when useCaffe is true
+     * @param taskIndex select which gpu to use based on task index. use -1 to indicate default gpu. Only takes effect when useCaffe is true
+     * @param maxGPUNum maximum GPU devices to use
+     */
+    public ForwardNet(String modelTxt, String modelBin, String meanBin, boolean useCaffe,
+                      boolean caffeOnCPU, int taskIndex, int maxGPUNum) {
         lazyLoad(useCaffe);
         if (!useCaffe) {
             System.out.println("Use OpenCV::DNN as neural network");
-            nativeObj = create(modelTxt, modelBin);
+            nativeObj = create_0(modelTxt, modelBin);
         } else {
             System.out.println("Use Caffe as neural network");
-            nativeObj = create(modelTxt, modelBin, meanBin, caffeOnCPU);
+            nativeObj = create_1(modelTxt, modelBin, meanBin, caffeOnCPU, taskIndex, maxGPUNum);
         }
     }
 
@@ -90,9 +101,10 @@ public class ForwardNet {
     }
     private static boolean lazyLoaded = false;
 
-    private static native long create(String modelTxt, String modelBin);
+    private static native long create_0(String modelTxt, String modelBin);
 
-    private static native long create(String modelTxt, String modelBin, String meanBin, boolean caffeOnCPU);
+    private static native long create_1(String modelTxt, String modelBin, String meanBin,
+                                        boolean caffeOnCPU, int taskIndex, int maxGPUNum);
 
     private static native void n_forward(long nativeObj, long nativeInput, long nativeOutput);
 

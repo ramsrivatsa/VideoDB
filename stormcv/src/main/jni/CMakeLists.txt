@@ -146,6 +146,15 @@ PUBLIC
     FN_USE_CAFFE
 )
 
+find_package(CUDA QUIET)
+if(CUDA_FOUND)
+    cuda_add_library(gpu_utils STATIC GPUUtils.cu)
+    target_link_libraries(stormcv_caffe gpu_utils)
+    target_compile_definitions(stormcv_caffe PUBLIC HAS_CUDA)
+else()
+    message("CUDA not found, gpu_utils will only have dummy implementation")
+endif()
+
 add_library(stormcv_thread SHARED
     ThreadUtils.cpp
     JniThreadUtils.cpp

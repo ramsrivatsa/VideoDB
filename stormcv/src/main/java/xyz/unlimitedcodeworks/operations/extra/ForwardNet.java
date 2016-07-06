@@ -40,7 +40,7 @@ public class ForwardNet {
      */
     public ForwardNet(String modelTxt, String modelBin, String meanBin, boolean useCaffe,
                       boolean caffeOnCPU, int taskIndex, int maxGPUNum) {
-        lazyLoad(useCaffe);
+        lazyLoad(useCaffe, !caffeOnCPU);
         if (!useCaffe) {
             System.out.println("Use OpenCV::DNN as neural network");
             nativeObj = create_0(modelTxt, modelBin);
@@ -81,11 +81,14 @@ public class ForwardNet {
         super.finalize();
     }
 
-    private static synchronized void lazyLoad(boolean useCaffe) {
+    private static synchronized void lazyLoad(boolean useCaffe, boolean useGPU) {
         if (!lazyLoaded) {
             try {
                 if (useCaffe) {
                     NativeUtils.loadLibrary("caffe", true);
+                    if (useGPU) {
+                        NativeUtils.loadLibrary("gpu_utils");
+                    }
                     NativeUtils.loadLibrary("stormcv_caffe");
                 } else {
                     NativeUtils.loadLibrary("opencv_dnn", true);

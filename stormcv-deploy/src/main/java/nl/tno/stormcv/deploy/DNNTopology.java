@@ -42,6 +42,7 @@ public class DNNTopology {
         String fetcherType = "video";
         boolean useCaffe = false;
         boolean useGPU = false;
+        int maxGPUNum = -1;
         List<String> files = new ArrayList<>();
         for (String arg : args) {
             if (arg.startsWith(switchKeyword)) {
@@ -100,6 +101,7 @@ public class DNNTopology {
                         break;
                     case "use-gpu":
                         useGPU = value != 0;
+                        maxGPUNum = value;
                         break;
                 }
             } else {
@@ -145,6 +147,7 @@ public class DNNTopology {
                                                        "/data/bvlc_googlenet.caffemodel",
                                                        "/data/imagenet_mean.binaryproto",
                                                        !useGPU); // caffeOnCPU == !useGPU
+            dnnforward.maxGPUNum(maxGPUNum);
         } else {
             System.out.println("Using OpenCV::DNN");
             dnnforward = new DnnForwardOp("classprob", "/data/bvlc_googlenet.prototxt",

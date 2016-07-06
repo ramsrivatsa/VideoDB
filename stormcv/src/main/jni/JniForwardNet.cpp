@@ -6,6 +6,7 @@
 #include "xyz_unlimitedcodeworks_operations_extra_ForwardNet.h"
 
 #ifdef FN_USE_CAFFE
+#include "GPUUtils.h"
 #include "ForwardNetCaffe.h"
 using CaffeForwardNet = ucw::caffe::ForwardNet;
 #else
@@ -19,10 +20,6 @@ using CVForwardNet = ucw::opencv::ForwardNet;
 
 using namespace std;
 using namespace ucw;
-
-/*
- * ==========================================================================================================
- */
 
 /*
  * Class:     xyz_unlimitedcodeworks_operations_extra_ForwardNet
@@ -54,19 +51,34 @@ JNIEXPORT jlong JNICALL Java_xyz_unlimitedcodeworks_operations_extra_ForwardNet_
 
 /*
  * Class:     xyz_unlimitedcodeworks_operations_extra_ForwardNet
- * Method:    create
- * Signature: (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Z)J
+ * Method:    create_1
+ * Signature: (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ZII)J
  */
-JNIEXPORT jlong JNICALL Java_xyz_unlimitedcodeworks_operations_extra_ForwardNet_create__Ljava_lang_String_2Ljava_lang_String_2Ljava_lang_String_2Z
-(JNIEnv *env, jclass, jstring jModelTxt, jstring jModelBin, jstring jMeanBin, jboolean jCaffeOnCPU)
+JNIEXPORT jlong JNICALL Java_xyz_unlimitedcodeworks_operations_extra_ForwardNet_create_11
+(JNIEnv *env, jclass, jstring jModelTxt, jstring jModelBin, jstring jMeanBin,
+ jboolean jCaffeOnCPU, jint jTaskId, jint jMaxGPUNum)
 {
     UNUSED(env);
     UNUSED(jModelTxt);
     UNUSED(jModelBin);
     UNUSED(jMeanBin);
     UNUSED(jCaffeOnCPU);
+    UNUSED(jTaskId);
+    UNUSED(jMaxGPUNum);
 
 #ifdef FN_USE_CAFFE
+    if (jTaskId != -1) {
+        if (!hasCuda()) {
+            cerr << "WARNING: cuda not found in compile time, setting current GPU will not work."
+                 << endl;
+        }
+        int numGPUs = jMaxGPUNum == -1 ? getNumGPUs() : jMaxGPUNum;
+        if (numGPUs != -1) {
+            int gpuId = jTaskId % numGPUs;
+            setGpuDevice(gpuId);
+        }
+    }
+
     try
     {
         IForwardNet *net = new CaffeForwardNet(fromJString(env, jModelTxt),

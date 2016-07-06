@@ -19,8 +19,21 @@
 #ifndef GPUUTILS_H
 #define GPUUTILS_H
 
+namespace ucw {
+
 int getNumGPUs();
 
-void setGPU(int id); 
+void setGpuDevice(int id);
+
+bool hasCuda();
+
+#ifndef HAS_CUDA
+// dummy implementation without cuda
+    int getNumGPUs() { return -1; }
+    void setGpuDevice(int) {}
+    bool hasCuda() { return false; }
+#endif
+
+}
 
 #endif

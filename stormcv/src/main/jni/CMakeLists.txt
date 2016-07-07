@@ -110,7 +110,11 @@ message("Using Caffe from ${Caffe_INCLUDE_DIRS}")
 #==============================================================================
 # Actual compile target
 #==============================================================================
-add_library(stormcv_common SHARED 
+
+#------------------------------------------------------------------------------
+# Shared Library stormcv_common
+#------------------------------------------------------------------------------
+add_library(stormcv_common SHARED
     jni_helper.cpp
     cv/converters.cpp
     cv/features2d_converters.cpp
@@ -120,6 +124,21 @@ target_link_libraries(stormcv_common
     opencv_core
 )
 
+#------------------------------------------------------------------------------
+# Shared Library gpu_utils
+#------------------------------------------------------------------------------
+find_package(CUDA QUIET)
+if(CUDA_FOUND)
+    cuda_add_library(gpu_utils SHARED GPUUtils.cu)
+else()
+    message("CUDA not found, gpu_utils will only have dummy implementation")
+    add_library(gpu_utils SHARED GPUUtils-dummy.c)
+endif()
+
+
+#------------------------------------------------------------------------------
+# Shared Library stormcv_cv
+#------------------------------------------------------------------------------
 add_library(stormcv_cv SHARED
     ForwardNetCV.cpp
     JniForwardNet.cpp
@@ -131,12 +150,16 @@ target_link_libraries(stormcv_cv
     opencv_dnn
 )
 
+#------------------------------------------------------------------------------
+# Shared Library stormcv_caffe
+#------------------------------------------------------------------------------
 add_library(stormcv_caffe SHARED
     ForwardNetCaffe.cpp
     JniForwardNet.cpp
 )
 target_link_libraries(stormcv_caffe
     stormcv_common
+    gpu_utils
 
     opencv_imgproc
     caffe
@@ -146,18 +169,9 @@ PUBLIC
     FN_USE_CAFFE
 )
 
-find_package(CUDA QUIET)
-if(CUDA_FOUND)
-    add_definitions(-DHAS_CUDA)
-    target_compile_definitions(stormcv_caffe PUBLIC HAS_CUDA)
-
-    cuda_add_library(gpu_utils SHARED GPUUtils.cu)
-    target_link_libraries(stormcv_caffe gpu_utils)
-    install(TARGETS gpu_utils DESTINATION native/x64)
-else()
-    message("CUDA not found, gpu_utils will only have dummy implementation")
-endif()
-
+#------------------------------------------------------------------------------
+# Shared Library stormcv_thread
+#------------------------------------------------------------------------------
 add_library(stormcv_thread SHARED
     ThreadUtils.cpp
     JniThreadUtils.cpp
@@ -166,6 +180,9 @@ target_link_libraries(stormcv_thread
     stormcv_common
 )
 
+#------------------------------------------------------------------------------
+# Shared Library stormcv_detectorx
+#------------------------------------------------------------------------------
 add_library(stormcv_detectorx SHARED
     FeatureDetectorX.cpp
     JniFeatureDetectorX.cpp
@@ -176,6 +193,9 @@ target_link_libraries(stormcv_detectorx
     opencv_xfeatures2d
 )
 
+#------------------------------------------------------------------------------
+# Shared Library stormcv_extractorx
+#------------------------------------------------------------------------------
 add_library(stormcv_extractorx SHARED
     DescriptorExtractorX.cpp
     JniDescriptorExtractorX.cpp
@@ -192,3 +212,4 @@ install(TARGETS stormcv_caffe DESTINATION native/x64)
 install(TARGETS stormcv_thread DESTINATION native/x64)
 install(TARGETS stormcv_detectorx DESTINATION native/x64)
 install(TARGETS stormcv_extractorx DESTINATION native/x64)
+install(TARGETS gpu_utils DESTINATION native/x64)

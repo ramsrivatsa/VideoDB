@@ -29,12 +29,6 @@ void setGpuDevice(int id);
 
 bool hasCuda();
 
-#ifndef HAS_CUDA
-// dummy implementation without cuda
-    int getNumGPUs() { return -1; }
-    void setGpuDevice(int) {}
-    bool hasCuda() { return false; }
-#endif
 
 #ifdef __cplusplus
 }

@@ -6,7 +6,7 @@ int getNumGPUs() {
     return numGpus;
 }
 
-void setGPU(int id) {
+void setGpuDevice(int id) {
     cudaSetDevice(id);
 }
 

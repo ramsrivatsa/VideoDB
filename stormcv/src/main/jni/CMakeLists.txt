@@ -148,9 +148,9 @@ PUBLIC
 
 find_package(CUDA QUIET)
 if(CUDA_FOUND)
+    add_definitions(-DHAS_CUDA)
     cuda_add_library(gpu_utils SHARED GPUUtils.cu)
     target_link_libraries(stormcv_caffe gpu_utils)
-    target_compile_definitions(stormcv_caffe PUBLIC HAS_CUDA)
     install(TARGETS gpu_utils DESTINATION native/x64)
 else()
     message("CUDA not found, gpu_utils will only have dummy implementation")

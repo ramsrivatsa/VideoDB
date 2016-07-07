@@ -150,7 +150,7 @@ find_package(CUDA QUIET)
 if(CUDA_FOUND)
     add_definitions(-DHAS_CUDA)
     target_compile_definitions(stormcv_caffe PUBLIC HAS_CUDA)
-    
+
     cuda_add_library(gpu_utils SHARED GPUUtils.cu)
     target_link_libraries(stormcv_caffe gpu_utils)
     install(TARGETS gpu_utils DESTINATION native/x64)

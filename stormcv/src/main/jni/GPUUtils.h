@@ -19,7 +19,9 @@
 #ifndef GPUUTILS_H
 #define GPUUTILS_H
 
-namespace ucw {
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 int getNumGPUs();
 
@@ -34,6 +36,8 @@ bool hasCuda();
     bool hasCuda() { return false; }
 #endif
 
+#ifdef __cplusplus
 }
-
 #endif
+
+#endif // GPUUTILS_H

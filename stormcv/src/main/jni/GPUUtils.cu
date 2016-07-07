@@ -1,14 +1,12 @@
 #include "GPUUtils.h"
 
-using namespace ucw;
-
 int getNumGPUs() {
     int numGpus = 0;
     cudaGetDeviceCount(&numGpus);
     return numGpus;
 }
 
-void setGPU(int id) {
+void setGpuDevice(int id) {
     cudaSetDevice(id);
 }
 

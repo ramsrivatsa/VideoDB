@@ -86,9 +86,7 @@ public class ForwardNet {
             try {
                 if (useCaffe) {
                     NativeUtils.loadLibrary("caffe", true);
-                    if (useGPU) {
-                        NativeUtils.loadLibrary("gpu_utils");
-                    }
+                    NativeUtils.loadLibrary("gpu_utils");
                     NativeUtils.loadLibrary("stormcv_caffe");
                 } else {
                     NativeUtils.loadLibrary("opencv_dnn", true);

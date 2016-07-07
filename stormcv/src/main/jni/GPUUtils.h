@@ -19,7 +19,9 @@
 #ifndef GPUUTILS_H
 #define GPUUTILS_H
 
-namespace ucw {
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 int getNumGPUs();
 
@@ -27,13 +29,9 @@ void setGpuDevice(int id);
 
 bool hasCuda();
 
-#ifndef HAS_CUDA
-// dummy implementation without cuda
-    int getNumGPUs() { return -1; }
-    void setGpuDevice(int) {}
-    bool hasCuda() { return false; }
-#endif
 
+#ifdef __cplusplus
 }
-
 #endif
+
+#endif // GPUUTILS_H

@@ -6,11 +6,12 @@ int getNumGPUs()
     return -1;
 }
 
-void setGpuDevice(int)
+void setGpuDevice(int gpuId)
 {
+    (void) gpuId;
 }
 
-bool hasCuda()
+int hasCuda()
 {
-    return false;
+    return 0;
 }

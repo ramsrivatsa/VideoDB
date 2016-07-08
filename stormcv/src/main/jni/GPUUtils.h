@@ -27,7 +27,7 @@ int getNumGPUs();
 
 void setGpuDevice(int id);
 
-bool hasCuda();
+int hasCuda();
 
 
 #ifdef __cplusplus

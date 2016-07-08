@@ -10,6 +10,6 @@ void setGpuDevice(int id) {
     cudaSetDevice(id);
 }
 
-bool hasCuda() {
-    return true;
+int hasCuda() {
+    return 1;
 }

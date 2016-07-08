@@ -16,6 +16,7 @@ using CVForwardNet = ucw::opencv::ForwardNet;
 
 #include "cv/converters.h"
 
+#undef UNUSED
 #define UNUSED(x) (void)(x)
 
 using namespace std;

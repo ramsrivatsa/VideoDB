@@ -210,6 +210,16 @@ target_link_libraries(stormcv_extractorx
     opencv_xfeatures2d
 )
 
+#------------------------------------------------------------------------------
+# Shared Library stormcv_tracker
+#------------------------------------------------------------------------------
+add_library(stormcv_tracker SHARED
+    JniCMTTracker.cpp
+)
+target_link_libraries(stormcv_tracker
+    stormcv_common
+    cmt
+)
 
 #==============================================================================
 # Target installation
@@ -221,5 +231,6 @@ install(TARGETS
     stormcv_thread
     stormcv_detectorx
     stormcv_extractorx
+    stormcv_tracker
     gpu_utils
     DESTINATION native/x64)

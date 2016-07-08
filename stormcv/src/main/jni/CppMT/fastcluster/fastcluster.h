@@ -3,9 +3,7 @@
 #include <algorithm> // for std::fill_n
 #include <stdexcept> // for std::runtime_error
 #include <string> // for std::string
-#include <math.h> // for std::string
-
-#include "../common.h"
+#include <cmath>
 
 #define fc_isnan(X) ((X)!=(X))
 

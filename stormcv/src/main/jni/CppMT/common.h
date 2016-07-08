@@ -8,8 +8,6 @@
 
 #include <opencv2/core/core.hpp>
 
-#include "logging/log.h"
-
 using cv::Mat;
 using cv::Point2f;
 using cv::Rect;

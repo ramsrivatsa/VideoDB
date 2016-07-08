@@ -1,45 +1,40 @@
 #include "ObjectTracking.h"
 
+#include <opencv2/imgproc.hpp>
+
+using cv::Mat;
+using cv::Rect;
+using cv::RotatedRect;
+using std::string;
+
 namespace cmt {
     //Pass in the location and the object to be tracked 
     ObjectTracking::ObjectTracking(const int x, 
                                    const int y, 
                                    const int width, 
                                    const int height, 
-                                   const string input_path,
-                                   const Mat input) {
+                                   const Mat &input) {
         rect = Rect(x,y,width,height);
         im0 = convertToGray(input);
         cmt.initialize(im0, rect);
     }
 
-    void ObjectTracking::trackImage(Mat im) {
+    void ObjectTracking::trackImage(const Mat &im) {
         Mat im_gray = convertToGray(im);
         cmt.processFrame(im_gray);
-        printCoords();
     }
 
-      
-    Mat ObjectTracking::convertToGray(Mat in) {
+    Mat ObjectTracking::convertToGray(const Mat &in) {
         Mat out;
         if (in.channels() > 1)
-          cvtColor(in, out, CV_BGR2GRAY);
+          cv::cvtColor(in, out, cv::COLOR_BGR2GRAY);
         else 
           out = in;
         return out;
     }
 
-      
-    void ObjectTracking::printCoords() {
-        RotatedRect rect = cmt.bb_rot;
-        Point2f verts[4];
-        rect.points(verts);
-        for(int i = 0; i < 4; i++)
-          {
-            std::cout << verts[i].x << "," << verts[i].y;
-            if(i!=3) std::cout << ",";
-          }
-        std::cout << std::endl;
+    RotatedRect ObjectTracking::currentPosition() const {
+        return cmt.bb_rot;
     }
 
 }

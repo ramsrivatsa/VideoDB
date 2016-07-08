@@ -107,6 +107,10 @@ unset(caffe_defs)
 message("Using JNI from ${JNI_INCLUDE_DIRS}")
 message("Using OpenCV from ${OpenCV_INCLUDE_DIRS}")
 message("Using Caffe from ${Caffe_INCLUDE_DIRS}")
+
+## CppMT built from source
+add_subdirectory(CppMT)
+
 #==============================================================================
 # Actual compile target
 #==============================================================================
@@ -206,10 +210,16 @@ target_link_libraries(stormcv_extractorx
     opencv_xfeatures2d
 )
 
-install(TARGETS stormcv_common DESTINATION native/x64)
-install(TARGETS stormcv_cv DESTINATION native/x64)
-install(TARGETS stormcv_caffe DESTINATION native/x64)
-install(TARGETS stormcv_thread DESTINATION native/x64)
-install(TARGETS stormcv_detectorx DESTINATION native/x64)
-install(TARGETS stormcv_extractorx DESTINATION native/x64)
-install(TARGETS gpu_utils DESTINATION native/x64)
+
+#==============================================================================
+# Target installation
+#==============================================================================
+install(TARGETS
+    stormcv_common
+    stormcv_cv
+    stormcv_caffe
+    stormcv_thread
+    stormcv_detectorx
+    stormcv_extractorx
+    gpu_utils
+    DESTINATION native/x64)

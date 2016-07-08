@@ -1,32 +1,32 @@
 #include "ObjectTracking.h"
 
+#include "common.h"
+
+#include <opencv2/core.hpp>
+#include <opencv2/videoio.hpp>
+
+#include <iostream>
+
+using namespace std;
 using namespace cmt;
-using cv::VideoCapture;
+using namespace cv;
 
-int main(int argc, char **argv)
+int main()
 {
-  //Create a CMT object
-  CMT cmt;
-
   //Initialization bounding box
   Rect rect;
 
   //Parse args
   int skip_frames = 0;
-  int verbose_flag = 0;
   string input_path = "test.avi";
 
   rect = Rect(128,49,13,17);
-  //Set up logging
-  FILELog::ReportingLevel() = verbose_flag ? logDEBUG : logINFO;
-  Output2FILE::Stream() = stdout; //Log to stdout
-
 
   VideoCapture cap;
 
   cap.open(input_path);
 
-  skip_frames = (int) cap.get(CV_CAP_PROP_POS_FRAMES);
+  skip_frames = (int) cap.get(cv::CAP_PROP_POS_FRAMES);
   std::cout << skip_frames << std::endl;
 
   //If it doesn't work, stop
@@ -39,9 +39,9 @@ int main(int argc, char **argv)
   //Get initial image
   Mat im0;
   cap >> im0;
-  ObjectTracking Tracker(128,49,13,17,input_path,im0);
+  ObjectTracking Tracker(128,49,13,17,im0);
 
-  FILE_LOG(logINFO) << "Using " << rect.x << "," << rect.y << "," << rect.width << "," << rect.height
+  cout << "Using " << rect.x << "," << rect.y << "," << rect.width << "," << rect.height
     << " as initial bounding box.";
 
   //Initialize CMT

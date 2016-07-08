@@ -1,14 +1,16 @@
 #include "CMT.h"
 
-#include <opencv2/highgui/highgui.hpp>
-#include <opencv2/imgproc/imgproc.hpp>
+#include "common.h"
+
+using cv::Point2f;
+using cv::Mat;
+using cv::RotatedRect;
+using cv::KeyPoint;
 
 namespace cmt {
 
-    void CMT::initialize(const Mat im_gray, const Rect rect)
-      {
-        FILE_LOG(logDEBUG) << "CMT::initialize() call";
-
+    void CMT::initialize(const Mat &im_gray, const Rect &rect)
+    {
         //Remember initial size
         size_initial = rect.size();
 
@@ -39,29 +41,28 @@ namespace cmt {
         vector<KeyPoint> keypoints_bg;
 
         for (size_t i = 0; i < keypoints.size(); i++)
-          {
+        {
             KeyPoint k = keypoints[i];
             Point2f pt = k.pt;
 
-            if (pt.x > rect.x && pt.y > rect.y && pt.x < rect.br().x && pt.y < rect.br().y)
-              {
+            if (pt.x > rect.x && pt.y > rect.y
+                && pt.x < rect.br().x && pt.y < rect.br().y)
+            {
                 keypoints_fg.push_back(k);
-              }
-
+            }
             else
-              {
+            {
                 keypoints_bg.push_back(k);
-              }
-
-          }
+            }
+        }
 
         //Create foreground classes
         vector<int> classes_fg;
         classes_fg.reserve(keypoints_fg.size());
         for (size_t i = 0; i < keypoints_fg.size(); i++)
-          {
+        {
             classes_fg.push_back(i);
-          }
+        }
 
         //Compute foreground/background features
         Mat descs_fg;
@@ -74,23 +75,23 @@ namespace cmt {
         vector<Point2f> points_bg;
 
         for (size_t i = 0; i < keypoints_fg.size(); i++)
-          {
+        {
             points_fg.push_back(keypoints_fg[i].pt);
-          }
+        }
 
-        FILE_LOG(logDEBUG) << points_fg.size() << " foreground points.";
+        //FILE_LOG(logDEBUG) << points_fg.size() << " foreground points.";
 
         for (size_t i = 0; i < keypoints_bg.size(); i++)
-          {
+        {
             points_bg.push_back(keypoints_bg[i].pt);
-          }
+        }
 
         //Create normalized points
         vector<Point2f> points_normalized;
         for (size_t i = 0; i < points_fg.size(); i++)
-          {
+        {
             points_normalized.push_back(points_fg[i] - center);
-          }
+        }
 
         //Initialize matcher
         matcher.initialize(points_normalized, descs_fg, classes_fg, descs_bg, center);
@@ -100,41 +101,39 @@ namespace cmt {
 
         //Create initial set of active keypoints
         for (size_t i = 0; i < keypoints_fg.size(); i++)
-          {
+        {
             points_active.push_back(keypoints_fg[i].pt);
             classes_active = classes_fg;
-          }
+        }
 
-        FILE_LOG(logDEBUG) << "CMT::initialize() return";
-      }
+        //FILE_LOG(logDEBUG) << "CMT::initialize() return";
+    }
 
-    void CMT::processFrame(Mat im_gray) {
+    void CMT::processFrame(const Mat &im_gray) {
 
-        FILE_LOG(logDEBUG) << "CMT::processFrame() call";
+        //FILE_LOG(logDEBUG) << "CMT::processFrame() call";
 
         //Track keypoints
         vector<Point2f> points_tracked;
         vector<unsigned char> status;
         tracker.track(im_prev, im_gray, points_active, points_tracked, status);
 
-        FILE_LOG(logDEBUG) << points_tracked.size() << " tracked points.";
+        //FILE_LOG(logDEBUG) << points_tracked.size() << " tracked points.";
 
         //keep only successful classes
         vector<int> classes_tracked;
         for (size_t i = 0; i < classes_active.size(); i++)
-          {
-            if (status[i])
-              {
+        {
+            if (status[i]) {
                 classes_tracked.push_back(classes_active[i]);
-              }
-
-          }
+            }
+        }
 
         //Detect keypoints, compute descriptors
         vector<KeyPoint> keypoints;
         detector->detect(im_gray, keypoints);
 
-        FILE_LOG(logDEBUG) << keypoints.size() << " keypoints found.";
+        //FILE_LOG(logDEBUG) << keypoints.size() << " keypoints found.";
 
         Mat descriptors;
         descriptor->compute(im_gray, keypoints, descriptors);
@@ -144,7 +143,7 @@ namespace cmt {
         vector<int> classes_matched_global;
         matcher.matchGlobal(keypoints, descriptors, points_matched_global, classes_matched_global);
 
-        FILE_LOG(logDEBUG) << points_matched_global.size() << " points matched globally.";
+        //FILE_LOG(logDEBUG) << points_matched_global.size() << " points matched globally.";
 
         //Fuse tracked and globally matched points
         vector<Point2f> points_fused;
@@ -152,14 +151,14 @@ namespace cmt {
         fusion.preferFirst(points_tracked, classes_tracked, points_matched_global, classes_matched_global,
                            points_fused, classes_fused);
 
-        FILE_LOG(logDEBUG) << points_fused.size() << " points fused.";
+        //FILE_LOG(logDEBUG) << points_fused.size() << " points fused.";
 
         //Estimate scale and rotation from the fused points
         float scale;
         float rotation;
         consensus.estimateScaleRotation(points_fused, classes_fused, scale, rotation);
 
-        FILE_LOG(logDEBUG) << "scale " << scale << ", " << "rotation " << rotation;
+        //FILE_LOG(logDEBUG) << "scale " << scale << ", " << "rotation " << rotation;
 
         //Find inliers and the center of their votes
         Point2f center;
@@ -168,15 +167,15 @@ namespace cmt {
         consensus.findConsensus(points_fused, classes_fused, scale, rotation,
                                 center, points_inlier, classes_inlier);
 
-        FILE_LOG(logDEBUG) << points_inlier.size() << " inlier points.";
-        FILE_LOG(logDEBUG) << "center " << center;
+        //FILE_LOG(logDEBUG) << points_inlier.size() << " inlier points.";
+        //FILE_LOG(logDEBUG) << "center " << center;
 
         //Match keypoints locally
         vector<Point2f> points_matched_local;
         vector<int> classes_matched_local;
         matcher.matchLocal(keypoints, descriptors, center, scale, rotation, points_matched_local, classes_matched_local);
 
-        FILE_LOG(logDEBUG) << points_matched_local.size() << " points matched locally.";
+        //FILE_LOG(logDEBUG) << points_matched_local.size() << " points matched locally.";
 
         //Clear active points
         points_active.clear();
@@ -187,7 +186,7 @@ namespace cmt {
         //    points_active = points_fused;
         //    classes_active = classes_fused;
 
-        FILE_LOG(logDEBUG) << points_active.size() << " final fused points.";
+        //FILE_LOG(logDEBUG) << points_active.size() << " final fused points.";
 
         //TODO: Use theta to suppress result
         bb_rot = RotatedRect(center,  size_initial * scale, rotation/CV_PI * 180);
@@ -195,7 +194,7 @@ namespace cmt {
         //Remember current image
         im_prev = im_gray;
 
-        FILE_LOG(logDEBUG) << "CMT::processFrame() return";
+        //FILE_LOG(logDEBUG) << "CMT::processFrame() return";
     }
 
 } /* namespace CMT */

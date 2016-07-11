@@ -68,7 +68,7 @@ JNIEXPORT jlong JNICALL Java_xyz_unlimitedcodeworks_operations_extra_ForwardNet_
     UNUSED(jMaxGPUNum);
 
 #ifdef FN_USE_CAFFE
-    if (jTaskId != -1) {
+    if (!jCaffeOnCPU && jTaskId != -1) {
         if (!hasCuda()) {
             cerr << "WARNING: cuda not found in compile time, setting current GPU will not work."
                  << endl;

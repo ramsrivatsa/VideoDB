@@ -70,6 +70,8 @@ public class NativeUtils {
             try {
                 System.loadLibrary(libname);
             } catch (UnsatisfiedLinkError e) {
+                logger.warn("Can't load {} from system, load from resources instead", libname);
+                logger.warn("Underlaying exception: ", e.getMessage());
                 loadLibrary(libname);
             }
         } else {

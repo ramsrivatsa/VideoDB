@@ -19,7 +19,7 @@ public class CMTTracker {
             NativeUtils.loadLibrary("cmt");
             NativeUtils.loadLibrary("stormcv_tarcker");
         } catch (Exception ex) {
-            System.err.println("Error loading ForwardNet native libraries");
+            System.err.println("Error loading CMTTracker native libraries");
             ex.printStackTrace();
             throw ex;
         }

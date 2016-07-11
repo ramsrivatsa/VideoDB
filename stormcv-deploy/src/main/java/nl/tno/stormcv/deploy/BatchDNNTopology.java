@@ -153,7 +153,7 @@ public class BatchDNNTopology {
             dnnforward.maxGPUNum(maxGPUNum);
         } else {
             System.out.println("Using OpenCV::DNN");
-            dnnforward = new DnnForwardOp("classprob", "/data/bvlc_googlenet.prototxt",
+            dnnforward = new DnnForwardOp("classprob", "/data/bvlc_googlenet.old.prototxt",
                     "/data/bvlc_googlenet.caffemodel");
         }
         dnnforward.outputFrame(true).threadPriority(fatPriority);
@@ -206,7 +206,7 @@ public class BatchDNNTopology {
             //cluster.shutdown();
 
             // run on a storm cluster
-            StormSubmitter.submitTopology("dnn_classification", conf, builder.createTopology());
+            StormSubmitter.submitTopology("dnn_classification_batch", conf, builder.createTopology());
         } catch (Exception e) {
             e.printStackTrace();
         }

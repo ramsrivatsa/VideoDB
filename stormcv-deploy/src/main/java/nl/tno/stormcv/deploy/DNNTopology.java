@@ -150,7 +150,7 @@ public class DNNTopology {
             dnnforward.maxGPUNum(maxGPUNum);
         } else {
             System.out.println("Using OpenCV::DNN");
-            dnnforward = new DnnForwardOp("classprob", "/data/bvlc_googlenet.prototxt",
+            dnnforward = new DnnForwardOp("classprob", "/data/bvlc_googlenet.old.prototxt",
                                                        "/data/bvlc_googlenet.caffemodel");
         }
         dnnforward.outputFrame(true).threadPriority(fatPriority);

@@ -178,7 +178,7 @@ public class ObjTrackingTopology {
             //cluster.shutdown();
 
             // run on a storm cluster
-            StormSubmitter.submitTopology("dnn_classification", conf, builder.createTopology());
+            StormSubmitter.submitTopology("object_tracking", conf, builder.createTopology());
         } catch (Exception e) {
             e.printStackTrace();
         }

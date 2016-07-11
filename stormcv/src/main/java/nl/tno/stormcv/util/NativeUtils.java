@@ -72,7 +72,8 @@ public class NativeUtils {
             } catch (UnsatisfiedLinkError e) {
                 logger.warn("Can't load {} from system, load from resources instead", libname);
                 logger.warn("Current java library path is {}", System.getProperty("java.library.path"));
-                logger.warn("Underlaying exception:", e);
+                logger.warn("Underlaying exception:");
+                e.printStackTrace();
                 loadLibrary(libname);
             }
         } else {

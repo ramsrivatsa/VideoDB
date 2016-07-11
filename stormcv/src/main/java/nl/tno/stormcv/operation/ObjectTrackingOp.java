@@ -37,7 +37,7 @@ public class ObjectTrackingOp extends OpenCVOp<CVParticle>
     private CVParticleSerializer serializer = new FeatureSerializer();
 
     private CMTTracker tracker = null;
-    private Rect roi;
+    private double[] roi = new double[4];
 
     /**
      * @param featureName    the name of the feature which will be put in the generated Feature's name field
@@ -45,7 +45,10 @@ public class ObjectTrackingOp extends OpenCVOp<CVParticle>
      */
     public ObjectTrackingOp(String featureName, Rect roi) {
         this.featureName = featureName;
-        this.roi = roi;
+        this.roi[0] = roi.x;
+        this.roi[1] = roi.y;
+        this.roi[2] = roi.width;
+        this.roi[3] = roi.height;
     }
 
     /**
@@ -134,7 +137,9 @@ public class ObjectTrackingOp extends OpenCVOp<CVParticle>
         if (tracker != null) {
             return;
         }
-        tracker = new CMTTracker(roi, frame);
+        Rect roi_rect = new Rect();
+        roi_rect.set(roi);
+        tracker = new CMTTracker(roi_rect, frame);
     }
 
     private Descriptor rotatedRectToDescriptor(Frame frame, RotatedRect rr) {

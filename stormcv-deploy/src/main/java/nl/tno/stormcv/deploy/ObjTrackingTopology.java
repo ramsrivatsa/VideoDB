@@ -68,8 +68,8 @@ public class ObjTrackingTopology {
                         startDelay = value;
                         break;
                     case "fps":
-                        //sleepMs = 1000 / value;
-                        sleepMs = 0;
+                        sleepMs = 1000 / value;
+                        //sleepMs = 0;
                         sendingFps = value;
                         break;
                     case "fetcher":
@@ -139,12 +139,13 @@ public class ObjTrackingTopology {
         IFetcher fetcher;
         switch(fetcherType) {
             case "video":
-                fetcher = new FileFrameFetcher(files).frameSkip(frameSkip).autoSleep(autoSleep);
+                fetcher = new FileFrameFetcher(files).frameSkip(frameSkip)
+                            .autoSleep(autoSleep).sleep(sleepMs);
                 break;
             default:
             case "image":
                 fetcher = new RefreshingImageFetcher(files).sendingFps(sendingFps)
-                        .sleep(sleepMs).autoSleep(autoSleep).startDelay(startDelay);
+                            .autoSleep(autoSleep).startDelay(startDelay);
         }
         builder.setSpout("fetcher", new CVParticleSpout(fetcher), 1);
         // add bolt that scales frames down to 80% of the original size

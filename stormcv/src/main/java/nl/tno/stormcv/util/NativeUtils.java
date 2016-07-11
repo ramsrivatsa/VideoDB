@@ -123,7 +123,7 @@ public class NativeUtils {
      */
     public static File getAsLocalFile(String name) throws IOException {
         URL url = NativeUtils.class.getResource(name);
-        if (url == null) throw new FileNotFoundException("Unable to locate " + name);
+        if (url == null) throw new FileNotFoundException("Unable to locate resource: " + name);
 
         File file = null;
         if (url.getProtocol().equals("jar")) {

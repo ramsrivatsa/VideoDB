@@ -18,7 +18,7 @@ public class CMTTracker {
             NativeUtils.loadLibrary("opencv_flann", true); // required by features2d
             NativeUtils.loadLibrary("opencv_features2d", true);
             NativeUtils.loadLibrary("cmt");
-            NativeUtils.loadLibrary("stormcv_tarcker");
+            NativeUtils.loadLibrary("stormcv_tracker");
         } catch (Exception ex) {
             System.err.println("Error loading CMTTracker native libraries");
             ex.printStackTrace();

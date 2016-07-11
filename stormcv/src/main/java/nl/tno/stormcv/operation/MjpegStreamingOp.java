@@ -110,7 +110,10 @@ public class MjpegStreamingOp extends Application implements IBatchOperation<Fra
     public List<Frame> execute(List<CVParticle> input) throws Exception {
         List<Frame> result = new ArrayList<>();
         for (CVParticle s : input) {
-            if (!(s instanceof Frame)) continue;
+            if (!(s instanceof Frame)) {
+                logger.warn("Getting non-frame input from stream {}. Check previous stage.", s.getStreamId());
+                continue;
+            }
             Frame frame = (Frame) s;
             result.add(frame);
             if (frame.getImage() == null) continue;

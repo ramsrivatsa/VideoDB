@@ -74,12 +74,19 @@ public class DrawFeaturesOp implements ISingleInputOperation<Frame> {
 	@Override
 	public List<Frame> execute(CVParticle particle) throws Exception {
 		List<Frame> result = new ArrayList<>();
-		if(!(particle instanceof Frame)) return result;
+		if(!(particle instanceof Frame)) {
+            logger.warn("Getting non-frame input from stream {}. Check previous stage.", particle.getStreamId());
+            return result;
+        }
 		Frame sf = (Frame)particle;
 		result.add(sf);
 		BufferedImage image = sf.getImage();
 		
-		if(image == null) return result;
+		if(image == null) {
+            logger.warn("Getting empty frame from stream {}. Check previous stage.", sf.getStreamId());
+            return result;
+        }
+
 		
 		Graphics2D graphics = image.createGraphics();
 		int colorIndex = 0;

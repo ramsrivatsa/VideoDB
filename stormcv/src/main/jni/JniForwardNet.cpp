@@ -24,10 +24,10 @@ using namespace ucw;
 
 /*
  * Class:     xyz_unlimitedcodeworks_operations_extra_ForwardNet
- * Method:    create
+ * Method:    create_0
  * Signature: (Ljava/lang/String;Ljava/lang/String;)J
  */
-JNIEXPORT jlong JNICALL Java_xyz_unlimitedcodeworks_operations_extra_ForwardNet_create__Ljava_lang_String_2Ljava_lang_String_2
+JNIEXPORT jlong JNICALL Java_xyz_unlimitedcodeworks_operations_extra_ForwardNet_create_10
   (JNIEnv *env, jclass, jstring jModelTxt, jstring jModelBin)
 {
     UNUSED(env);

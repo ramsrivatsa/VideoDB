@@ -46,6 +46,13 @@ public class ForwardNet {
             nativeObj = create_0(modelTxt, modelBin);
         } else {
             System.out.println("Use Caffe as neural network");
+            if (!caffeOnCPU) {
+                // check which gpu we are using
+                String cuda_visible_devices = System.getenv("CUDA_VISIBLE_DEVICES");
+                if (cuda_visible_devices == null || !cuda_visible_devices.equals("3,4")) {
+                    throw new RuntimeException("GPU selection incorrect! CUDA_VISIBLE_DEVICES=" + cuda_visible_devices);
+                }
+            }
             nativeObj = create_1(modelTxt, modelBin, meanBin, caffeOnCPU, taskIndex, maxGPUNum);
         }
     }

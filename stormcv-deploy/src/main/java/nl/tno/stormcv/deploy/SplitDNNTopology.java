@@ -59,13 +59,13 @@ public class SplitDNNTopology {
                     case "scale":
                         scaleHint = value;
                         break;
-                    case "face-detect":
+                    case "facedetect":
                         faceDetectHint = value;
                         break;
-                    case "dnn-forward":
+                    case "dnnforward":
                         dnnForwardHint = value;
                         break;
-                    case "dnn-classify":
+                    case "dnnclassify":
                         dnnClassifyHint = value;
                         break;
                     case "max-spout-pending":

@@ -44,8 +44,15 @@ public abstract class OpenCVOp<Output extends CVParticle> implements IOperation<
 	@SuppressWarnings("rawtypes")
 	protected void loadOpenCV( Map stormConf) throws RuntimeException, IOException{
 		this.libName = (String)stormConf.get(StormCVConfig.STORMCV_OPENCV_LIB);
-		if(libName == null) NativeUtils.loadLibrary(OPENCV_NATIVE_LIBNAME);
-		else NativeUtils.loadLibrary(libName);
+		if(libName == null) {
+            try {
+                NativeUtils.loadLibrary(OPENCV_NATIVE_LIBNAME);
+            } catch (UnsatisfiedLinkError ex) {
+                NativeUtils.loadLibrary(OPENCV_NATIVE_LIBNAME + ".xine1");
+            }
+		} else {
+				NativeUtils.loadLibrary(libName);
+		}
 	}
 	
 	@SuppressWarnings("rawtypes")

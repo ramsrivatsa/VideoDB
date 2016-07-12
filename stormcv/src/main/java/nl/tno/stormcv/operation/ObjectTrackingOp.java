@@ -86,6 +86,8 @@ public class ObjectTrackingOp extends OpenCVOp<CVParticle>
 
     @Override
     public List<CVParticle> execute(CVParticle particle) throws Exception {
+        logger.info("ObjectTrackingOp: get frame {}", particle.getSequenceNr());
+
         List<CVParticle> result = new ArrayList<>();
         if (!(particle instanceof Frame)) return result;
 
@@ -128,6 +130,10 @@ public class ObjectTrackingOp extends OpenCVOp<CVParticle>
 
         for (CVParticle cvt : inputs) {
             result.addAll(execute(cvt));
+        }
+
+        if (result.size() != inputs.size()) {
+            logger.error("Output batch size mismatch input batch size!!");
         }
 
         return result;

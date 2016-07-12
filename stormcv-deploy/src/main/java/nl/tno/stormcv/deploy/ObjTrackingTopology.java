@@ -152,9 +152,8 @@ public class ObjTrackingTopology {
         builder.setBolt("scale", new SingleInputBolt(new ScaleImageOp(0.5f)), scaleHint)
                 .shuffleGrouping("fetcher");
 
-        builder.setBolt("obj_track", new BatchInputBolt(
-                    new SlidingWindowBatcher(2, 0).maxSize(6),
-                    new ObjectTrackingOp("obj1", roi).outputFrame(true)).groupBy(new Fields(FrameSerializer.STREAMID)),
+        builder.setBolt("obj_track", new SingleInputBolt(
+                    new ObjectTrackingOp("obj1", roi).outputFrame(true)),
                 1)
                 .shuffleGrouping("scale");
 

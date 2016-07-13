@@ -152,8 +152,9 @@ public class ObjTrackingTopology {
         builder.setBolt("scale", new SingleInputBolt(new ScaleImageOp(0.5f)), scaleHint)
                 .shuffleGrouping("fetcher");
 
-        builder.setBolt("obj_track", new SingleInputBolt(
-                    new ObjectTrackingOp("obj1", roi).outputFrame(true)),
+        builder.setBolt("obj_track", new BatchInputBolt(
+                    new SlidingWindowBatcher(2, 1).maxSize(24),
+                    new ObjectTrackingOp("obj1", roi).outputFrame(true)).groupBy(new Fields(FrameSerializer.STREAMID)),
                 1)
                 .shuffleGrouping("scale");
 
@@ -164,7 +165,7 @@ public class ObjTrackingTopology {
 
         // add bolt that creates a webservice on port 8558 enabling users to view the result
         builder.setBolt("streamer", new BatchInputBolt(
-                    new SlidingWindowBatcher(2, 0).maxSize(6),
+                    new SlidingWindowBatcher(2, 1).maxSize(24),
                     new MjpegStreamingOp().port(8558).framerate(5)).groupBy(new Fields(FrameSerializer.STREAMID)),
                 1)
                 .shuffleGrouping("drawer");

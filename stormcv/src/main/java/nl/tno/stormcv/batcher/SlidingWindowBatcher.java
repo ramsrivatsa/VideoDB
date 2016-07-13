@@ -48,6 +48,66 @@ public class SlidingWindowBatcher implements IBatcher {
     @Override
     public List<List<CVParticle>> partition(History history, List<CVParticle> currentSet) {
         List<List<CVParticle>> result = new ArrayList<List<CVParticle>>();
+
+        if (currentSet.size() == 0) return result;
+
+        for (int startAt = 0; startAt != currentSet.size() - 1; ++startAt) {
+            windowSize = 0;
+            List<CVParticle> window = null;
+            for (int endBefore = currentSet.size(); endBefore >= 0; --endBefore) {
+                window = new ArrayList<>();
+                window.addAll(currentSet.subList(startAt, endBefore));
+                windowSize = window.size();
+                if (assessWindow(window)) {
+                    break;
+                }
+            }
+            // leave the last matching one, which is used for next matching.
+            if (windowSize > 1) {
+                window.remove(window.size()-1);
+                for (CVParticle cvt : window) {
+                    history.removeFromHistory(cvt);
+                }
+                result.add(window);
+                return result;
+            }
+
+            // suitable window not found
+            if (currentSet.size() - startAt > maxSize) {
+                logger.warn("Skipping frame(s) between {} and {}",
+                            currentSet.get(startAt),
+                            currentSet.get(startAt + 1));
+                if (windowSize != 0) {
+                    for (CVParticle cvt : window) {
+                        history.removeFromHistory(cvt);
+                    }
+                    result.add(window);
+                }
+            } else {
+                break;
+            }
+        }
+
+        /*
+        long previous = currentSet.get(0).getSequenceNr();
+        int i = 1;
+        for (; i != currentSet.size(); ++i) {
+            if (currentSet.get(i).getSequenceNr() - previous != sequenceDelta) {
+                break;
+            }
+            previous = currentSet.get(i).getSequenceNr();
+        }
+        --i; // leave the last matching one, which is used for next matching.
+        List<CVParticle> window = new ArrayList<>();
+        window.addAll(currentSet.subList(0, i));
+        for (CVParticle cvt : window) {
+            history.removeFromHistory(cvt);
+        }
+        result.add(window);
+        */
+
+
+        /*
         for (int i = 0; i <= currentSet.size() - windowSize; i++) {
             List<CVParticle> window = new ArrayList<CVParticle>();
             window.addAll(currentSet.subList(i, i + windowSize)); // add all is used to avoid ConcurrentModificationException when the History cleans stuff up
@@ -58,6 +118,7 @@ public class SlidingWindowBatcher implements IBatcher {
             } else break;
         }
         //logger.info("Frame Obtained" + System.nanoTime());
+        */
         return result;
     }
 

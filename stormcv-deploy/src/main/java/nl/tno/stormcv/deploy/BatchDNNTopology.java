@@ -181,7 +181,7 @@ public class BatchDNNTopology {
         builder.setBolt("scale", new SingleInputBolt(new ScaleImageOp(0.5f)), scaleHint)
                 .shuffleGrouping("fetcher");
 
-        builder.setBolt("fat_features", new BatchInputBolt(new DiscreteWindowBatcher(batchSize, 1),
+        builder.setBolt("dnn_forward", new BatchInputBolt(new DiscreteWindowBatcher(batchSize, 1),
                                             dnnforward).groupBy(new Fields(FrameSerializer.STREAMID)),
                 fatfeatureHint)
                 .shuffleGrouping("scale");
@@ -189,7 +189,7 @@ public class BatchDNNTopology {
         // simple bolt that draws Features (i.e. locations of features) into the frame
         builder.setBolt("drawer", new SingleInputBolt(new SequentialFrameOp(operations).outputFrame(true).retainImage(true)),
                 drawerHint)
-                .shuffleGrouping("fat_features");
+                .shuffleGrouping("dnn_forward");
 
         // add bolt that creates a webservice on port 8558 enabling users to view the result
         builder.setBolt("streamer", new BatchInputBolt(

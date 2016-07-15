@@ -34,7 +34,6 @@ public class RefreshingImageFetcher implements IFetcher<Frame> {
 	private static final long serialVersionUID = 7578821428365233524L;
 	private Logger logger = LoggerFactory.getLogger(getClass());
 	private LinkedBlockingQueue<Frame> frameQueue; // queue used to store frames
-	private int sleep = 40;
 	private List<String> locations;
 	private List<ImageReader> readers;
 	private String imageType;
@@ -46,17 +45,6 @@ public class RefreshingImageFetcher implements IFetcher<Frame> {
 		this.locations = locations;
 	}
 	
-	/**
-	 * Determines how often this Fetcher reads and decodes an image. The default sleep is 
-	 * 40 ms. 
-	 * @param ms
-	 * @return
-	 */
-	public RefreshingImageFetcher sleep(int ms) {
-		this.sleep = ms;
-		return this;
-	}
-
     /**
      * Try to send frames at FPS `fps`. Note sleeping interferences with this, you can't
      * use these two in the same time.
@@ -118,7 +106,7 @@ public class RefreshingImageFetcher implements IFetcher<Frame> {
 	public void activate() {
 		for(String location : locations){
 			try {
-				ImageReader ir = new ImageReader(new URL(location), sleep, autoSleep,
+				ImageReader ir = new ImageReader(new URL(location), autoSleep,
                                                  startDelay, sendingFps, frameQueue);
 				new Thread(ir).start();
 				readers.add(ir);
@@ -147,7 +135,6 @@ public class RefreshingImageFetcher implements IFetcher<Frame> {
 		private Logger logger = LoggerFactory.getLogger(getClass());
 		private LinkedBlockingQueue<Frame> frameQueue;
 		private URL url;
-		private int sleep;
 		private int sequenceNr;
 		private boolean running = true;
         private boolean autoSleep = false;
@@ -158,9 +145,8 @@ public class RefreshingImageFetcher implements IFetcher<Frame> {
         private int remainFps = 0;
         private long binSize = 0;
 		
-		public ImageReader(URL url, int sleep, boolean autoSleep, int startDelay, int sendingFps, LinkedBlockingQueue<Frame> frameQueue){
+		public ImageReader(URL url, boolean autoSleep, int startDelay, int sendingFps, LinkedBlockingQueue<Frame> frameQueue){
 			this.url = url;
-			this.sleep = sleep;
             this.autoSleep = autoSleep;
             this.startDelay = startDelay;
 			this.frameQueue = frameQueue;
@@ -219,8 +205,6 @@ public class RefreshingImageFetcher implements IFetcher<Frame> {
 					sequenceNr++;
 					if(autoSleep && frameQueue.size() > 20)
                         Utils.sleep(frameQueue.size());
-                    if (sleep > 0)
-                        Utils.sleep(sleep);
                 }
             }catch(Exception e){
                 logger.warn("Exception while reading "+url+" : "+e.getMessage());

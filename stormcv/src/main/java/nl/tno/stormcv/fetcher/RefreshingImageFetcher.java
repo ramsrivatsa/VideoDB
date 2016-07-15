@@ -201,7 +201,7 @@ public class RefreshingImageFetcher implements IFetcher<Frame> {
                         if ((currBin % stepRatio) < remainFps)
                             ++limit;
                         if (currStepFps == limit) {
-                            Utils.sleep(1);
+                            Utils.sleep(0);
                             continue;
                         }
 

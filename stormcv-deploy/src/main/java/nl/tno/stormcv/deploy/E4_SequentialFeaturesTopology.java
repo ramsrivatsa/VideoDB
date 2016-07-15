@@ -129,12 +129,12 @@ public class E4_SequentialFeaturesTopology {
         IFetcher fetcher;
         switch(fetcherType) {
             case "video":
-                fetcher = new FileFrameFetcher(files).frameSkip(frameSkip).autoSleep(autoSleep);
+                fetcher = new FileFrameFetcher(files).frameSkip(frameSkip).autoSleep(autoSleep).sleep(sleepMs);
                 break;
             default:
             case "image":
                 fetcher = new RefreshingImageFetcher(files).sendingFps(sendingFps)
-                        .sleep(sleepMs).autoSleep(autoSleep).startDelay(startDelay);
+                        .autoSleep(autoSleep).startDelay(startDelay);
         }
 		 // just one spout reading video files, extracting 1 frame out of 25 (i.e. 1 per second)
 		builder.setSpout("spout", new CVParticleSpout(fetcher), 1);

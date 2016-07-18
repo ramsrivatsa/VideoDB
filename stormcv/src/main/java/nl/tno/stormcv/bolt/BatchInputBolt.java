@@ -188,7 +188,9 @@ public class BatchInputBolt extends CVParticleBolt implements RemovalListener<CV
 		}
         history.add(currGroupKey, input);
         List<List<CVParticle>> batches = batcher.partition(history, history.getGroupedItems(currGroupKey));
+        logger.info("Get {} batches from batcher", batches.size());
         for (List<CVParticle> batch : batches) {
+            logger.info("Get a batch of size {}", batch.size());
             long beginExecute = Timing.currentTimeMillis();
             long endExecute;
             if (profiling) {

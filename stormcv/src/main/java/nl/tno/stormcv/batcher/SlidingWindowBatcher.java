@@ -84,6 +84,7 @@ public class SlidingWindowBatcher implements IBatcher {
     private void submitWindow(List<List<CVParticle>> result, List<CVParticle> window) {
         if (window.isEmpty()) return;
 
+        lastSubmitTime = Timing.currentTimeMillis();
         if (forceSingleFrameBatch) {
             for (CVParticle cvt : window) {
                 List<CVParticle> l = new ArrayList<>();
@@ -91,11 +92,9 @@ public class SlidingWindowBatcher implements IBatcher {
                 result.add(l);
             }
         } else {
-            result.add(window);
+            result.add(new ArrayList<>(window)); // must make a copy of the original one
         }
-        lastSubmitTime = Timing.currentTimeMillis();
-        logger.info("Submitting window of {} frame(s) at time {}",
-                window.size(), lastSubmitTime);
+        logger.info("Submitting window of {} frame(s) at time {}", window.size(), lastSubmitTime);
         window.clear();
     }
 

@@ -35,6 +35,10 @@ public class SlidingWindowBatcher implements IBatcher {
     private int maxSize = Integer.MAX_VALUE;
     private long maxWait = Long.MAX_VALUE;
 
+    public SlidingWindowBatcher(int windowSize, int sequenceDelta) {
+        this(windowSize, sequenceDelta, 0);
+    }
+
     public SlidingWindowBatcher(int windowSize, int sequenceDelta, long lastSequence) {
         this.windowSize = windowSize;
         this.sequenceDelta = sequenceDelta;

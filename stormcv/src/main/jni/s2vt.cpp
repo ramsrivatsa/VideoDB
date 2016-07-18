@@ -16,25 +16,69 @@
  * =====================================================================================
  */
 
-#include <caffe/fc7FrameSequenceGenerator.hpp>
-#include <math.h>
-
-using namespace caffe;
+#include "s2vt.h"
 
 namespace ucw{
-    void encodeVideoFrames(shared_ptr<Net<float> > net, vector<vector<float>> &vidFeatures, int prevWord=-1) {
-        for(int i = 0; i < vidFeatures.size(); i++) {
+    Captioner::Captioner(const string& VOCAB_FILE,
+                         const string& LSTM_NET_FILE,
+                         const string& MODEL_FILE,
+                         const vector<vector<float> >& frameFeats) {
+        Caffe::set_mode(Caffe::GPU);
+        vidFrameFeats = frameFeats;
+
+        lstmNet.reset(new Net<float>(LSTM_NET_FILE, TEST));
+        lstmNet->CopyTrainedLayersFrom(MODEL_FILE);
+        strategies={{"type","beam"},{"beam_size","1"}};
+        initVocabFromFiles(VOCAB_FILE);
+    }
+
+    void Captioner::runCaptioner(){
+        runPredIters();
+        convertToWords();
+    }
+
+    void Captioner::initVocabFromFiles(string vocabFile) {
+        vocabInverted.push_back("<EOS>");
+        vocabInverted.push_back(UNK_IDENTIFIER);
+        int numWordsDataset = 0;
+        std::ifstream vocab(vocabFile);
+        string word;
+        while(getline(vocab,word)) {
+            //            std::cout << word << std::endl;
+            if(!word.compare(UNK_IDENTIFIER))
+              continue;
+
+            numWordsDataset++;
+
+            vocabInverted.push_back(word);
+        }
+    }
+
+    void Captioner::runPredIters() {
+        vector<vector<float> > vidFeatures = vidFrameFeats;
+        encodeVideoFrames(-1);
+        vector<float> padImgFeature = vidFeatures[vidFeatures.size()-1];
+
+        for(int i = 0; i < padImgFeature.size(); i++) {
+            if(padImgFeature[i] > 0.0f) padImgFeature[i] = 0.0f;
+        }
+
+        predictCaption(padImgFeature,20);
+    }
+
+    void Captioner::encodeVideoFrames(int prevWord) {
+        for(int i = 0; i < vidFrameFeats.size(); i++) {
             float contInput = 0 ? prevWord == -1 : 1;
             float cont = contInput;
             float dataEn = prevWord;
             float stageInd = 0;
 
-            vector<float> currFrame = vidFeatures[i];
+            vector<float> currFrame = vidFrameFeats[i];
 
-            Blob<float>* fc7 = net->input_blobs()[0];
-            Blob<float>* cont_sentence = net->input_blobs()[1];
-            Blob<float>* input_sentence = net->input_blobs()[2];
-            Blob<float>* stage_indicator = net->input_blobs()[3];
+            Blob<float>* fc7 = lstmNet->input_blobs()[0];
+            Blob<float>* cont_sentence = lstmNet->input_blobs()[1];
+            Blob<float>* input_sentence = lstmNet->input_blobs()[2];
+            Blob<float>* stage_indicator = lstmNet->input_blobs()[3];
 
             float* input_fc7 = fc7->mutable_cpu_data();
             memcpy(input_fc7, &currFrame[0],currFrame.size()*sizeof(float));
@@ -48,21 +92,42 @@ namespace ucw{
             float* input_stage_indicator = stage_indicator->mutable_cpu_data();
             memcpy(input_stage_indicator,&stageInd,sizeof(float));
 
-            net->Forward();
+            lstmNet->Forward();
         } 
     }
 
-    vector<float> predictSingleWord(shared_ptr<Net<float> > net, vector<float> &padImgFeatures, int prevWord) {
+    void Captioner::predictCaption(vector<float> &padImgFeats,
+                                   int maxLength) {
+        int beamComplete = 0;
 
+        int prevWord;
+
+        //Only 1 vid, so 1 beam
+        while(beamComplete < 1) {
+            if(!beam.empty()) {
+                prevWord = beam[beam.size() - 1];
+            }
+            else prevWord = 0;
+
+            vector<float> probs = predictSingleWord(padImgFeats, prevWord);
+
+            beam.push_back(std::distance(probs.begin(),max_element(probs.begin(), probs.end())));
+            beamComplete = 0;
+
+            if(beam[beam.size() - 1] == 0 || beam.size() >= maxLength) beamComplete++;
+        }
+    }
+
+    vector<float> Captioner::predictSingleWord(vector<float> &padImgFeatures, int prevWord) {
         float contInput = 1;
         float cont = contInput;
         float dataEn = prevWord;
         float stageInd = 1;
 
-        Blob<float>* fc7 = net->input_blobs()[0];
-        Blob<float>* cont_sentence = net->input_blobs()[1];
-        Blob<float>* input_sentence = net->input_blobs()[2];
-        Blob<float>* stage_indicator = net->input_blobs()[3];
+        Blob<float>* fc7 = lstmNet->input_blobs()[0];
+        Blob<float>* cont_sentence = lstmNet->input_blobs()[1];
+        Blob<float>* input_sentence = lstmNet->input_blobs()[2];
+        Blob<float>* stage_indicator = lstmNet->input_blobs()[3];
 
         float* input_fc7 = fc7->mutable_cpu_data();
         memcpy(input_fc7, &padImgFeatures[0],padImgFeatures.size()*sizeof(float));
@@ -76,9 +141,9 @@ namespace ucw{
         float* input_stage_indicator = stage_indicator->mutable_cpu_data();
         memcpy(input_stage_indicator,&stageInd,sizeof(float));
 
-        net->Forward();
+        lstmNet->Forward();
 
-        Blob<float>* output_layer = net->output_blobs()[0];
+        Blob<float>* output_layer = lstmNet->output_blobs()[0];
         const float* begin = output_layer->cpu_data();
         const float* end = begin + output_layer->shape(2);
 
@@ -87,123 +152,43 @@ namespace ucw{
         return result;
     }
 
-    vector<int> predictCaption(shared_ptr<Net<float> > net, 
-                               vector<float> &padImgFeats,
-                               vector<string> &vocabList,
-                               map<string,string> &strategies,
-                               int maxLength = 15) {
-        vector<int> beam;
-        int beamComplete = 0;
-
-        int prevWord;
-
-        //Only 1 vid, so 1 beam
-        while(beamComplete < 1) {
-            if(!beam.empty()) {
-                prevWord = beam[beam.size() - 1];
-            }
-            else prevWord = 0;
-
-            vector<float> probs = predictSingleWord(net, padImgFeats, prevWord);
-
-            beam.push_back(std::distance(probs.begin(),max_element(probs.begin(), probs.end())));
-            beamComplete = 0;
-
-            if(beam[beam.size() - 1] == 0 || beam.size() >= maxLength) beamComplete++;
-            //        std::sort(expansions.begin(), expansions.end());
-        }
-
-        return beam;
-    }
-
-    map<string,vector<int> > runPredIters(shared_ptr<Net<float> > net,
-                                          string vidId,
-                                          map<string, vector<float> > &videoGtPairs,
-                                          fc7FrameSequenceGenerator fsg,
-                                          map<string,string> &strategies,
-                                          vector<string> &vocabList) {
-        //Return the vector of probs and indices
-        map<string,vector<int> > outputs;
-        int numPairs = 0;
-        string descriptorId = "";
-        //TODO: For each video in chunk: put the following code in a loop
-
-        vector<float> gtCaptions = videoGtPairs[vidId];
-        numPairs++;
-        vector<vector<float> > vidFeatures = fsg.vidFrameFeats[vidId];
-        encodeVideoFrames(net, vidFeatures);
-        vector<float> padImgFeature = vidFeatures[vidFeatures.size()-1];
-
-        for(int i = 0; i < padImgFeature.size(); i++) {
-            if(padImgFeature[i] > 0.0f) padImgFeature[i] = 0.0f;
-        }
-
-        outputs[vidId] = predictCaption(net, padImgFeature, vocabList, strategies);
-
-        return outputs;
-    }
-
-    void convertToWords(map<string,vector<int> > &captionsId, vector<string> vocabList) {
-        vector<int> captions = captionsId.begin()->second;
-        for(int i = 0; i < captions.size() - 1; i++) 
-          cout << vocabList[captions[i]] << " ";
+    void Captioner::convertToWords() {
+        for(int i = 0; i < beam.size() - 1; i++) 
+          cout << vocabInverted[beam[i]] << " ";
         cout << endl;
     }
-
-    vector<vector<float> > readFeatFromFiles(string fileName) {
-        std::ifstream featfd(fileName);
-        vector<vector<float> > retVals;
-        string line;
-        while(getline(featfd,line)) {
-            stringstream lineStream(line);
-            string cell;
-            string idFrameNum;
-            getline(lineStream,idFrameNum,',');
-
-            vector<float> fc7Features;
-            while(getline(lineStream,cell,',')) 
-              fc7Features.push_back(atof(cell.c_str()));
-            retVals.push_back(fc7Features);
-        }
-        return retVals;
-    }
-
-    /* NOTE: Modify this function as you need. If necessary, move all file parsing calls from main inside this function
-     * call convertToWords to see output in complete sentence*/
-    void runCaptioner(vector<vector<float> > &allVidFeats, string FRAMEFEAT_FILE_PATTERN, string fileName) {
-        string VOCAB_FILE = "/home/peifeng/tools/caffe-recurrent/examples/s2vt/yt_coco_mvad_mpiimd_vocabulary.txt";
-        string LSTM_NET_FILE = "/home/peifeng/tools/caffe-recurrent/examples/s2vt/s2vt.words_to_preds.deploy.prototxt";
-        string MODEL_FILE = "/home/peifeng/tools/caffe-recurrent/examples/s2vt/snapshots/s2vt_vgg_rgb.caffemodel";
-        map<string,string> STRATEGIES = {{"type","beam"},{"beam_size","1"}};
-
-        Caffe::set_mode(Caffe::GPU);
-
-        shared_ptr<Net<float> > lstmNet;
-        lstmNet.reset(new Net<float>(LSTM_NET_FILE, TEST));
-        lstmNet->CopyTrainedLayersFrom(MODEL_FILE);
-
-        vector<shared_ptr<Net<float> > > nets;
-        nets.push_back(lstmNet);
-
-        string vocab = VOCAB_FILE;
-
-        vector<float> emp;
-
-        fc7FrameSequenceGenerator fsg(fileName, vocab, allVidFeats);
-        string vidId = fsg.vidId;
-        map<string,vector<float> > videoGtPairs = {{vidId,emp}};
-
-        map<string,vector<int> > outputs = runPredIters(lstmNet, vidId, videoGtPairs, fsg, STRATEGIES, fsg.vocabInverted);
-        convertToWords(outputs,fsg.vocabInverted);
-    }
 }
+
 /*  
-    int main(int argc, char** argv) {
+vector<vector<float> > readFeatFromFiles(string fileName) {
+    std::ifstream featfd(fileName);
+    vector<vector<float> > retVals;
+    string line;
+    while(getline(featfd,line)) {
+        stringstream lineStream(line);
+        string cell;
+        string idFrameNum;
+        getline(lineStream,idFrameNum,',');
+
+        vector<float> fc7Features;
+        while(getline(lineStream,cell,',')) 
+          fc7Features.push_back(atof(cell.c_str()));
+        retVals.push_back(fc7Features);
+    }
+    return retVals;
+}
+
+int main(int argc, char** argv) {
     ::google::InitGoogleLogging(argv[0]);
     string fileName = argv[1];
-    string FRAMEFEAT_FILE_PATTERN = "/home/peifeng/tools/caffe-recurrent/examples/s2vt/" + fileName + ".txt";
+    string VOCAB_FILE = "/home/peifeng/tools/caffe-recurrent/examples/s2vt/yt_coco_mvad_mpiimd_vocabulary.txt";
+    string LSTM_NET_FILE = "/home/peifeng/tools/caffe-recurrent/examples/s2vt/s2vt.words_to_preds.deploy.prototxt";
+    string MODEL_FILE = "/home/peifeng/tools/caffe-recurrent/examples/s2vt/snapshots/s2vt_vgg_rgb.caffemodel";
+    string FRAMEFEAT_FILE_PATTERN = "/home/peifeng/tools/caffe-recurrent/examples/s2vt/" + fileName;
     vector<vector<float> > vidFeats = readFeatFromFiles(FRAMEFEAT_FILE_PATTERN);
-    runCaptioner(vidFeats, FRAMEFEAT_FILE_PATTERN, fileName);
+    Captioner captioner(VOCAB_FILE, LSTM_NET_FILE, MODEL_FILE, vidFeats);
+    captioner.runCaptioner();
+    //    runCaptioner(vidFeats, FRAMEFEAT_FILE_PATTERN, fileName);
     return 0;
-    }
-    */
+}
+*/

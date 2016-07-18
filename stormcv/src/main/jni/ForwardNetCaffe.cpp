@@ -96,16 +96,18 @@ namespace ucw { namespace caffe {
         Blob<float>* output_layer = net_->output_blobs()[0];
         const float* begin;
         const float* end;
-        for (int i = 0; i < output_layer->num(); ++i) {
-            begin = output_layer->cpu_data() + i * output_layer->channels();
-            end = begin + output_layer->channels();
-            /*  Copy the output layer to a std::vector */
-        }
 
         if(extractor) {
             const shared_ptr<Blob<float> >& fc7Layer = net_->blob_by_name("fc7");
             begin = fc7Layer->cpu_data();
             end = begin + fc7Layer->shape(1);
+        }
+        else {
+            for (int i = 0; i < output_layer->num(); ++i) {
+                begin = output_layer->cpu_data() + i * output_layer->channels();
+                end = begin + output_layer->channels();
+                /*  Copy the output layer to a std::vector */
+            }
         }
         std::vector<float> result(begin, end);
         if (result.size() == 0) {

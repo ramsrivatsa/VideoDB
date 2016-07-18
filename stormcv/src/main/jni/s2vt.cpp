@@ -21,8 +21,7 @@
 namespace ucw{
     Captioner::Captioner(const string& VOCAB_FILE,
                          const string& LSTM_NET_FILE,
-                         const string& MODEL_FILE,
-                         const vector<vector<float> >& frameFeats) {
+                         const string& MODEL_FILE) {
         Caffe::set_mode(Caffe::GPU);
         vidFrameFeats = frameFeats;
 
@@ -32,7 +31,8 @@ namespace ucw{
         initVocabFromFiles(VOCAB_FILE);
     }
 
-    void Captioner::runCaptioner(){
+    void Captioner::runCaptioner(vector<vector<float> >& frameFeats){
+        vidFrameFeats = frameFeats;
         runPredIters();
         convertToWords();
     }
@@ -160,25 +160,25 @@ namespace ucw{
 }
 
 /*  
-vector<vector<float> > readFeatFromFiles(string fileName) {
+    vector<vector<float> > readFeatFromFiles(string fileName) {
     std::ifstream featfd(fileName);
     vector<vector<float> > retVals;
     string line;
     while(getline(featfd,line)) {
-        stringstream lineStream(line);
-        string cell;
-        string idFrameNum;
-        getline(lineStream,idFrameNum,',');
+    stringstream lineStream(line);
+    string cell;
+    string idFrameNum;
+    getline(lineStream,idFrameNum,',');
 
-        vector<float> fc7Features;
-        while(getline(lineStream,cell,',')) 
-          fc7Features.push_back(atof(cell.c_str()));
-        retVals.push_back(fc7Features);
+    vector<float> fc7Features;
+    while(getline(lineStream,cell,',')) 
+    fc7Features.push_back(atof(cell.c_str()));
+    retVals.push_back(fc7Features);
     }
     return retVals;
-}
+    }
 
-int main(int argc, char** argv) {
+    int main(int argc, char** argv) {
     ::google::InitGoogleLogging(argv[0]);
     string fileName = argv[1];
     string VOCAB_FILE = "/home/peifeng/tools/caffe-recurrent/examples/s2vt/yt_coco_mvad_mpiimd_vocabulary.txt";
@@ -188,7 +188,7 @@ int main(int argc, char** argv) {
     vector<vector<float> > vidFeats = readFeatFromFiles(FRAMEFEAT_FILE_PATTERN);
     Captioner captioner(VOCAB_FILE, LSTM_NET_FILE, MODEL_FILE, vidFeats);
     captioner.runCaptioner();
-    //    runCaptioner(vidFeats, FRAMEFEAT_FILE_PATTERN, fileName);
-    return 0;
+//    runCaptioner(vidFeats, FRAMEFEAT_FILE_PATTERN, fileName);
+return 0;
 }
 */

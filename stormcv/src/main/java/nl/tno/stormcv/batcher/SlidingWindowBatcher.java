@@ -31,6 +31,7 @@ public class SlidingWindowBatcher implements IBatcher {
     private int sequenceDelta;
     private long lastSequence;
     private long lastSubmitTime;
+    private boolean forceSingleFrameBatch = true;
 
     private int maxSize = Integer.MAX_VALUE;
     private long maxWait = Long.MAX_VALUE;
@@ -43,6 +44,16 @@ public class SlidingWindowBatcher implements IBatcher {
         this.windowSize = windowSize;
         this.sequenceDelta = sequenceDelta;
         this.lastSequence = lastSequence;
+    }
+
+    /**
+     * Whether to force output batch size to be one
+     * @param force
+     * @return
+     */
+    public SlidingWindowBatcher forceSingleFrameBatch(boolean force) {
+        this.forceSingleFrameBatch = force;
+        return this;
     }
 
     /**
@@ -91,7 +102,15 @@ public class SlidingWindowBatcher implements IBatcher {
             } else {
                 // window ends, submit what we found
                 if (window.size() != 0) {
-                    result.add(window);
+                    if (forceSingleFrameBatch) {
+                        for (CVParticle cvt : window) {
+                            List<CVParticle> l = new ArrayList<>();
+                            l.add(cvt);
+                            result.add(l);
+                        }
+                    } else {
+                        result.add(window);
+                    }
                     lastSubmitTime = Timing.currentTimeMillis();
                     window = null;
                 }

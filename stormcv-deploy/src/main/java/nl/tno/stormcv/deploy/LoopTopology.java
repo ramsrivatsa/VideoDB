@@ -33,6 +33,7 @@ public class LoopTopology {
         int msgTimeout = 25;
         int cacheTimeout = 30;
         boolean autoSleep = false;
+        boolean forceSingleFrame = false;
         int frameSkip = 1;
         int numWorkers = 1;
         int sleepMs = 40;
@@ -54,6 +55,9 @@ public class LoopTopology {
                     // nothing
                 }
                 switch (kv[0]) {
+                    case "force-single-frame":
+                        forceSingleFrame = value != 0;
+                        break;
                     case "sliding-wait":
                         slidingWait = value;
                         break;
@@ -158,7 +162,7 @@ public class LoopTopology {
                 .shuffleGrouping("fetcher");
 
         builder.setBolt("obj_track", new BatchInputBolt(
-                        new SlidingWindowBatcher(2, 1, 0).maxSize(slidingWindow).maxWait(slidingWait),
+                        new SlidingWindowBatcher(2, 1, 0).maxSize(slidingWindow).maxWait(slidingWait).forceSingleFrameBatch(forceSingleFrame),
                         new SimpleLoopOp(3)).groupBy(new Fields(FrameSerializer.STREAMID)),
                 1)
                 .shuffleGrouping("scale");
@@ -170,7 +174,7 @@ public class LoopTopology {
 
         // add bolt that creates a webservice on port 8558 enabling users to view the result
         builder.setBolt("streamer", new BatchInputBolt(
-                        new SlidingWindowBatcher(2, 1, 0).maxSize(slidingWindow).maxWait(slidingWait),
+                        new SlidingWindowBatcher(2, 1, 0).maxSize(slidingWindow).maxWait(slidingWait).forceSingleFrameBatch(forceSingleFrame),
                         new SimpleLoopOp(1)).groupBy(new Fields(FrameSerializer.STREAMID)),
                 1)
                 .shuffleGrouping("drawer");

@@ -4,6 +4,7 @@ import nl.tno.stormcv.bolt.BatchInputBolt.History;
 import nl.tno.stormcv.model.CVParticle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import xyz.unlimitedcodeworks.utils.Timing;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,13 +29,33 @@ public class SlidingWindowBatcher implements IBatcher {
     private Logger logger = LoggerFactory.getLogger(SlidingWindowBatcher.class);
     private int windowSize;
     private int sequenceDelta;
-    private int maxSize = Integer.MAX_VALUE;
+    private long lastSequence;
+    private long lastSubmitTime;
 
-    public SlidingWindowBatcher(int windowSize, int sequenceDelta) {
+    private int maxSize = Integer.MAX_VALUE;
+    private long maxWait = Long.MAX_VALUE;
+
+    public SlidingWindowBatcher(int windowSize, int sequenceDelta, long lastSequence) {
         this.windowSize = windowSize;
         this.sequenceDelta = sequenceDelta;
+        this.lastSequence = lastSequence;
     }
 
+    /**
+     * Maximum time to wait before skipping frames
+     * @param waitMs
+     * @return
+     */
+    public SlidingWindowBatcher maxWait(long waitMs) {
+        this.maxWait = waitMs;
+        return this;
+    }
+
+    /**
+     * Maximum size for the cache before skipping frames
+     * @param size
+     * @return
+     */
     public SlidingWindowBatcher maxSize(int size) {
         this.maxSize = size;
         return this;
@@ -51,6 +72,44 @@ public class SlidingWindowBatcher implements IBatcher {
 
         if (currentSet.size() == 0) return result;
 
+        List<CVParticle> window = new ArrayList<>();
+        for (int curr = 0; curr != currentSet.size(); ++curr) {
+            CVParticle particle = currentSet.get(curr);
+            if (particle.getSequenceNr() == lastSequence + sequenceDelta) {
+                // get what we want
+                window.add(particle);
+                history.removeFromHistory(particle);
+                lastSequence += sequenceDelta;
+            } else if (particle.getSequenceNr() <= lastSequence) {
+               // an old frame, drop it
+                history.removeFromHistory(particle);
+                logger.warn("Dropping old frame {}",particle.getSequenceNr());
+            } else {
+                // window ends, submit what we found
+                if (window.size() != 0) {
+                    result.add(window);
+                    lastSubmitTime = Timing.currentTimeMillis();
+                    window = null;
+                }
+
+                // if we still want to wait
+                if (currentSet.size() - curr > maxSize
+                        || Timing.currentTimeMillis() - lastSubmitTime > maxWait) {
+                    logger.warn("Skipping frame(s) between {} and {}",
+                            lastSequence, particle.getSequenceNr());
+                    if (window == null)
+                        window = new ArrayList<>();
+
+                    window.add(particle);
+                    history.removeFromHistory(particle);
+                    lastSequence = particle.getSequenceNr();
+                } else {
+                    break;
+                }
+            }
+        }
+
+        /*
         for (int startAt = 0; startAt != currentSet.size() - 1; ++startAt) {
             windowSize = 0;
             List<CVParticle> window = null;
@@ -87,6 +146,7 @@ public class SlidingWindowBatcher implements IBatcher {
                 break;
             }
         }
+        */
 
         /*
         long previous = currentSet.get(0).getSequenceNr();

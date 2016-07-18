@@ -94,9 +94,9 @@ public class SlidingWindowBatcher implements IBatcher {
             result.add(window);
         }
         lastSubmitTime = Timing.currentTimeMillis();
-        window.clear();
         logger.info("Submitting window of {} frame(s) at time {}",
                 window.size(), lastSubmitTime);
+        window.clear();
     }
 
     @Override

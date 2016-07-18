@@ -95,11 +95,14 @@ public class SlidingWindowBatcher implements IBatcher {
                 window.add(particle);
                 history.removeFromHistory(particle);
                 lastSequence += sequenceDelta;
+                logger.warn("Get frame {}, advance lastSequence to {}",
+                        particle.getSequenceNr(), lastSequence);
             } else if (particle.getSequenceNr() <= lastSequence) {
                // an old frame, drop it
                 history.removeFromHistory(particle);
-                logger.warn("Dropping old frame {}",particle.getSequenceNr());
+                logger.warn("Dropping old frame {}", particle.getSequenceNr());
             } else {
+                logger.warn("Window ended with size {}", window.size());
                 // window ends, submit what we found
                 if (window.size() != 0) {
                     if (forceSingleFrameBatch) {

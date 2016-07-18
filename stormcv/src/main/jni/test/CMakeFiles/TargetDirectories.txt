@@ -1,0 +1,4 @@
+/home/lvnguyen/VideoDB/stormcv/src/main/jni/test/CMakeFiles/stormcv_caffe.dir
+/home/lvnguyen/VideoDB/stormcv/src/main/jni/test/CMakeFiles/ForwardNet.dir
+/home/lvnguyen/VideoDB/stormcv/src/main/jni/test/CMakeFiles/stormcv_cv.dir
+/home/lvnguyen/VideoDB/stormcv/src/main/jni/test/CMakeFiles/stormcv_thread.dir

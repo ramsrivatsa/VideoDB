@@ -1,0 +1,1 @@
+/usr/bin/c++  -fPIC -g  -shared -Wl,-soname,libstormcv_thread.so -o libstormcv_thread.so CMakeFiles/stormcv_thread.dir/ThreadUtils.cpp.o CMakeFiles/stormcv_thread.dir/JniThreadUtils.cpp.o  -L/usr/local/cuda/lib64 

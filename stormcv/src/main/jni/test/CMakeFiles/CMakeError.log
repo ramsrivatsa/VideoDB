@@ -1,0 +1,17 @@
+Performing C++ SOURCE FILE Test COMPILER_SUPPORT-Werror failed with the following output:
+Change Dir: /home/lvnguyen/VideoDB/stormcv/src/main/jni/test/CMakeFiles/CMakeTmp
+
+Run Build Command:"/usr/bin/make" "cmTryCompileExec2879875884/fast"
+/usr/bin/make -f CMakeFiles/cmTryCompileExec2879875884.dir/build.make CMakeFiles/cmTryCompileExec2879875884.dir/build
+make[1]: Entering directory `/home/lvnguyen/VideoDB/stormcv/src/main/jni/test/CMakeFiles/CMakeTmp'
+/usr/bin/cmake -E cmake_progress_report /home/lvnguyen/VideoDB/stormcv/src/main/jni/test/CMakeFiles/CMakeTmp/CMakeFiles 1
+Building CXX object CMakeFiles/cmTryCompileExec2879875884.dir/src.cxx.o
+/usr/bin/c++    -DCOMPILER_SUPPORT-Werror   -Werror -o CMakeFiles/cmTryCompileExec2879875884.dir/src.cxx.o -c /home/lvnguyen/VideoDB/stormcv/src/main/jni/test/CMakeFiles/CMakeTmp/src.cxx
+<command-line>:0:17: error: missing whitespace after the macro name [-Werror]
+cc1plus: all warnings being treated as errors
+make[1]: *** [CMakeFiles/cmTryCompileExec2879875884.dir/src.cxx.o] Error 1
+make[1]: Leaving directory `/home/lvnguyen/VideoDB/stormcv/src/main/jni/test/CMakeFiles/CMakeTmp'
+make: *** [cmTryCompileExec2879875884/fast] Error 2
+
+Source file was:
+int main() { return 0; }

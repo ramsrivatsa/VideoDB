@@ -85,11 +85,11 @@ public class SlidingWindowBatcher implements IBatcher {
     public List<List<CVParticle>> partition(History history, List<CVParticle> currentSet) {
         List<List<CVParticle>> result = new ArrayList<List<CVParticle>>();
 
-        if (currentSet.size() == 0) return result;
-
         List<CVParticle> window = new ArrayList<>();
-        for (int curr = 0; curr != currentSet.size(); ++curr) {
-            CVParticle particle = currentSet.get(curr);
+//        for (int curr = 0; curr != currentSet.size(); ++curr) {
+        while (currentSet.size() > 0) {
+//            CVParticle particle = currentSet.get(curr);
+            CVParticle particle = currentSet.get(0);
             if (particle.getSequenceNr() == lastSequence + sequenceDelta) {
                 // get what we want
                 window.add(particle);
@@ -116,7 +116,7 @@ public class SlidingWindowBatcher implements IBatcher {
                 }
 
                 // if we still want to wait
-                if (currentSet.size() - curr > maxSize
+                if (currentSet.size() > maxSize
                         || Timing.currentTimeMillis() - lastSubmitTime > maxWait) {
                     logger.warn("Skipping frame(s) between {} and {}",
                             lastSequence, particle.getSequenceNr());

@@ -30,14 +30,14 @@ public class SlidingWindowBatcher implements IBatcher {
     private int windowSize;
     private int sequenceDelta;
     private long lastSequence;
-    private long lastSubmitTime;
+    private long lastSubmitTime = -1;
     private boolean forceSingleFrameBatch = true;
 
     private int maxSize = Integer.MAX_VALUE;
     private long maxWait = Long.MAX_VALUE;
 
     public SlidingWindowBatcher(int windowSize, int sequenceDelta) {
-        this(windowSize, sequenceDelta, 0);
+        this(windowSize, sequenceDelta, -1);
     }
 
     public SlidingWindowBatcher(int windowSize, int sequenceDelta, long lastSequence) {
@@ -83,7 +83,7 @@ public class SlidingWindowBatcher implements IBatcher {
 
     @Override
     public List<List<CVParticle>> partition(History history, List<CVParticle> currentSet) {
-        List<List<CVParticle>> result = new ArrayList<List<CVParticle>>();
+        List<List<CVParticle>> result = new ArrayList<>();
 
         List<CVParticle> window = new ArrayList<>();
 //        for (int curr = 0; curr != currentSet.size(); ++curr) {
@@ -112,10 +112,15 @@ public class SlidingWindowBatcher implements IBatcher {
                         result.add(window);
                     }
                     lastSubmitTime = Timing.currentTimeMillis();
+                    logger.info("Submitting window of {} frame(s) at time {}",
+                            window.size(), lastSubmitTime);
                     window = null;
                 }
 
                 // if we still want to wait
+                if (lastSubmitTime == -1) {
+                    lastSubmitTime = Timing.currentTimeMillis();
+                }
                 if (currentSet.size() > maxSize
                         || Timing.currentTimeMillis() - lastSubmitTime > maxWait) {
                     logger.warn("Skipping frame(s) between {} and {}",

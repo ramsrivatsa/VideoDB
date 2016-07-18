@@ -81,6 +81,24 @@ public class SlidingWindowBatcher implements IBatcher {
     public void prepare(Map conf) throws Exception {
     }
 
+    private void submitWindow(List<List<CVParticle>> result, List<CVParticle> window) {
+        if (window.isEmpty()) return;
+
+        if (forceSingleFrameBatch) {
+            for (CVParticle cvt : window) {
+                List<CVParticle> l = new ArrayList<>();
+                l.add(cvt);
+                result.add(l);
+            }
+        } else {
+            result.add(window);
+        }
+        lastSubmitTime = Timing.currentTimeMillis();
+        window.clear();
+        logger.info("Submitting window of {} frame(s) at time {}",
+                window.size(), lastSubmitTime);
+    }
+
     @Override
     public List<List<CVParticle>> partition(History history, List<CVParticle> currentSet) {
         List<List<CVParticle>> result = new ArrayList<>();
@@ -104,21 +122,7 @@ public class SlidingWindowBatcher implements IBatcher {
             } else {
                 logger.warn("Window ended with size {}", window.size());
                 // window ends, submit what we found
-                if (window.size() != 0) {
-                    if (forceSingleFrameBatch) {
-                        for (CVParticle cvt : window) {
-                            List<CVParticle> l = new ArrayList<>();
-                            l.add(cvt);
-                            result.add(l);
-                        }
-                    } else {
-                        result.add(window);
-                    }
-                    lastSubmitTime = Timing.currentTimeMillis();
-                    logger.info("Submitting window of {} frame(s) at time {}",
-                            window.size(), lastSubmitTime);
-                    window = null;
-                }
+                submitWindow(result, window);
 
                 // if we still want to wait
                 if (lastSubmitTime == -1) {
@@ -128,8 +132,6 @@ public class SlidingWindowBatcher implements IBatcher {
                         || Timing.currentTimeMillis() - lastSubmitTime > maxWait) {
                     logger.warn("Skipping frame(s) between {} and {}",
                             lastSequence, particle.getSequenceNr());
-                    if (window == null)
-                        window = new ArrayList<>();
 
                     window.add(particle);
                     history.removeFromHistory(particle);
@@ -139,6 +141,8 @@ public class SlidingWindowBatcher implements IBatcher {
                 }
             }
         }
+        // submit what we have at hand
+        submitWindow(result, window);
 
         /*
         for (int startAt = 0; startAt != currentSet.size() - 1; ++startAt) {

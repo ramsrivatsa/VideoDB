@@ -228,7 +228,7 @@ add_library(stormcv_s2vt SHARED
     s2vt.cpp
     JniS2VT.cpp
 )
-target_link_libraries(stormcv_tracker
+target_link_libraries(stormcv_s2vt
     stormcv_common
     caffe
 )

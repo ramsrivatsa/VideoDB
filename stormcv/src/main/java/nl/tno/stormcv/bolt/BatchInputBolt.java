@@ -184,7 +184,7 @@ public class BatchInputBolt extends CVParticleBolt implements RemovalListener<CV
 		if (profiling) {
             logger.info("[Timing] RequestID: {} StreamID: {} SequenceNr: {} Entering {}: {}",
                     input.getRequestId(), input.getStreamId(), input.getSequenceNr(),
-					boltName + "-batcher", Timing.currentTimeMillis());
+					boltName + "_batcher", Timing.currentTimeMillis());
 		}
         history.add(currGroupKey, input);
         List<List<CVParticle>> batches = batcher.partition(history, history.getGroupedItems(currGroupKey));
@@ -197,7 +197,7 @@ public class BatchInputBolt extends CVParticleBolt implements RemovalListener<CV
                 for (CVParticle cvt : batch) {
                     logger.info("[Timing] RequestID: {} StreamID: {} SequenceNr: {} Leaving {}: {}",
                             cvt.getRequestId(), cvt.getStreamId(), cvt.getSequenceNr(),
-                            boltName + "-batcher", beginExecute);
+                            boltName + "_batcher", beginExecute);
                     logger.info("[Timing] RequestID: {} StreamID: {} SequenceNr: {} Entering {}: {}",
                             cvt.getRequestId(), cvt.getStreamId(), cvt.getSequenceNr(), boltName, beginExecute);
                 }

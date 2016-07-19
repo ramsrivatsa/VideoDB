@@ -42,10 +42,9 @@ namespace ucw{
     public:
       Captioner(const string& VOCAB_FILE,
                 const string& LSTM_NET_FILE,
-                const string& MODEL_FILE, 
-                const vector<vector<float> > &framesFeat);
+                const string& MODEL_FILE);
 
-      void runCaptioner();
+      void runCaptioner(vector<vector<float> > &framesFeat);
 
     private:
       void encodeVideoFrames(int prevWord); 

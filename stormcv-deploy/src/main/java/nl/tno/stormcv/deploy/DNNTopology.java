@@ -145,13 +145,15 @@ public class DNNTopology {
             System.out.println("Using Caffe");
             dnnforward = new DnnForwardOp("classprob", "/data/bvlc_googlenet.prototxt",
                                                        "/data/bvlc_googlenet.caffemodel",
+                                                       "prob",
                                                        "/data/imagenet_mean.binaryproto",
                                                        !useGPU); // caffeOnCPU == !useGPU
             dnnforward.maxGPUNum(maxGPUNum);
         } else {
             System.out.println("Using OpenCV::DNN");
             dnnforward = new DnnForwardOp("classprob", "/data/bvlc_googlenet.old.prototxt",
-                                                       "/data/bvlc_googlenet.caffemodel");
+                                                       "/data/bvlc_googlenet.caffemodel",
+                                                       "prob");
         }
         dnnforward.outputFrame(true).threadPriority(fatPriority);
         operations.add(dnnforward);

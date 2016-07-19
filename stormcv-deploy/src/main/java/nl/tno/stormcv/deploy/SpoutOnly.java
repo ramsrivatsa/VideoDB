@@ -11,10 +11,6 @@ import backtype.storm.tuple.Tuple;
 import nl.tno.stormcv.StormCVConfig;
 import nl.tno.stormcv.fetcher.FileFrameFetcher;
 import nl.tno.stormcv.model.Frame;
-import nl.tno.stormcv.operation.DnnClassifyOp;
-import nl.tno.stormcv.operation.DnnForwardOp;
-import nl.tno.stormcv.operation.HaarCascadeOp;
-import nl.tno.stormcv.operation.ISingleInputOperation;
 import nl.tno.stormcv.spout.CVParticleSpout;
 
 import java.util.ArrayList;
@@ -96,13 +92,6 @@ public class SpoutOnly {
 
         // Enable time profiling for spout and bolt
         conf.put(StormCVConfig.STORMCV_LOG_PROFILING, true);
-
-        // specify the list with SingleInputOperations to be executed sequentially by the 'fat' bolt
-        List<ISingleInputOperation> operations = new ArrayList<>();
-        operations.add(new HaarCascadeOp("face", "haarcascade_frontalface_default.xml"));
-        operations.add(new DnnForwardOp("classprob", "/data/bvlc_googlenet.prototxt", "/data/bvlc_googlenet.caffemodel").outputFrame(true));
-        operations.add(new DnnClassifyOp("classprob", "/data/synset_words.txt").addMetadata(true).outputFrame(true));
-        //operations.add(new FeatureExtractionOp("sift", FeatureDetector.SIFT, DescriptorExtractor.SIFT));
 
         // now create the topology itself
         // (spout -> scale -> fat[face detection & dnn] -> drawer -> streamer)

@@ -194,7 +194,7 @@ public class BatchDNNTopology {
 
         // add bolt that creates a webservice on port 8558 enabling users to view the result
         builder.setBolt("streamer", new BatchInputBolt(
-                        new SlidingWindowBatcher(2, frameSkip).maxSize(6),
+                        new SlidingWindowBatcher(2, 1).maxSize(6),
                         new MjpegStreamingOp().port(8558).framerate(5)).groupBy(new Fields(FrameSerializer.STREAMID)),
                 1)
                 .shuffleGrouping("drawer");

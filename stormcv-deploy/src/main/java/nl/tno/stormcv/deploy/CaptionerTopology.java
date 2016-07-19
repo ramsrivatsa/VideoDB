@@ -3,11 +3,13 @@ package nl.tno.stormcv.deploy;
 import backtype.storm.Config;
 import backtype.storm.StormSubmitter;
 import backtype.storm.topology.TopologyBuilder;
+import backtype.storm.tuple.Fields;
 import nl.tno.stormcv.StormCVConfig;
 import nl.tno.stormcv.batcher.RandomBatcher;
 import nl.tno.stormcv.bolt.BatchInputBolt;
 import nl.tno.stormcv.bolt.SingleInputBolt;
 import nl.tno.stormcv.model.Frame;
+import nl.tno.stormcv.model.serializer.FrameSerializer;
 import nl.tno.stormcv.operation.DnnForwardOp;
 import nl.tno.stormcv.operation.FrameGrouperOp;
 import nl.tno.stormcv.operation.ResultSinkOp;
@@ -119,7 +121,7 @@ public class CaptionerTopology {
 
         builder.setBolt("frame_grouper", new BatchInputBolt(
                     new RandomBatcher(minGroupSize, maxGroupSize),
-                    new FrameGrouperOp()),
+                    new FrameGrouperOp()).groupBy(new Fields(FrameSerializer.STREAMID)),
                 1).shuffleGrouping("vgg_feature");
 
         builder.setBolt("captioner", new SingleInputBolt(opBuilder.buildCaptioner("caption", "vgg")),

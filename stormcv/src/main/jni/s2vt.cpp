@@ -22,8 +22,11 @@
 namespace ucw {
     Captioner::Captioner(const string& VOCAB_FILE,
                          const string& LSTM_NET_FILE,
-                         const string& MODEL_FILE) {
-        Caffe::set_mode(Caffe::GPU);
+                         const string& MODEL_FILE, bool useGPU) {
+        if (useGPU)
+            Caffe::set_mode(Caffe::GPU);
+        else
+            Caffe::set_mode(Caffe::CPU);
 
         lstmNet.reset(new Net<float>(LSTM_NET_FILE, TEST));
         lstmNet->CopyTrainedLayersFrom(MODEL_FILE);

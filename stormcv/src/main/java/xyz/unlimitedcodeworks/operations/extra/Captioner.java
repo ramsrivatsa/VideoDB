@@ -15,6 +15,7 @@ public class Captioner {
             NativeUtils.loadLibrary("opencv_core", true);
             NativeUtils.loadLibrary("opencv_imgproc", true);
             NativeUtils.loadLibrary("caffe", true);
+            NativeUtils.loadLibrary("gpu_utils");
             NativeUtils.loadLibrary("stormcv_common");
             NativeUtils.loadLibrary("stormcv_s2vt");
         } catch (Exception ex) {
@@ -24,8 +25,9 @@ public class Captioner {
         }
     }
 
-    public Captioner(String vocabFile, String lstmProto, String modelBin) {
-        nativeObj = n_create(vocabFile, lstmProto, modelBin);
+    public Captioner(String vocabFile, String lstmProto, String modelBin,
+                     boolean useGPU, int taskIndex, int maxGPUNum) {
+        nativeObj = n_create(vocabFile, lstmProto, modelBin, useGPU, taskIndex, maxGPUNum);
     }
 
     public String captioning(List<Mat> frameFeatures) {
@@ -40,7 +42,8 @@ public class Captioner {
         super.finalize();
     }
 
-    private static native long n_create(String vocabFile, String lstmProto, String modelBin);
+    private static native long n_create(String vocabFile, String lstmProto, String modelBin,
+                                        boolean useGPU, int taskIndex, int maxGPUNum);
 
     private static native void n_delete(long nativeObj);
 

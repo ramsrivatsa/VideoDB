@@ -30,18 +30,34 @@ public class CaptionerOp  implements ISingleInputOperation<GroupOfFrames> {
     private String vggFeatureName;
     private Captioner captioner;
 
+    private boolean useGPU;
+    private int maxGPUNum = -1;
+
     public CaptionerOp(String outputMetaName, String vocabFile, String lstmProto,
-                       String modelBin, String vggFeatureName) {
+                       String modelBin, String vggFeatureName, boolean useGPU) {
         this.outputMetaName = outputMetaName;
         this.vocabFile = vocabFile;
         this.lstmProto = lstmProto;
         this.modelBin = modelBin;
         this.vggFeatureName = vggFeatureName;
+        this.useGPU = useGPU;
+    }
+
+    /**
+     * How many GPU devices to use when using Caffe on GPU. Use -1 to indicate maximum available number
+     * @param num number of GPU to use
+     * @return this for chain
+     */
+    public CaptionerOp maxGPUNum(int num) {
+        maxGPUNum = num;
+        return this;
     }
 
     @Override
     public void prepare(Map stormConf, TopologyContext context) throws Exception {
-        captioner = new Captioner(vocabFile, lstmProto, modelBin);
+        int thisTaskIndex = context.getThisTaskIndex();
+
+        captioner = new Captioner(vocabFile, lstmProto, modelBin, useGPU, thisTaskIndex, maxGPUNum);
     }
 
     @Override
@@ -57,7 +73,7 @@ public class CaptionerOp  implements ISingleInputOperation<GroupOfFrames> {
         List<Mat> vggFeatures = new ArrayList<>();
         for (Frame frame : frames) {
             for (Feature ft : frame.getFeatures()) {
-                if (ft.getName() == vggFeatureName) {
+                if (ft.getName().equals(vggFeatureName)) {
                     vggFeatures.add(MatFeatureUtils.featureToMat(ft, 0));
                 }
             }

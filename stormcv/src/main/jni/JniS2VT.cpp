@@ -5,6 +5,7 @@
 
 #include "s2vt.h"
 #include "cv/converters.h"
+#include "GPUUtils.h"
 
 #include <stdexcept>
 
@@ -15,16 +16,30 @@ using std::runtime_error;
 /*
  * Class:     xyz_unlimitedcodeworks_operations_extra_Captioner
  * Method:    n_create
- * Signature: (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)J
+ * Signature: (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ZII)J
  */
 JNIEXPORT jlong JNICALL Java_xyz_unlimitedcodeworks_operations_extra_Captioner_n_1create
-(JNIEnv *env, jclass, jstring jVocabFile, jstring jLstmProto, jstring jModelBin)
+(JNIEnv *env, jclass, jstring jVocabFile, jstring jLstmProto, jstring jModelBin,
+ jboolean jUseGPU, jint jTaskId, jint jMaxGPUNum)
 {
+    if (jUseGPU && jTaskId != -1) {
+        if (!hasCuda()) {
+            cerr << "WARNING: cuda not found in compile time, setting current GPU will not work."
+                 << endl;
+        }
+        int numGPUs = jMaxGPUNum == -1 ? getNumGPUs() : jMaxGPUNum;
+        if (numGPUs != -1) {
+            int gpuId = jTaskId % numGPUs;
+            setGpuDevice(gpuId);
+        }
+    }
+
     try
     {
         auto *ct = new Captioner(fromJString(env, jVocabFile),
                                  fromJString(env, jLstmProto),
-                                 fromJString(env, jModelBin));
+                                 fromJString(env, jModelBin),
+                                 jUseGPU);
         return reinterpret_cast<jlong>(ct);
     }
     catch (runtime_error *e)

@@ -28,6 +28,13 @@ public class OpBuilder {
                     // nothing
                 }
                 switch (kv[0]) {
+                    // CaptionerOp
+                    case "cap-use-gpu":
+                        captionerUseGPU = value != 0;
+                        captionerMaxGPU = value;
+                        break;
+
+                    // DnnForwardOp
                     case "fat-priority":
                         fatPriority = value;
                         break;
@@ -110,12 +117,16 @@ public class OpBuilder {
         return dnnforward;
     }
 
+    public boolean captionerUseGPU = true;
+    public int captionerMaxGPU = -1;
     public CaptionerOp buildCaptioner(String outputMetaName, String vggFeatureName) {
-        return new CaptionerOp(outputMetaName,
+        CaptionerOp op =  new CaptionerOp(outputMetaName,
                 "/data/yt_coco_mvad_mpiimd_vocabulary.txt",
                 "/data/s2vt.words_to_preds.prototxt",
                 "/data/s2vt_vgg_rgb.caffemodel",
-                vggFeatureName);
+                vggFeatureName, captionerUseGPU);
+        op.maxGPUNum(captionerMaxGPU);
+        return op;
     }
 
     public List<String> files = new ArrayList<>();

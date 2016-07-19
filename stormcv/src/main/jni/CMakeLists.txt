@@ -230,6 +230,8 @@ add_library(stormcv_s2vt SHARED
 )
 target_link_libraries(stormcv_s2vt
     stormcv_common
+    gpu_utils
+    
     caffe
 )
 

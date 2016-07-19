@@ -15,9 +15,6 @@ import nl.tno.stormcv.operation.ScaleImageOp;
 import nl.tno.stormcv.spout.CVParticleSpout;
 import nl.tno.stormcv.utils.OpBuilder;
 
-import java.util.ArrayList;
-import java.util.List;
-
 /**
  * Created by Aetf (aetf at unlimitedcodeworks dot xyz) on 16-7-19.
  */
@@ -27,7 +24,6 @@ public class CaptionerTopology {
         final String switchKeyword = "--";
         int scaleHint = 1;
         int vggHint = 1;
-        int grouperHint = 1;
         int captionerHint = 10;
 
         int minGroupSize = 1;
@@ -36,14 +32,7 @@ public class CaptionerTopology {
         int maxSpoutPending = 128;
         int msgTimeout = 25;
         int cacheTimeout = 30;
-        boolean autoSleep = false;
         int numWorkers = 1;
-        int sleepMs = 40;
-        int sendingFps = 0;
-        int frameSkip = 1;
-        int startDelay = 0;
-        String fetcherType = "video";
-        List<String> files = new ArrayList<>();
         for (String arg : args) {
             if (arg.startsWith(switchKeyword)) {
                 String[] kv = arg.substring(switchKeyword.length()).split("=");
@@ -61,20 +50,6 @@ public class CaptionerTopology {
                     case "max-group-size":
                         maxGroupSize = value;
                         break;
-                    case "start-delay":
-                        startDelay = value;
-                        break;
-                    case "fps":
-                        sleepMs = 1000 / value;
-                        //sleepMs = 0;
-                        sendingFps = value;
-                        break;
-                    case "frame-skip":
-                        frameSkip = value;
-                        break;
-                    case "fetcher":
-                        fetcherType = kv[1];
-                        break;
                     case "num-workers":
                         numWorkers = value;
                         break;
@@ -83,9 +58,6 @@ public class CaptionerTopology {
                         break;
                     case "vgg":
                         vggHint = value;
-                        break;
-                    case "grouper":
-                        grouperHint = value;
                         break;
                     case "captioner":
                         captionerHint = value;
@@ -99,16 +71,11 @@ public class CaptionerTopology {
                     case "cache-timeout":
                         cacheTimeout = value;
                         break;
-                    case "auto-sleep":
-                        autoSleep = value != 0;
-                        break;
                 }
-            } else {
-                // Multiple files will be spread over the available spouts
-                files.add("file://" + arg);
             }
         }
         OpBuilder opBuilder = new OpBuilder(args);
+        opBuilder.useCaffe = true; // Caffe is required
 
         // first some global (topology configuration)
         StormCVConfig conf = new StormCVConfig();

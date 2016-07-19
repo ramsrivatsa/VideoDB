@@ -67,7 +67,7 @@ string fromJString(JNIEnv *env, jstring jstr)
 
 jstring toJString(JNIEnv *env, const std::string &str)
 {
-    return env->NewStringUTF(env, str.c_str());
+    return env->NewStringUTF(str.c_str());
 }
 
 } // namespace ucw

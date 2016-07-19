@@ -24,7 +24,6 @@ namespace ucw {
                          const string& LSTM_NET_FILE,
                          const string& MODEL_FILE) {
         Caffe::set_mode(Caffe::GPU);
-        vidFrameFeats = frameFeats;
 
         lstmNet.reset(new Net<float>(LSTM_NET_FILE, TEST));
         lstmNet->CopyTrainedLayersFrom(MODEL_FILE);
@@ -60,21 +59,19 @@ namespace ucw {
         encodeVideoFrames(-1);
         vector<float> padImgFeature = vidFeatures[vidFeatures.size()-1];
 
-        for(int i = 0; i < padImgFeature.size(); i++) {
-            if(padImgFeature[i] > 0.0f) padImgFeature[i] = 0.0f;
+        for (auto &item : padImgFeature) {
+            if (item > 0.0f) item = 0.0f;
         }
 
         predictCaption(padImgFeature,20);
     }
 
     void Captioner::encodeVideoFrames(int prevWord) {
-        for(int i = 0; i < vidFrameFeats.size(); i++) {
+        for(const auto &currFrame : vidFrameFeats) {
             float contInput = 0 ? prevWord == -1 : 1;
             float cont = contInput;
             float dataEn = prevWord;
             float stageInd = 0;
-
-            vector<float> currFrame = vidFrameFeats[i];
 
             Blob<float>* fc7 = lstmNet->input_blobs()[0];
             Blob<float>* cont_sentence = lstmNet->input_blobs()[1];
@@ -98,7 +95,7 @@ namespace ucw {
     }
 
     void Captioner::predictCaption(vector<float> &padImgFeats,
-                                   int maxLength) {
+                                   size_t maxLength) {
         int beamComplete = 0;
 
         int prevWord;
@@ -155,8 +152,8 @@ namespace ucw {
 
     std::string Captioner::convertToWords() {
         ostringstream oss;
-        for(int i = 0; i < beam.size() - 1; i++) 
-            oss << vocabInverted[beam[i]] << " ";
+        for (const auto &item : beam)
+            oss << vocabInverted[item] << " ";
         auto res = oss.str();
         res.pop_back();
         return res;

@@ -1,9 +1,10 @@
 #include <jni.h>
 
 #include "jni_helper.h"
-#include "xyz_unlimitedcodeworks_operations_extra_S2VT.h"
+#include "xyz_unlimitedcodeworks_operations_extra_Captioner.h"
 
 #include "s2vt.h"
+#include "cv/converters.h"
 
 #include <stdexcept>
 
@@ -61,7 +62,7 @@ JNIEXPORT jstring JNICALL Java_xyz_unlimitedcodeworks_operations_extra_Captioner
         try {
             Mat_to_vector_vector_float(frameFeatures, frameFeatures_vv);
 
-            auto res = toJString(ct.runCaptioner(frameFeatures_vv));
+            auto res = toJString(env, ct.runCaptioner(frameFeatures_vv));
             vector_vector_float_to_Mat(frameFeatures_vv, frameFeatures);
 
             return res;

@@ -53,7 +53,7 @@ namespace ucw{
                                       int prevWord);
 
       void predictCaption(vector<float> &padImgFeats,
-                          int maxLength);
+                          size_t maxLength);
 
       void runPredIters();
       std::string convertToWords();

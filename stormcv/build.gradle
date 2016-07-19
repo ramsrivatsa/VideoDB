@@ -63,6 +63,7 @@ task generateJNIHeaders(dependsOn: compileJava) {
     ext.inputClasses = ["xyz.unlimitedcodeworks.operations.extra.ForwardNet",
                         "xyz.unlimitedcodeworks.operations.extra.FeatureDetectorX",
                         "xyz.unlimitedcodeworks.operations.extra.DescriptorExtractorX",
+                        "xyz.unlimitedcodeworks.operations.extra.Captioner",
                         "xyz.unlimitedcodeworks.operations.extra.CMTTracker"
                        ]
     ext.outputDir = file("$buildDir/native-headers")

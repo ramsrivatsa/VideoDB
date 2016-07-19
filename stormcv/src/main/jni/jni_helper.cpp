@@ -56,13 +56,18 @@ string fromJString(JNIEnv *env, jstring jstr)
 {
     if (jstr)
     {
-        const char * c_str = env->GetStringUTFChars(jstr, NULL);
+        const char *c_str = env->GetStringUTFChars(jstr, NULL);
         if (c_str)
         {
             return string(c_str);
         }
     }
     return string();
+}
+
+jstring toJString(JNIEnv *env, const std::string &str)
+{
+    return env->NewStringUTF(env, str.c_str());
 }
 
 } // namespace ucw

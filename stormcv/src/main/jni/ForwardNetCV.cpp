@@ -57,7 +57,7 @@ namespace ucw { namespace opencv {
         // auto outputBlob = net.getBlob("prob");   //gather output of "prob" layer
         auto outputBlob = net.getBlob(outputBlobName); //gather output of "prob" layer
 
-        return outputBlob.matRefConst().reshape(1, 1);
+        return outputBlob.matRefConst().reshape(1, outputBlob.matRefConst().total());
     }
 
     vector<Mat> ForwardNet::forward(const vector<Mat>& imgs)

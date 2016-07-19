@@ -44,7 +44,7 @@ namespace ucw{
                 const string& LSTM_NET_FILE,
                 const string& MODEL_FILE);
 
-      void runCaptioner(vector<vector<float> > &framesFeat);
+      std::string runCaptioner(vector<vector<float> > &framesFeat);
 
     private:
       void encodeVideoFrames(int prevWord); 
@@ -56,7 +56,7 @@ namespace ucw{
                           int maxLength);
 
       void runPredIters();
-      void convertToWords();
+      std::string convertToWords();
 
       void initVocabFromFiles(string vocabFile);
 

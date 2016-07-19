@@ -23,6 +23,8 @@ namespace ucw {
 
     std::string fromJString(JNIEnv *env, jstring jstr);
 
+    jstring toJString(JNIEnv *env, const std::string &str);
+
 } // namespace ucw
 
 #endif // JNI_HELPER_H

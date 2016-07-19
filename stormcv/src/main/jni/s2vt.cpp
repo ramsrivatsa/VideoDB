@@ -17,8 +17,9 @@
  */
 
 #include "s2vt.h"
+#include <sstream>
 
-namespace ucw{
+namespace ucw {
     Captioner::Captioner(const string& VOCAB_FILE,
                          const string& LSTM_NET_FILE,
                          const string& MODEL_FILE) {
@@ -31,10 +32,10 @@ namespace ucw{
         initVocabFromFiles(VOCAB_FILE);
     }
 
-    void Captioner::runCaptioner(vector<vector<float> >& frameFeats){
+    std::string Captioner::runCaptioner(vector<vector<float> >& frameFeats){
         vidFrameFeats = frameFeats;
         runPredIters();
-        convertToWords();
+        return convertToWords();
     }
 
     void Captioner::initVocabFromFiles(string vocabFile) {
@@ -152,10 +153,13 @@ namespace ucw{
         return result;
     }
 
-    void Captioner::convertToWords() {
+    std::string Captioner::convertToWords() {
+        ostringstream oss;
         for(int i = 0; i < beam.size() - 1; i++) 
-          cout << vocabInverted[beam[i]] << " ";
-        cout << endl;
+            oss << vocabInverted[beam[i]] << " ";
+        auto res = oss.str();
+        res.pop_back();
+        return res;
     }
 }
 

@@ -221,6 +221,18 @@ target_link_libraries(stormcv_tracker
     cmt
 )
 
+#------------------------------------------------------------------------------
+# Shared Library stormcv_s2vt
+#------------------------------------------------------------------------------
+add_library(stormcv_s2vt SHARED
+    s2vt.cpp
+    JniS2VT.cpp
+)
+target_link_libraries(stormcv_tracker
+    stormcv_common
+    caffe
+)
+
 #==============================================================================
 # Target installation
 #==============================================================================
@@ -232,5 +244,6 @@ install(TARGETS
     stormcv_detectorx
     stormcv_extractorx
     stormcv_tracker
+    stormcv_s2vt
     gpu_utils
     DESTINATION native/x64)

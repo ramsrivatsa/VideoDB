@@ -107,7 +107,7 @@ namespace ucw { namespace caffe {
             if (count == 0)
                 throw std::runtime_error("Caffe forward pass returned empty result");
 
-            cv::Mat data(1, count, CV_32FC1, const_cast<float*>(begin)); // create a Mat wrapper around the cpu_data
+            cv::Mat data(count, 1, CV_32FC1, const_cast<float*>(begin)); // create a Mat wrapper around the cpu_data
             outputs.push_back(data.clone()); // make a copy of it
         }
 

@@ -242,6 +242,32 @@ void Mat_to_vector_vector_Point3f(Mat& mat, std::vector< std::vector< Point3f > 
     }
 }
 
+void Mat_to_vector_vector_float(Mat &mat, std::vector< std::vector<float>> &vv_fl)
+{
+    std::vector<Mat> vm;
+    vm.reserve(mat.rows);
+    Mat_to_vector_Mat(mat, vm);
+    for(size_t i=0; i<vm.size(); i++)
+    {
+        std::vector<float> vfl;
+        Mat_to_vector_float(vm[i], vfl);
+        vv_fl.push_back(vfl);
+    }
+}
+
+void vector_vector_float_to_Mat(std::vector<std::vector<float>> &vv_fl, Mat &mat)
+{
+    std::vector<Mat> vm;
+    vm.reserve(vv_fl.size());
+    for(size_t i =0; i<vv_fl.size(); i++)
+    {
+        Mat m;
+        vector_float_to_Mat(vv_fl[i], m);
+        vm.push_back(m);
+    }
+    vector_Mat_to_Mat(vm, mat);
+}
+
 void Mat_to_vector_vector_char(Mat& mat, std::vector< std::vector< char > >& vv_ch)
 {
     std::vector<Mat> vm;

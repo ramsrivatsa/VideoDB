@@ -25,7 +25,8 @@ namespace ucw { namespace caffe {
       ForwardNet(const string& model_file,
                  const string& trained_file,
                  const string& mean_file,
-                 bool CPU = true);
+                 bool CPU = true,
+                 bool featExtractor = false);
       ~ForwardNet() override {}
 
       void SetMean(const string& mean_file);
@@ -45,6 +46,7 @@ namespace ucw { namespace caffe {
 
     private:
       shared_ptr<Net<float> > net_;
+      bool extractor;
       cv::Size input_geometry_;
       int num_channels_;
       cv::Mat mean_;

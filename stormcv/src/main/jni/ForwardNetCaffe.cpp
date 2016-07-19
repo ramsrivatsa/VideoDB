@@ -7,10 +7,12 @@ namespace ucw { namespace caffe {
     ForwardNet::ForwardNet(const string& model_file,
                            const string& trained_file,
                            const string& mean_file,
-                           const bool CPU) {
+                           const bool CPU,
+                           const bool featExtractor) {
 
         if (CPU) Caffe::set_mode(Caffe::CPU);
         else Caffe::set_mode(Caffe::GPU);
+        extractor(featExtractor);
 
         clock_t modelTime = clock();
         /*  Load the network. */
@@ -87,27 +89,38 @@ namespace ucw { namespace caffe {
             WrapInputLayer(&input_channels, i);
             Preprocess(imgs[i], &input_channels);
         }
-        net_->ForwardPrefilled();
+        net_->Forward();
 
         std::vector<Mat> outputs;
 
         Blob<float>* output_layer = net_->output_blobs()[0];
-        for (int i = 0; i < output_layer->num(); ++i) {
-            const float* begin = output_layer->cpu_data() + i * output_layer->channels();
-            const float* end = begin + output_layer->channels();
-            /*  Copy the output layer to a std::vector */
-            std::vector<float> result(begin, end);
-            if (result.size() == 0) {
-                throw std::runtime_error("Caffe forward pass returned empty result");
-            }
-            cv::Mat mat(result,true);
-            Mat probMat = mat.reshape(1,1);
+        const float* begin;
+        const float* end;
 
-            if (probMat.elemSize() * probMat.cols * probMat.rows == 0) {
-                throw std::runtime_error("Caffe forward pass result converted to empty cv::Mat");
-            }
-            outputs.push_back(probMat);
+        if(extractor) {
+            const shared_ptr<Blob<float> >& fc7Layer = net_->blob_by_name("fc7");
+            begin = fc7Layer->cpu_data();
+            end = begin + fc7Layer->shape(1);
         }
+        else {
+            for (int i = 0; i < output_layer->num(); ++i) {
+                begin = output_layer->cpu_data() + i * output_layer->channels();
+                end = begin + output_layer->channels();
+                /*  Copy the output layer to a std::vector */
+            }
+        }
+        std::vector<float> result(begin, end);
+        if (result.size() == 0) {
+            throw std::runtime_error("Caffe forward pass returned empty result");
+        }
+        cv::Mat mat(result,true);
+        Mat probMat = mat.reshape(1,1);
+
+        if (probMat.elemSize() * probMat.cols * probMat.rows == 0) {
+            throw std::runtime_error("Caffe forward pass result converted to empty cv::Mat");
+        }
+
+        outputs.push_back(probMat);
 
         return outputs;
     }
@@ -128,10 +141,7 @@ namespace ucw { namespace caffe {
             cv::Mat channel(height, width, CV_32FC1, input_data);
             input_channels->push_back(channel);
             input_data += width * height;
-
         }
-
-
     }
 
     void ForwardNet::Preprocess(const cv::Mat& img,
@@ -172,14 +182,14 @@ namespace ucw { namespace caffe {
 
 //NOTE: comment this block out as a standalone app to test
 /*  
-using namespace ucw; 
+    using namespace ucw; 
 
-int main(int argc, char** argv) {
+    int main(int argc, char** argv) {
     if (argc < 6) {
-        std::cerr << "Usage: " << argv[0]
-          << " deploy.prototxt network.caffemodel"
-          << " mean.binaryproto labels.txt img.jpg" << std::endl;
-        return 1;
+    std::cerr << "Usage: " << argv[0]
+    << " deploy.prototxt network.caffemodel"
+    << " mean.binaryproto labels.txt img.jpg" << std::endl;
+    return 1;
     }
 
     ::google::InitGoogleLogging(argv[0]);
@@ -196,11 +206,11 @@ int main(int argc, char** argv) {
     clock_t imgTime = clock();
     std::vector<cv::Mat> imgs;
     for (int i = 5; i < argc; ++i)
-      {
-        cv::Mat img = cv::imread(argv[i], -1);
-        CHECK(!img.empty()) << "Unable to decode image " << argv[i];
-        imgs.push_back(img);
-      }
+    {
+    cv::Mat img = cv::imread(argv[i], -1);
+    CHECK(!img.empty()) << "Unable to decode image " << argv[i];
+    imgs.push_back(img);
+    }
     imgTime = clock() - imgTime;
     std::cout << "Loading images: " << double(imgTime) / CLOCKS_PER_SEC * 1000 << "ms" << std::endl;
 
@@ -210,5 +220,5 @@ int main(int argc, char** argv) {
     elapsed = clock() - elapsed;
     std::cout << "Computation: " << double(elapsed) / CLOCKS_PER_SEC * 1000 << "ms" << std::endl;
 
-}
-*/
+    }
+    */

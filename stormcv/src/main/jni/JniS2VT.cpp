@@ -8,10 +8,13 @@
 #include "GPUUtils.h"
 
 #include <stdexcept>
+#include <iostream>
 
 using namespace ucw;
 
 using std::runtime_error;
+using std::cerr;
+using std::endl;
 
 /*
  * Class:     xyz_unlimitedcodeworks_operations_extra_Captioner

@@ -42,7 +42,7 @@ namespace ucw{
     public:
       Captioner(const string& VOCAB_FILE,
                 const string& LSTM_NET_FILE,
-                const string& MODEL_FILE);
+                const string& MODEL_FILE, bool useGPU);
 
       std::string runCaptioner(vector<vector<float> > &framesFeat);
 

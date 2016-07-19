@@ -5,17 +5,15 @@ import backtype.storm.StormSubmitter;
 import backtype.storm.topology.TopologyBuilder;
 import backtype.storm.tuple.Fields;
 import nl.tno.stormcv.StormCVConfig;
-import nl.tno.stormcv.batcher.DiscreteWindowBatcher;
+import nl.tno.stormcv.batcher.SimpleBatcher;
 import nl.tno.stormcv.batcher.SlidingWindowBatcher;
 import nl.tno.stormcv.bolt.BatchInputBolt;
 import nl.tno.stormcv.bolt.SingleInputBolt;
-import nl.tno.stormcv.fetcher.FileFrameFetcher;
-import nl.tno.stormcv.fetcher.IFetcher;
-import nl.tno.stormcv.fetcher.RefreshingImageFetcher;
 import nl.tno.stormcv.model.Frame;
 import nl.tno.stormcv.model.serializer.FrameSerializer;
 import nl.tno.stormcv.operation.*;
 import nl.tno.stormcv.spout.CVParticleSpout;
+import nl.tno.stormcv.utils.OpBuilder;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,19 +31,8 @@ public class BatchDNNTopology {
         int maxSpoutPending = 128;
         int msgTimeout = 25;
         int cacheTimeout = 30;
-        boolean autoSleep = false;
-        int frameSkip = 1;
         int numWorkers = 1;
-        int sleepMs = 40;
-        int sendingFps = 0;
-        int startDelay = 0;
-        int fatPriority = 0;
         int batchSize = 30;
-        String fetcherType = "video";
-        boolean useCaffe = false;
-        boolean useGPU = false;
-        int maxGPUNum = -1;
-        List<String> files = new ArrayList<>();
         for (String arg : args) {
             if (arg.startsWith(switchKeyword)) {
                 String[] kv = arg.substring(switchKeyword.length()).split("=");
@@ -60,25 +47,8 @@ public class BatchDNNTopology {
                     case "batch-size" :
                         batchSize = value;
                         break;
-                    case "fat-priority":
-                        fatPriority = value;
-                        break;
-                    case "start-delay":
-                        startDelay = value;
-                        break;
-                    case "fps":
-                        //sleepMs = 1000 / value;
-                        sleepMs = 0;
-                        sendingFps = value;
-                        break;
-                    case "fetcher":
-                        fetcherType = kv[1];
-                        break;
                     case "num-workers":
                         numWorkers = value;
-                        break;
-                    case "frame-skip":
-                        frameSkip = value;
                         break;
                     case "drawer":
                         drawerHint = value;
@@ -98,22 +68,10 @@ public class BatchDNNTopology {
                     case "cache-timeout":
                         cacheTimeout = value;
                         break;
-                    case "auto-sleep":
-                        autoSleep = value != 0;
-                        break;
-                    case "use-caffe":
-                        useCaffe = value != 0;
-                        break;
-                    case "use-gpu":
-                        useGPU = value != 0;
-                        maxGPUNum = value;
-                        break;
                 }
-            } else {
-                // Multiple files will be spread over the available spouts
-                files.add("file://" + arg);
             }
         }
+        OpBuilder opBuilder = new OpBuilder(args);
 
         // first some global (topology configuration)
         StormCVConfig conf = new StormCVConfig();
@@ -143,21 +101,8 @@ public class BatchDNNTopology {
         conf.put(StormCVConfig.STORMCV_LOG_PROFILING, true);
 
         // specify the list with SingleInputOperations to be executed sequentially by the 'fat' bolt
-        DnnForwardOp dnnforward;
-        if (useCaffe) {
-            System.out.println("Using Caffe");
-            dnnforward = new DnnForwardOp("classprob", "/data/bvlc_googlenet.prototxt",
-                                          "/data/bvlc_googlenet.caffemodel",
-                                          "prob",
-                                          "/data/imagenet_mean.binaryproto",
-                                          !useGPU); // caffeOnCPU == !useGPU
-            dnnforward.maxGPUNum(maxGPUNum);
-        } else {
-            System.out.println("Using OpenCV::DNN");
-            dnnforward = new DnnForwardOp("classprob", "/data/bvlc_googlenet.old.prototxt",
-                    "/data/bvlc_googlenet.caffemodel", "prob");
-        }
-        dnnforward.outputFrame(true).threadPriority(fatPriority);
+
+        DnnForwardOp dnnforward = opBuilder.buildGoogleNet("classprob", "prob");
 
         List<ISingleInputOperation> operations = new ArrayList<>();
         operations.add(new DnnClassifyOp("classprob", "/data/synset_words.txt").addMetadata(true).outputFrame(true));
@@ -167,23 +112,14 @@ public class BatchDNNTopology {
         // now create the topology itself
         // (spout -> scale -> fat[face detection & dnn] -> drawer -> streamer)
         TopologyBuilder builder = new TopologyBuilder();
-        IFetcher fetcher;
-        switch(fetcherType) {
-            case "video":
-                fetcher = new FileFrameFetcher(files).frameSkip(frameSkip).autoSleep(autoSleep)
-                              .sleep(sleepMs);
-                break;
-            default:
-            case "image":
-                fetcher = new RefreshingImageFetcher(files).sendingFps(sendingFps)
-                              .autoSleep(autoSleep).startDelay(startDelay);
-        }
-        builder.setSpout("fetcher", new CVParticleSpout(fetcher), 1);
+
+        builder.setSpout("fetcher", new CVParticleSpout(opBuilder.buildFetcher()), 1);
+
         // add bolt that scales frames down to 80% of the original size
         builder.setBolt("scale", new SingleInputBolt(new ScaleImageOp(0.5f)), scaleHint)
                 .shuffleGrouping("fetcher");
 
-        builder.setBolt("dnn_forward", new BatchInputBolt(new SimpleBatcher(batchSize),
+        builder.setBolt("dnn_forward", new BatchInputBolt(new SimpleBatcher().windowSize(batchSize),
                                             dnnforward).groupBy(new Fields(FrameSerializer.STREAMID)),
                 fatfeatureHint)
                 .shuffleGrouping("scale");
@@ -195,7 +131,7 @@ public class BatchDNNTopology {
 
         // add bolt that creates a webservice on port 8558 enabling users to view the result
         builder.setBolt("streamer", new BatchInputBolt(
-                        new SlidingWindowBatcher(2, 1).maxSize(6),
+                        new SlidingWindowBatcher(2, opBuilder.frameSkip).maxSize(6),
                         new MjpegStreamingOp().port(8558).framerate(5)).groupBy(new Fields(FrameSerializer.STREAMID)),
                 1)
                 .shuffleGrouping("drawer");

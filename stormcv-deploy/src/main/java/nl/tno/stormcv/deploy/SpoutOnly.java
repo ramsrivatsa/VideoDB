@@ -9,12 +9,9 @@ import backtype.storm.topology.base.BaseBasicBolt;
 import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
 import nl.tno.stormcv.StormCVConfig;
-import nl.tno.stormcv.fetcher.FileFrameFetcher;
 import nl.tno.stormcv.model.Frame;
 import nl.tno.stormcv.spout.CVParticleSpout;
-
-import java.util.ArrayList;
-import java.util.List;
+import nl.tno.stormcv.utils.OpBuilder;
 
 /**
  * Created by Aetf (aetf at unlimitedcodeworks dot xyz) on 16-3-19.
@@ -26,10 +23,7 @@ public class SpoutOnly {
         int maxSpoutPending = 128;
         int msgTimeout = 25;
         int cacheTimeout = 30;
-        boolean autoSleep = false;
-        int frameSkip = 1;
         int numWorkers = 1;
-        List<String> files = new ArrayList<>();
         for (String arg : args) {
             if (arg.startsWith(switchKeyword)) {
                 String[] kv = arg.substring(switchKeyword.length()).split("=");
@@ -44,9 +38,6 @@ public class SpoutOnly {
                     case "num-workers":
                         numWorkers = value;
                         break;
-                    case "frame-skip":
-                        frameSkip = value;
-                        break;
                     case "max-spout-pending":
                         maxSpoutPending = value;
                         break;
@@ -56,15 +47,10 @@ public class SpoutOnly {
                     case "cache-timeout":
                         cacheTimeout = value;
                         break;
-                    case "auto-sleep":
-                        autoSleep = value != 0;
-                        break;
                 }
-            } else {
-                // Multiple files will be spread over the available spouts
-                files.add("file://" + arg);
             }
         }
+        OpBuilder opBuilder = new OpBuilder(args);
 
         // first some global (topology configuration)
         StormCVConfig conf = new StormCVConfig();
@@ -96,8 +82,7 @@ public class SpoutOnly {
         // now create the topology itself
         // (spout -> scale -> fat[face detection & dnn] -> drawer -> streamer)
         TopologyBuilder builder = new TopologyBuilder();
-        builder.setSpout("fetcher", new CVParticleSpout(
-                        new FileFrameFetcher(files).frameSkip(frameSkip).autoSleep(autoSleep)),
+        builder.setSpout("fetcher", new CVParticleSpout(opBuilder.buildFetcher()),
                 1);
         builder.setBolt("noop", new BaseBasicBolt() {
             @Override

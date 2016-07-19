@@ -8,11 +8,12 @@ import nl.tno.stormcv.StormCVConfig;
 import nl.tno.stormcv.batcher.SlidingWindowBatcher;
 import nl.tno.stormcv.bolt.BatchInputBolt;
 import nl.tno.stormcv.bolt.SingleInputBolt;
-import nl.tno.stormcv.fetcher.FileFrameFetcher;
+import nl.tno.stormcv.model.CVParticle;
 import nl.tno.stormcv.model.Frame;
 import nl.tno.stormcv.model.serializer.FrameSerializer;
 import nl.tno.stormcv.operation.*;
 import nl.tno.stormcv.spout.CVParticleSpout;
+import nl.tno.stormcv.utils.OpBuilder;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -32,10 +33,7 @@ public class SplitDNNTopology {
         int maxSpoutPending = 128;
         int msgTimeout = 25;
         int cacheTimeout = 30;
-        int frameSkip = 1;
         int numWorkers = 1;
-        boolean autoSleep = false;
-        List<String> files = new ArrayList<>();
         for (String arg : args) {
             if (arg.startsWith(switchKeyword)) {
                 String[] kv = arg.substring(switchKeyword.length()).split("=");
@@ -49,9 +47,6 @@ public class SplitDNNTopology {
                 switch (kv[0]) {
                     case "num-workers":
                         numWorkers = value;
-                        break;
-                    case "frame-skip":
-                        frameSkip = value;
                         break;
                     case "drawer":
                         drawerHint = value;
@@ -77,15 +72,10 @@ public class SplitDNNTopology {
                     case "cache-timeout":
                         cacheTimeout = value;
                         break;
-                    case "auto-sleep":
-                        autoSleep = value != 0;
-                        break;
                 }
-            } else {
-                // Multiple files will be spread over the available spouts
-                files.add("file://" + arg);
             }
         }
+        OpBuilder opBuilder = new OpBuilder(args);
 
         // first some global (topology configuration)
         StormCVConfig conf = new StormCVConfig();
@@ -115,10 +105,9 @@ public class SplitDNNTopology {
         conf.put(StormCVConfig.STORMCV_LOG_PROFILING, true);
 
         // specify the list with SingleInputOperations to be executed sequentially by the 'fat' bolt
-        List<ISingleInputOperation> operations = new ArrayList<>();
+        List<ISingleInputOperation<? extends CVParticle>> operations = new ArrayList<>();
         operations.add(new HaarCascadeOp("face", "haarcascade_frontalface_default.xml").outputFrame(true));
-        operations.add(new DnnForwardOp("dnnforward", "/data/bvlc_googlenet.prototxt",
-                                        "/data/bvlc_googlenet.caffemodel", "prob").outputFrame(true));
+        operations.add(opBuilder.buildGoogleNet("classprob", "prob"));
         operations.add(new DnnClassifyOp("classprob", "/data/synset_words.txt")
                        .addMetadata(true).outputFrame(true));
         //operations.add(new FeatureExtractionOp("sift", FeatureDetector.SIFT, DescriptorExtractor.SIFT));
@@ -126,9 +115,8 @@ public class SplitDNNTopology {
         // now create the topology itself
         // (spout -> scale -> fat[face detection & dnn] -> drawer -> streamer)
         TopologyBuilder builder = new TopologyBuilder();
-        builder.setSpout("fetcher", new CVParticleSpout(
-                        new FileFrameFetcher(files).frameSkip(frameSkip).autoSleep(autoSleep)),
-                1);
+        builder.setSpout("fetcher", new CVParticleSpout(opBuilder.buildFetcher()), 1);
+
         // add bolt that scales frames down to 80% of the original size
         builder.setBolt("scale", new SingleInputBolt(new ScaleImageOp(0.5f)), scaleHint)
                 .shuffleGrouping("fetcher");
@@ -147,7 +135,7 @@ public class SplitDNNTopology {
 
         // add bolt that creates a webservice on port 8558 enabling users to view the result
         builder.setBolt("streamer", new BatchInputBolt(
-                        new SlidingWindowBatcher(2, frameSkip).maxSize(6),
+                        new SlidingWindowBatcher(2, opBuilder.frameSkip).maxSize(6),
                         new MjpegStreamingOp().port(8558).framerate(5)).groupBy(new Fields(FrameSerializer.STREAMID)),
                 1)
                 .shuffleGrouping("drawer");

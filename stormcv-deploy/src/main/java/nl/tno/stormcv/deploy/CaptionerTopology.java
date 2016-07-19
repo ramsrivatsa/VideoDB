@@ -3,14 +3,15 @@ package nl.tno.stormcv.deploy;
 import backtype.storm.Config;
 import backtype.storm.StormSubmitter;
 import backtype.storm.topology.TopologyBuilder;
-import backtype.storm.tuple.Fields;
 import nl.tno.stormcv.StormCVConfig;
-import nl.tno.stormcv.batcher.SlidingWindowBatcher;
+import nl.tno.stormcv.batcher.RandomBatcher;
 import nl.tno.stormcv.bolt.BatchInputBolt;
 import nl.tno.stormcv.bolt.SingleInputBolt;
 import nl.tno.stormcv.model.Frame;
-import nl.tno.stormcv.model.serializer.FrameSerializer;
-import nl.tno.stormcv.operation.*;
+import nl.tno.stormcv.operation.DnnForwardOp;
+import nl.tno.stormcv.operation.FrameGrouperOp;
+import nl.tno.stormcv.operation.ResultSinkOp;
+import nl.tno.stormcv.operation.ScaleImageOp;
 import nl.tno.stormcv.spout.CVParticleSpout;
 import nl.tno.stormcv.utils.OpBuilder;
 
@@ -18,19 +19,31 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Created by Aetf (aetf at unlimitedcodeworks dot xyz) on 16-3-19.
+ * Created by Aetf (aetf at unlimitedcodeworks dot xyz) on 16-7-19.
  */
-public class DNNTopology {
+public class CaptionerTopology {
     public static void main(String[] args) {
         // process args
         final String switchKeyword = "--";
         int scaleHint = 1;
-        int fatfeatureHint = 52;
-        int drawerHint = 5;
+        int vggHint = 1;
+        int grouperHint = 1;
+        int captionerHint = 10;
+
+        int minGroupSize = 1;
+        int maxGroupSize = 10;
+
         int maxSpoutPending = 128;
         int msgTimeout = 25;
         int cacheTimeout = 30;
+        boolean autoSleep = false;
         int numWorkers = 1;
+        int sleepMs = 40;
+        int sendingFps = 0;
+        int frameSkip = 1;
+        int startDelay = 0;
+        String fetcherType = "video";
+        List<String> files = new ArrayList<>();
         for (String arg : args) {
             if (arg.startsWith(switchKeyword)) {
                 String[] kv = arg.substring(switchKeyword.length()).split("=");
@@ -42,17 +55,40 @@ public class DNNTopology {
                     // nothing
                 }
                 switch (kv[0]) {
+                    case "min-group-size":
+                        minGroupSize = value;
+                        break;
+                    case "max-group-size":
+                        maxGroupSize = value;
+                        break;
+                    case "start-delay":
+                        startDelay = value;
+                        break;
+                    case "fps":
+                        sleepMs = 1000 / value;
+                        //sleepMs = 0;
+                        sendingFps = value;
+                        break;
+                    case "frame-skip":
+                        frameSkip = value;
+                        break;
+                    case "fetcher":
+                        fetcherType = kv[1];
+                        break;
                     case "num-workers":
                         numWorkers = value;
-                        break;
-                    case "drawer":
-                        drawerHint = value;
                         break;
                     case "scale":
                         scaleHint = value;
                         break;
-                    case "fat":
-                        fatfeatureHint = value;
+                    case "vgg":
+                        vggHint = value;
+                        break;
+                    case "grouper":
+                        grouperHint = value;
+                        break;
+                    case "captioner":
+                        captionerHint = value;
                         break;
                     case "max-spout-pending":
                         maxSpoutPending = value;
@@ -63,7 +99,13 @@ public class DNNTopology {
                     case "cache-timeout":
                         cacheTimeout = value;
                         break;
+                    case "auto-sleep":
+                        autoSleep = value != 0;
+                        break;
                 }
+            } else {
+                // Multiple files will be spread over the available spouts
+                files.add("file://" + arg);
             }
         }
         OpBuilder opBuilder = new OpBuilder(args);
@@ -95,39 +137,31 @@ public class DNNTopology {
         // Enable time profiling for spout and bolt
         conf.put(StormCVConfig.STORMCV_LOG_PROFILING, true);
 
-        // specify the list with SingleInputOperations to be executed sequentially by the 'fat' bolt
-        List<ISingleInputOperation> operations = new ArrayList<>();
-        //operations.add(new HaarCascadeOp("face", "haarcascade_frontalface_default.xml"));
-        DnnForwardOp dnnforward = opBuilder.buildGoogleNet("classprob", "prob");
-        operations.add(dnnforward);
-        operations.add(new DnnClassifyOp("classprob", "/data/synset_words.txt").addMetadata(true).outputFrame(true));
-        //operations.add(new FeatureExtractionOp("sift", FeatureDetector.SIFT, DescriptorExtractor.SIFT));
-
         // now create the topology itself
         // (spout -> scale -> fat[face detection & dnn] -> drawer -> streamer)
         TopologyBuilder builder = new TopologyBuilder();
 
         builder.setSpout("fetcher", new CVParticleSpout(opBuilder.buildFetcher()), 1);
 
-        // add bolt that scales frames down to 80% of the original size
         builder.setBolt("scale", new SingleInputBolt(new ScaleImageOp(0.5f)), scaleHint)
-                .shuffleGrouping("fetcher");
+               .shuffleGrouping("fetcher");
 
-        // 'fat' bolts containing a SequentialFrameOperation will will emit a Frame object containing the detected features
-        builder.setBolt("fat_features", new SingleInputBolt(
-                        new SequentialFrameOp(operations).outputFrame(true).retainImage(true)), fatfeatureHint)
+        DnnForwardOp dnnforward = opBuilder.buildVggNet("vgg", "fc7").retainImage(false);
+        builder.setBolt("vgg_feature", new SingleInputBolt(dnnforward), vggHint)
                 .shuffleGrouping("scale");
 
-        // simple bolt that draws Features (i.e. locations of features) into the frame
-        builder.setBolt("drawer", new SingleInputBolt(new DrawFeaturesOp().drawMetadata(true)), drawerHint)
-                .shuffleGrouping("fat_features");
+        builder.setBolt("frame_grouper", new BatchInputBolt(
+                    new RandomBatcher(minGroupSize, maxGroupSize),
+                    new FrameGrouperOp()),
+                1).shuffleGrouping("vgg_feature");
 
-        // add bolt that creates a webservice on port 8558 enabling users to view the result
-        builder.setBolt("streamer", new BatchInputBolt(
-                        new SlidingWindowBatcher(2, opBuilder.frameSkip).maxSize(6),
-                        new MjpegStreamingOp().port(8558).framerate(5)).groupBy(new Fields(FrameSerializer.STREAMID)),
+        builder.setBolt("captioner", new SingleInputBolt(opBuilder.buildCaptioner("caption", "vgg")),
+                    captionerHint)
+                .shuffleGrouping("frame_grouper");
+
+        builder.setBolt("streamer", new SingleInputBolt(new ResultSinkOp().port(8558).topNumber(20)),
                 1)
-                .shuffleGrouping("drawer");
+                .shuffleGrouping("captioner");
 
         try {
             // run in local mode
@@ -137,7 +171,7 @@ public class DNNTopology {
             //cluster.shutdown();
 
             // run on a storm cluster
-            StormSubmitter.submitTopology("dnn_classification", conf, builder.createTopology());
+            StormSubmitter.submitTopology("captioning", conf, builder.createTopology());
         } catch (Exception e) {
             e.printStackTrace();
         }

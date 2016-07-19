@@ -8,9 +8,6 @@ import nl.tno.stormcv.StormCVConfig;
 import nl.tno.stormcv.batcher.SlidingWindowBatcher;
 import nl.tno.stormcv.bolt.BatchInputBolt;
 import nl.tno.stormcv.bolt.SingleInputBolt;
-import nl.tno.stormcv.fetcher.FileFrameFetcher;
-import nl.tno.stormcv.fetcher.IFetcher;
-import nl.tno.stormcv.fetcher.RefreshingImageFetcher;
 import nl.tno.stormcv.model.Frame;
 import nl.tno.stormcv.model.serializer.FrameSerializer;
 import nl.tno.stormcv.operation.DrawFeaturesOp;
@@ -18,10 +15,8 @@ import nl.tno.stormcv.operation.MjpegStreamingOp;
 import nl.tno.stormcv.operation.ObjectTrackingOp;
 import nl.tno.stormcv.operation.ScaleImageOp;
 import nl.tno.stormcv.spout.CVParticleSpout;
+import nl.tno.stormcv.utils.OpBuilder;
 import org.opencv.core.Rect;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Created by Aetf (aetf at unlimitedcodeworks dot xyz) on 16-7-08.
@@ -36,17 +31,10 @@ public class ObjTrackingTopology {
         int msgTimeout = 25;
         int cacheTimeout = 30;
         boolean forceSingleFrame = false;
-        boolean autoSleep = false;
-        int frameSkip = 1;
         int numWorkers = 1;
-        int sleepMs = 40;
-        int sendingFps = 0;
-        int startDelay = 0;
         int slidingWindow = 24;
         int slidingWait = 10;
         Rect roi = new Rect();
-        String fetcherType = "video";
-        List<String> files = new ArrayList<>();
         for (String arg : args) {
             if (arg.startsWith(switchKeyword)) {
                 String[] kv = arg.substring(switchKeyword.length()).split("=");
@@ -76,22 +64,8 @@ public class ObjTrackingTopology {
                         roi.set(vals);
                         System.out.println("Using ROI: " + roi.toString());
                         break;
-                    case "start-delay":
-                        startDelay = value;
-                        break;
-                    case "fps":
-                        sleepMs = 1000 / value;
-                        //sleepMs = 0;
-                        sendingFps = value;
-                        break;
-                    case "fetcher":
-                        fetcherType = kv[1];
-                        break;
                     case "num-workers":
                         numWorkers = value;
-                        break;
-                    case "frame-skip":
-                        frameSkip = value;
                         break;
                     case "drawer":
                         drawerHint = value;
@@ -108,15 +82,10 @@ public class ObjTrackingTopology {
                     case "cache-timeout":
                         cacheTimeout = value;
                         break;
-                    case "auto-sleep":
-                        autoSleep = value != 0;
-                        break;
                 }
-            } else {
-                // Multiple files will be spread over the available spouts
-                files.add("file://" + arg);
             }
         }
+        OpBuilder opBuilder = new OpBuilder(args);
 
         // first some global (topology configuration)
         StormCVConfig conf = new StormCVConfig();
@@ -148,24 +117,14 @@ public class ObjTrackingTopology {
         // now create the topology itself
         // (spout -> scale -> fat[face detection & dnn] -> drawer -> streamer)
         TopologyBuilder builder = new TopologyBuilder();
-        IFetcher fetcher;
-        switch(fetcherType) {
-            case "video":
-                fetcher = new FileFrameFetcher(files).frameSkip(frameSkip)
-                            .autoSleep(autoSleep).sleep(sleepMs);
-                break;
-            default:
-            case "image":
-                fetcher = new RefreshingImageFetcher(files).sendingFps(sendingFps)
-                            .autoSleep(autoSleep).startDelay(startDelay);
-        }
-        builder.setSpout("fetcher", new CVParticleSpout(fetcher), 1);
+
+        builder.setSpout("fetcher", new CVParticleSpout(opBuilder.buildFetcher()), 1);
         // add bolt that scales frames down to 80% of the original size
         builder.setBolt("scale", new SingleInputBolt(new ScaleImageOp(0.5f)), scaleHint)
                 .shuffleGrouping("fetcher");
 
         builder.setBolt("obj_track", new BatchInputBolt(
-                    new SlidingWindowBatcher(2, 1).maxSize(slidingWindow).maxWait(slidingWait).forceSingleFrameBatch(forceSingleFrame),
+                    new SlidingWindowBatcher(2, opBuilder.frameSkip).maxSize(slidingWindow).maxWait(slidingWait).forceSingleFrameBatch(forceSingleFrame),
                     new ObjectTrackingOp("obj1", roi).outputFrame(true)).groupBy(new Fields(FrameSerializer.STREAMID)),
                 1)
                 .shuffleGrouping("scale");
@@ -177,7 +136,7 @@ public class ObjTrackingTopology {
 
         // add bolt that creates a webservice on port 8558 enabling users to view the result
         builder.setBolt("streamer", new BatchInputBolt(
-                    new SlidingWindowBatcher(2, 1).maxSize(slidingWindow).maxWait(slidingWait).forceSingleFrameBatch(forceSingleFrame),
+                    new SlidingWindowBatcher(2, opBuilder.frameSkip).maxSize(slidingWindow).maxWait(slidingWait).forceSingleFrameBatch(forceSingleFrame),
                     new MjpegStreamingOp().port(8558).framerate(5)).groupBy(new Fields(FrameSerializer.STREAMID)),
                 1)
                 .shuffleGrouping("drawer");

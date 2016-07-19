@@ -25,20 +25,22 @@ using namespace ucw;
 /*
  * Class:     xyz_unlimitedcodeworks_operations_extra_ForwardNet
  * Method:    create_0
- * Signature: (Ljava/lang/String;Ljava/lang/String;)J
+ * Signature: (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)J
  */
 JNIEXPORT jlong JNICALL Java_xyz_unlimitedcodeworks_operations_extra_ForwardNet_create_10
-  (JNIEnv *env, jclass, jstring jModelTxt, jstring jModelBin)
+(JNIEnv *env, jclass, jstring jModelTxt, jstring jModelBin, jstring jOutputName)
 {
     UNUSED(env);
     UNUSED(jModelTxt);
     UNUSED(jModelBin);
+    UNUSED(jOutputName);
 
 #ifndef FN_USE_CAFFE
     try
     {
         IForwardNet *net = new CVForwardNet(fromJString(env, jModelTxt),
-                                            fromJString(env, jModelBin));
+                                            fromJString(env, jModelBin),
+                                            fromJString(env, jOutputName));
         return reinterpret_cast<jlong>(net);
     }
     catch (runtime_error *e)
@@ -53,15 +55,16 @@ JNIEXPORT jlong JNICALL Java_xyz_unlimitedcodeworks_operations_extra_ForwardNet_
 /*
  * Class:     xyz_unlimitedcodeworks_operations_extra_ForwardNet
  * Method:    create_1
- * Signature: (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ZII)J
+ * Signature: (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ZII)J
  */
 JNIEXPORT jlong JNICALL Java_xyz_unlimitedcodeworks_operations_extra_ForwardNet_create_11
-(JNIEnv *env, jclass, jstring jModelTxt, jstring jModelBin, jstring jMeanBin,
- jboolean jCaffeOnCPU, jint jTaskId, jint jMaxGPUNum)
+(JNIEnv *env, jclass, jstring jModelTxt, jstring jModelBin, jstring jOutputName,
+ jstring jMeanBin, jboolean jCaffeOnCPU, jint jTaskId, jint jMaxGPUNum)
 {
     UNUSED(env);
     UNUSED(jModelTxt);
     UNUSED(jModelBin);
+    UNUSED(jOutputName);
     UNUSED(jMeanBin);
     UNUSED(jCaffeOnCPU);
     UNUSED(jTaskId);
@@ -85,7 +88,8 @@ JNIEXPORT jlong JNICALL Java_xyz_unlimitedcodeworks_operations_extra_ForwardNet_
         IForwardNet *net = new CaffeForwardNet(fromJString(env, jModelTxt),
                                                fromJString(env, jModelBin),
                                                fromJString(env, jMeanBin),
-                                               jCaffeOnCPU);
+                                               jCaffeOnCPU,
+                                               fromJString(env, jOutputName));
         return reinterpret_cast<jlong>(net);
     }
     catch (runtime_error *e)

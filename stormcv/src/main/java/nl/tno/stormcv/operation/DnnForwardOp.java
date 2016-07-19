@@ -38,6 +38,7 @@ public class DnnForwardOp extends OpenCVOp<CVParticle> implements ISingleInputOp
 
     private String modelTxt;
     private String modelBin;
+    private String outputName;
     private String meanBin;
     private boolean caffeOnCPU;
     private boolean useCaffe;
@@ -56,25 +57,29 @@ public class DnnForwardOp extends OpenCVOp<CVParticle> implements ISingleInputOp
      * Constructs a {@link DnnForwardOp} using the provided caffe model (.prototxt and .caffemodel)
      * and will emit Features with the provided name
      *
-     * @param name     the feature name to use
-     * @param modelBin path to .caffemodel file for the model
-     * @param modelTxt path to .prototxt file for the model
+     * @param name       the feature name to use
+     * @param modelBin   path to .caffemodel file for the model
+     * @param modelTxt   path to .prototxt file for the model
+     * @param outputName the name of the output blob
      */
-    public DnnForwardOp(String name, String modelTxt, String modelBin) {
+    public DnnForwardOp(String name, String modelTxt, String modelBin, String outputName) {
         this.name = name;
         this.useCaffe = false;
         this.modelTxt = modelTxt;
         this.modelBin = modelBin;
+        this.outputName = outputName;
 
         if (modelTxt.charAt(0) != '/') this.modelTxt = OPENCV_RES_HOME + modelTxt;
         if (modelBin.charAt(0) != '/') this.modelBin = OPENCV_RES_HOME + modelBin;
     }
 
-    public DnnForwardOp(String name, String modelTxt, String modelBin, String meanBin, boolean caffeOnCPU) {
+    public DnnForwardOp(String name, String modelTxt, String modelBin, String outputName,
+                        String meanBin, boolean caffeOnCPU) {
         this.name = name;
         this.useCaffe = true;
         this.modelTxt = modelTxt;
         this.modelBin = modelBin;
+        this.outputName = outputName;
         this.meanBin = meanBin;
         this.caffeOnCPU = caffeOnCPU;
 
@@ -141,10 +146,11 @@ public class DnnForwardOp extends OpenCVOp<CVParticle> implements ISingleInputOp
             if (useCaffe) {
                 File meanBinFile = NativeUtils.getAsLocalFile(meanBin);
                 net = new ForwardNet(modelTxtFile.getAbsolutePath(), modelBinFile.getAbsolutePath(),
-                                     meanBinFile.getAbsolutePath(), useCaffe, caffeOnCPU,
-                                     thisTaskIndex, maxGPUNum);
+                                     outputName, meanBinFile.getAbsolutePath(),
+                                     useCaffe, caffeOnCPU, thisTaskIndex, maxGPUNum);
             } else {
-                net = new ForwardNet(modelTxtFile.getAbsolutePath(), modelBinFile.getAbsolutePath());
+                net = new ForwardNet(modelTxtFile.getAbsolutePath(),
+                                     modelBinFile.getAbsolutePath(), outputName);
             }
             net.setThreadPriority(kernelThreadPriority);
         } catch (Exception e) {

@@ -8,11 +8,13 @@ namespace ucw { namespace caffe {
                            const string& trained_file,
                            const string& mean_file,
                            const bool CPU,
-                           const bool featExtractor) {
+                           const string &output_name)
+        : net_(nullptr)
+        , output_blob_name(output_name)
+    {
 
         if (CPU) Caffe::set_mode(Caffe::CPU);
         else Caffe::set_mode(Caffe::GPU);
-        extractor(featExtractor);
 
         clock_t modelTime = clock();
         /*  Load the network. */
@@ -93,34 +95,21 @@ namespace ucw { namespace caffe {
 
         std::vector<Mat> outputs;
 
-        Blob<float>* output_layer = net_->output_blobs()[0];
-        const float* begin;
-        const float* end;
+        const Blob<float> *output_blob;
+        if (output_blob_name.empty()) {
+            output_blob = net_->output_blobs()[0];
+        } else {
+            output_blob = net_->blob_by_name(output_blob_name).get();
+        }
+        for (int i = 0; i != output_blob->shape(0); ++i) {
+            auto begin = output_blob->cpu_data() + output_blob->offset(i, 0, 0, 0);
+            auto count = output_blob->count(1, output_blob->num_axes());
+            if (count == 0)
+                throw std::runtime_error("Caffe forward pass returned empty result");
 
-        if(extractor) {
-            const shared_ptr<Blob<float> >& fc7Layer = net_->blob_by_name("fc7");
-            begin = fc7Layer->cpu_data();
-            end = begin + fc7Layer->shape(1);
+            cv::Mat data(1, count, CV_32FC1, const_cast<float*>(begin)); // create a Mat wrapper around the cpu_data
+            outputs.push_back(data.clone()); // make a copy of it
         }
-        else {
-            for (int i = 0; i < output_layer->num(); ++i) {
-                begin = output_layer->cpu_data() + i * output_layer->channels();
-                end = begin + output_layer->channels();
-                /*  Copy the output layer to a std::vector */
-            }
-        }
-        std::vector<float> result(begin, end);
-        if (result.size() == 0) {
-            throw std::runtime_error("Caffe forward pass returned empty result");
-        }
-        cv::Mat mat(result,true);
-        Mat probMat = mat.reshape(1,1);
-
-        if (probMat.elemSize() * probMat.cols * probMat.rows == 0) {
-            throw std::runtime_error("Caffe forward pass result converted to empty cv::Mat");
-        }
-
-        outputs.push_back(probMat);
 
         return outputs;
     }

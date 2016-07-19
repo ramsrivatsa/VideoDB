@@ -15,12 +15,16 @@ class ForwardNet : public IForwardNet
     cv::dnn::Net net;
 
 public:
-    ForwardNet(const std::string &modelTxt, const std::string &modelBin);
+    ForwardNet(const std::string &modelTxt, const std::string &modelBin,
+               const std::string &outputName = "");
     ~ForwardNet() override {}
 
     cv::Mat forward(const cv::Mat &input) override;
 
     std::vector<cv::Mat> forward(const std::vector<cv::Mat>& imgs) override;
+
+private:
+    std::string outputBlobName;
 };
 
 }

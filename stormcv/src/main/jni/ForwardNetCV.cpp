@@ -13,8 +13,13 @@ using namespace cv::dnn;
 
 namespace ucw { namespace opencv {
 
-    ForwardNet::ForwardNet(const string &modelTxt, const string &modelBin)
-      {
+    ForwardNet::ForwardNet(const string &modelTxt, const string &modelBin,
+                           const string &outputName)
+        : outputBlobName(outputName)
+    {
+        if (outputBlobName.empty()) {
+            outputBlobName = "prob"; // backward compatibale
+        }
         Ptr<dnn::Importer> importer;
         try {
             importer = dnn::createCaffeImporter(modelTxt, modelBin);
@@ -28,7 +33,7 @@ namespace ucw { namespace opencv {
         }
 
         importer->populateNet(net);
-      }
+    }
 
     Mat ForwardNet::forward(const cv::Mat &input)
     {
@@ -49,7 +54,8 @@ namespace ucw { namespace opencv {
         // TODO: input and output layer name should be set upon model loading
         net.setBlob(".data", inputBlob);        //set the network input
         net.forward();                          //compute output
-        auto outputBlob = net.getBlob("prob");   //gather output of "prob" layer
+        // auto outputBlob = net.getBlob("prob");   //gather output of "prob" layer
+        auto outputBlob = net.getBlob(outputBlobName); //gather output of "prob" layer
 
         return outputBlob.matRefConst().reshape(1, 1);
     }

@@ -24,8 +24,8 @@ public class ForwardNet {
         }
     }
 
-    public ForwardNet(String modelTxt, String modelBin) {
-        this(modelTxt, modelBin, "", false, false, -1, -1);
+    public ForwardNet(String modelTxt, String modelBin, String outputName) {
+        this(modelTxt, modelBin, outputName, "", false, false, -1, -1);
     }
 
     /**
@@ -38,12 +38,12 @@ public class ForwardNet {
      * @param taskIndex select which gpu to use based on task index. use -1 to indicate default gpu. Only takes effect when useCaffe is true
      * @param maxGPUNum maximum GPU devices to use
      */
-    public ForwardNet(String modelTxt, String modelBin, String meanBin, boolean useCaffe,
-                      boolean caffeOnCPU, int taskIndex, int maxGPUNum) {
+    public ForwardNet(String modelTxt, String modelBin, String outputName, String meanBin,
+                      boolean useCaffe, boolean caffeOnCPU, int taskIndex, int maxGPUNum) {
         lazyLoad(useCaffe, !caffeOnCPU);
         if (!useCaffe) {
             System.out.println("Use OpenCV::DNN as neural network");
-            nativeObj = create_0(modelTxt, modelBin);
+            nativeObj = create_0(modelTxt, modelBin, outputName);
         } else {
             System.out.println("Use Caffe as neural network");
             if (!caffeOnCPU) {
@@ -53,7 +53,8 @@ public class ForwardNet {
                     throw new RuntimeException("GPU selection incorrect! CUDA_VISIBLE_DEVICES=" + cuda_visible_devices);
                 }
             }
-            nativeObj = create_1(modelTxt, modelBin, meanBin, caffeOnCPU, taskIndex, maxGPUNum);
+            nativeObj = create_1(modelTxt, modelBin, outputName, meanBin,
+                                 caffeOnCPU, taskIndex, maxGPUNum);
         }
     }
 
@@ -109,10 +110,11 @@ public class ForwardNet {
     }
     private static boolean lazyLoaded = false;
 
-    private static native long create_0(String modelTxt, String modelBin);
+    private static native long create_0(String modelTxt, String modelBin, String outputName);
 
-    private static native long create_1(String modelTxt, String modelBin, String meanBin,
-                                        boolean caffeOnCPU, int taskIndex, int maxGPUNum);
+    private static native long create_1(String modelTxt, String modelBin, String outputName,
+                                        String meanBin, boolean caffeOnCPU, int taskIndex,
+                                        int maxGPUNum);
 
     private static native void n_forward(long nativeObj, long nativeInput, long nativeOutput);
 

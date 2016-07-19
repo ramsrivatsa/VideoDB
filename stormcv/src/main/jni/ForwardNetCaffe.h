@@ -26,7 +26,7 @@ namespace ucw { namespace caffe {
                  const string& trained_file,
                  const string& mean_file,
                  bool CPU = true,
-                 bool featExtractor = false);
+                 const string &output_name = "");
       ~ForwardNet() override {}
 
       void SetMean(const string& mean_file);
@@ -40,13 +40,9 @@ namespace ucw { namespace caffe {
       void Preprocess(const cv::Mat& img,
                       std::vector<cv::Mat>* input_channels);
 
-      static void setPriority(int priority = 0);
-
-      static long getCurrentTid();
-
     private:
       shared_ptr<Net<float> > net_;
-      bool extractor;
+      string output_blob_name;
       cv::Size input_geometry_;
       int num_channels_;
       cv::Mat mean_;

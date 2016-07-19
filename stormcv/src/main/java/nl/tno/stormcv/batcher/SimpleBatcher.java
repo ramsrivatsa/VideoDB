@@ -13,10 +13,18 @@ import java.util.Map;
 public class SimpleBatcher implements  IBatcher {
     private static final long serialVersionUID = 789734984649506398L;
 
-    private int windowSize;
+    private int windowSize = 1;
 
-    public SimpleBatcher(int windowSize){
-        this.windowSize = windowSize;
+    public SimpleBatcher(){
+    }
+
+    public SimpleBatcher windowSize(int window) {
+        this.windowSize = window;
+        return this;
+    }
+
+    protected int getWindowSize() {
+        return windowSize;
     }
 
     @SuppressWarnings("rawtypes")
@@ -27,6 +35,7 @@ public class SimpleBatcher implements  IBatcher {
     public List<List<CVParticle>> partition(BatchInputBolt.History history, List<CVParticle> currentSet) {
         List<List<CVParticle>> result = new ArrayList<>();
 
+        int windowSize = getWindowSize();
         while (currentSet.size() > windowSize) {
             List<CVParticle> window = new ArrayList<>();
             window.addAll(currentSet.subList(0, windowSize));

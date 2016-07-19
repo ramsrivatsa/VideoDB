@@ -50,6 +50,9 @@ public class DnnForwardOp extends OpenCVOp<CVParticle> implements ISingleInputOp
     private int maxGPUNum = -1;
 
     private boolean outputFrame;
+
+    private boolean retainImage = true;
+
     @SuppressWarnings("rawtypes")
     private CVParticleSerializer serializer = new FeatureSerializer();
 
@@ -103,6 +106,19 @@ public class DnnForwardOp extends OpenCVOp<CVParticle> implements ISingleInputOp
         } else {
             this.serializer = new FeatureSerializer();
         }
+        return this;
+    }
+
+    /**
+     * Indicate if the image provided within each Frame received must be added to the output or not. This setting
+     * only applies when outputFrame == true. Hence it is possible set the result of this operation to be a
+     * {@link Frame} but omit the image by setting retainImage to false. Doing so will lower network usage.
+     * Default value is true
+     * @param retain
+     * @return
+     */
+    public DnnForwardOp retainImage(boolean retain){
+        this.retainImage = retain;
         return this;
     }
 
@@ -193,6 +209,7 @@ public class DnnForwardOp extends OpenCVOp<CVParticle> implements ISingleInputOp
 
         if (outputFrame) {
             frame.getFeatures().add(f);
+            if (!retainImage) frame.setImage(null);
             result.add(frame);
         } else {
             result.add(f);

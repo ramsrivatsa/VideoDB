@@ -12,3 +12,5 @@
 hs_err_pid*
 run-application.sh
 .DS_Store
+
+*.sublime-workspace

@@ -7,24 +7,28 @@ import nl.tno.stormcv.model.Frame;
 import nl.tno.stormcv.model.GroupOfFrames;
 import nl.tno.stormcv.model.serializer.GroupOfFramesSerializer;
 import nl.tno.stormcv.util.MatFeatureUtils;
+import nl.tno.stormcv.util.NativeUtils;
 import org.opencv.core.Mat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import xyz.unlimitedcodeworks.operations.extra.Captioner;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 /**
+ * Captioner using S2VT
  * Created by Aetf (aetf at unlimitedcodeworks dot xyz) on 16-7-19.
  */
-public class CaptionerOp  implements ISingleInputOperation<GroupOfFrames> {
+public class CaptionerOp extends OpenCVOp<GroupOfFrames>
+        implements ISingleInputOperation<GroupOfFrames> {
     private static final long serialVersionUID = 889734984649506398L;
     protected Logger logger = LoggerFactory.getLogger(CaptionerOp.class);
 
     private String outputMetaName;
-    private String vocabFile;
+    private String vocab;
     private String lstmProto;
     private String modelBin;
     private String vggFeatureName;
@@ -33,14 +37,18 @@ public class CaptionerOp  implements ISingleInputOperation<GroupOfFrames> {
     private boolean useGPU;
     private int maxGPUNum = -1;
 
-    public CaptionerOp(String outputMetaName, String vocabFile, String lstmProto,
+    public CaptionerOp(String outputMetaName, String vocab, String lstmProto,
                        String modelBin, String vggFeatureName, boolean useGPU) {
         this.outputMetaName = outputMetaName;
-        this.vocabFile = vocabFile;
+        this.vocab = vocab;
         this.lstmProto = lstmProto;
         this.modelBin = modelBin;
         this.vggFeatureName = vggFeatureName;
         this.useGPU = useGPU;
+
+        if (vocab.charAt(0) != '/') this.vocab = OPENCV_RES_HOME + vocab;
+        if (lstmProto.charAt(0) != '/') this.lstmProto = OPENCV_RES_HOME + lstmProto;
+        if (modelBin.charAt(0) != '/') this.modelBin = OPENCV_RES_HOME + modelBin;
     }
 
     /**
@@ -54,10 +62,20 @@ public class CaptionerOp  implements ISingleInputOperation<GroupOfFrames> {
     }
 
     @Override
-    public void prepare(Map stormConf, TopologyContext context) throws Exception {
+    public void prepareOpenCVOp(Map stormConf, TopologyContext context) throws Exception {
         int thisTaskIndex = context.getThisTaskIndex();
 
-        captioner = new Captioner(vocabFile, lstmProto, modelBin, useGPU, thisTaskIndex, maxGPUNum);
+        try {
+            File vocabFile = NativeUtils.getAsLocalFile(vocab);
+            File lstmProtoFile = NativeUtils.getAsLocalFile(lstmProto);
+            File modelBinFile = NativeUtils.getAsLocalFile(modelBin);
+            captioner = new Captioner(vocabFile.getAbsolutePath(), lstmProtoFile.getAbsolutePath(),
+                                      modelBinFile.getAbsolutePath(),
+                                      useGPU, thisTaskIndex, maxGPUNum);
+        } catch (Exception e) {
+            logger.error("Unable to instantiate CaptionerOp due to: " + e.getMessage(), e);
+            throw e;
+        }
     }
 
     @Override

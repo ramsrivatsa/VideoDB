@@ -16,10 +16,11 @@ import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Application;
 import java.io.IOException;
+import java.net.URLEncoder;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
@@ -117,17 +118,36 @@ public class ResultSinkOp extends Application
     @Path("/")
     @Produces("text/plain")
     public String getStreamIds() throws IOException {
+        /*
         String result = "";
         for (String id : results.asMap().keySet()) {
             result += "/results/list/" + id + "\r\n";
         }
         return result;
+        */
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("<html><head><title>All Stream ");
+        sb.append("Results</title></head><body bgcolor=\"#3C3C3C\">");
+        sb.append("<font style=\"color:#CCC;\">Total: ");
+        sb.append(results.asMap().size());
+        sb.append("<br />");
+        for (String id : results.asMap().keySet()) {
+            sb.append("<a href=\"/results/top?streamid=");
+            sb.append(URLEncoder.encode(id, "UTF-8"));
+            sb.append("\">");
+            sb.append(id);
+            sb.append("</a> ");
+            sb.append("<br />");
+        }
+        sb.append("</body></html>");
+        return sb.toString();
     }
 
     @GET
-    @Path("list/{streamid}")
+    @Path("top")
     @Produces("text/plain")
-    public String resultList(@PathParam("streamid") final String streamId) {
+    public String resultList(@QueryParam("streamid") final String streamId) {
         List<CVParticle> streamResult;
         if ((streamResult = results.getIfPresent(streamId)) != null) {
             StringBuilder sb = new StringBuilder();

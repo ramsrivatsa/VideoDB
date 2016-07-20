@@ -12,10 +12,12 @@ public class RandomBatcher extends SimpleBatcher {
     public RandomBatcher(int min, int max) {
         this.minWindowSize = min;
         this.maxWindowSize = max;
+
+        updateWindowSize();
     }
 
     @Override
-    protected int getWindowSize() {
-        return ThreadLocalRandom.current().nextInt(minWindowSize, maxWindowSize);
+    protected void updateWindowSize() {
+        currWindowSize = ThreadLocalRandom.current().nextInt(minWindowSize, maxWindowSize);
     }
 }

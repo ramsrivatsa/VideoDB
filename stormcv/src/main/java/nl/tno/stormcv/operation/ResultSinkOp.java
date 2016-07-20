@@ -119,7 +119,7 @@ public class ResultSinkOp extends Application
     public String getStreamIds() throws IOException {
         String result = "";
         for (String id : results.asMap().keySet()) {
-            result += "/results/list" + id + "\r\n";
+            result += "/results/list/" + id + "\r\n";
         }
         return result;
     }

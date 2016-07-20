@@ -17,6 +17,7 @@ public class FeatureDetectorX extends FeatureDetector {
         try {
             NativeUtils.loadLibrary("opencv_core", true);
             NativeUtils.loadLibrary("opencv_imgproc", true);
+            NativeUtils.loadLibrary("opencv_features2d", true);
             NativeUtils.loadLibrary("opencv_xfeatures2d", true);
             NativeUtils.loadLibrary("stormcv_common");
             NativeUtils.loadLibrary("stormcv_detectorx");
@@ -26,7 +27,7 @@ public class FeatureDetectorX extends FeatureDetector {
             throw ex;
         }
     }
-    
+
     protected boolean patched = false;
     protected FeatureDetectorX(long nativeObj) {
         super(nativeObj);

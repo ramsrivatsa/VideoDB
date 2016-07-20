@@ -118,7 +118,7 @@ public class SpoutOnly {
             public CVParticleSerializer getSerializer() {
                 return serializer;
             }
-        }));
+        }), 1).shuffleGrouping("fetcher");
         /*
         builder.setBolt("noop", new BaseBasicBolt() {
             @Override

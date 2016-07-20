@@ -19,6 +19,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Application;
+import javax.ws.rs.core.MediaType;
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.util.*;
@@ -75,7 +76,7 @@ public class ResultSinkOp extends Application
         results = ResultSinkOp.getResults();
 
         ApplicationAdapter connector = new ApplicationAdapter(this);
-        server = HttpServerFactory.create("http://localhost:" + port + "/", connector);
+        server = HttpServerFactory.create("http://0.0.0.0:" + port + "/", connector);
         server.start();
     }
 
@@ -116,7 +117,7 @@ public class ResultSinkOp extends Application
 
     @GET
     @Path("/")
-    @Produces("text/plain")
+    @Produces(MediaType.TEXT_HTML)
     public String getStreamIds() throws IOException {
         /*
         String result = "";
@@ -146,7 +147,7 @@ public class ResultSinkOp extends Application
 
     @GET
     @Path("top")
-    @Produces("text/plain")
+    @Produces(MediaType.TEXT_HTML)
     public String resultList(@QueryParam("streamid") final String streamId) {
         List<CVParticle> streamResult;
         if ((streamResult = results.getIfPresent(streamId)) != null) {

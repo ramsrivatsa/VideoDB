@@ -209,7 +209,7 @@ public class DnnForwardOp extends OpenCVOp<CVParticle> implements ISingleInputOp
 
         if (outputFrame) {
             frame.getFeatures().add(f);
-            if (!retainImage) frame.setImage(null);
+            if (!retainImage) frame.removeImage();
             result.add(frame);
         } else {
             result.add(f);

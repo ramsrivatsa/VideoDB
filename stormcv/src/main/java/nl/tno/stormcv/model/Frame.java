@@ -149,7 +149,10 @@ public class Frame extends CVParticle {
 
 	@Override
 	public long estimatedByteSize() {
-		long size = super.estimatedByteSize() + 8 + imageType.getBytes().length + imageBytes.length + 4*8;
+		long size = super.estimatedByteSize() + 8 + imageType.getBytes().length + 4*8;
+		if (imageBytes != null)
+			size += imageBytes.length;
+
         for (Feature f : features) {
             size += f.estimatedByteSize();
         }

@@ -2,16 +2,22 @@ package nl.tno.stormcv.deploy;
 
 import backtype.storm.Config;
 import backtype.storm.StormSubmitter;
-import backtype.storm.topology.BasicOutputCollector;
-import backtype.storm.topology.OutputFieldsDeclarer;
+import backtype.storm.task.TopologyContext;
 import backtype.storm.topology.TopologyBuilder;
-import backtype.storm.topology.base.BaseBasicBolt;
-import backtype.storm.tuple.Fields;
-import backtype.storm.tuple.Tuple;
 import nl.tno.stormcv.StormCVConfig;
+import nl.tno.stormcv.bolt.SingleInputBolt;
+import nl.tno.stormcv.model.CVParticle;
 import nl.tno.stormcv.model.Frame;
+import nl.tno.stormcv.model.serializer.CVParticleSerializer;
+import nl.tno.stormcv.model.serializer.FrameSerializer;
+import nl.tno.stormcv.operation.ISingleInputOperation;
 import nl.tno.stormcv.spout.CVParticleSpout;
 import nl.tno.stormcv.utils.OpBuilder;
+import org.slf4j.LoggerFactory;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Created by Aetf (aetf at unlimitedcodeworks dot xyz) on 16-3-19.
@@ -84,6 +90,36 @@ public class SpoutOnly {
         TopologyBuilder builder = new TopologyBuilder();
         builder.setSpout("fetcher", new CVParticleSpout(opBuilder.buildFetcher()),
                 1);
+        builder.setBolt("noop", new SingleInputBolt(new ISingleInputOperation<CVParticle>() {
+            private long lastSequence = -1;
+            @Override
+            public List<CVParticle> execute(CVParticle cvParticle) throws Exception {
+                List<CVParticle> res = new ArrayList<>();
+                res.add(cvParticle);
+                if (cvParticle.getSequenceNr() != lastSequence + 1) {
+                    LoggerFactory.getLogger("order_verifier").warn("Out-of-Order frame {}, should be {}",
+                            cvParticle.getSequenceNr(), lastSequence);
+                } else {
+                    lastSequence += 1;
+                }
+                return res;
+            }
+
+            @Override
+            public void prepare(Map map, TopologyContext topologyContext) throws Exception {
+
+            }
+
+            @Override
+            public void deactivate() { }
+
+            private FrameSerializer serializer = new FrameSerializer();
+            @Override
+            public CVParticleSerializer getSerializer() {
+                return serializer;
+            }
+        }));
+        /*
         builder.setBolt("noop", new BaseBasicBolt() {
             @Override
             public void execute(Tuple tuple, BasicOutputCollector basicOutputCollector) {
@@ -94,6 +130,7 @@ public class SpoutOnly {
                 outputFieldsDeclarer.declare(new Fields());
             }
         });
+        */
 
         try {
 

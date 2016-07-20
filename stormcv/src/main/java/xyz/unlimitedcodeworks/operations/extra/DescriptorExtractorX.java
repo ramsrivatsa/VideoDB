@@ -17,8 +17,9 @@ public class DescriptorExtractorX extends DescriptorExtractor {
     static {
         try {
             NativeUtils.loadLibrary("opencv_core", true);
-            NativeUtils.loadLibrary("opencv_imgproc", true);
-            NativeUtils.loadLibrary("opencv_features2d", true);
+            NativeUtils.loadLibrary("opencv_imgproc", true); //required by xfeatures2d
+            NativeUtils.loadLibrary("opencv_flann", true); // required by features2d
+            NativeUtils.loadLibrary("opencv_features2d", true); //required by xfeatures2d
             NativeUtils.loadLibrary("opencv_xfeatures2d", true);
             NativeUtils.loadLibrary("stormcv_common");
             NativeUtils.loadLibrary("stormcv_extractorx");

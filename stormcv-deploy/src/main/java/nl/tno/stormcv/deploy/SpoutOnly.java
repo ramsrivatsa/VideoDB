@@ -11,6 +11,7 @@ import nl.tno.stormcv.model.Frame;
 import nl.tno.stormcv.model.serializer.CVParticleSerializer;
 import nl.tno.stormcv.model.serializer.FrameSerializer;
 import nl.tno.stormcv.operation.ISingleInputOperation;
+import nl.tno.stormcv.operation.ScaleImageOp;
 import nl.tno.stormcv.spout.CVParticleSpout;
 import nl.tno.stormcv.utils.OpBuilder;
 import org.slf4j.LoggerFactory;
@@ -90,6 +91,10 @@ public class SpoutOnly {
         TopologyBuilder builder = new TopologyBuilder();
         builder.setSpout("fetcher", new CVParticleSpout(opBuilder.buildFetcher()),
                 1);
+
+        builder.setBolt("scale", new SingleInputBolt(new ScaleImageOp(0.5f)), 1)
+                .shuffleGrouping("fetcher");
+
         builder.setBolt("noop", new SingleInputBolt(new ISingleInputOperation<CVParticle>() {
             private long lastSequence = -1;
             @Override
@@ -118,7 +123,7 @@ public class SpoutOnly {
             public CVParticleSerializer getSerializer() {
                 return serializer;
             }
-        }), 1).shuffleGrouping("fetcher");
+        }), 1).shuffleGrouping("scale");
         /*
         builder.setBolt("noop", new BaseBasicBolt() {
             @Override

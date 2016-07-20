@@ -78,6 +78,12 @@ public class CaptionerTopology {
         }
         OpBuilder opBuilder = new OpBuilder(args);
         opBuilder.useCaffe = true; // Caffe is required
+        if (opBuilder.useGPU && opBuilder.maxGPUNum != 0) {
+            vggHint = opBuilder.maxGPUNum;
+        }
+        if (opBuilder.captionerUseGPU && opBuilder.captionerMaxGPU != 0) {
+            captionerHint = opBuilder.captionerMaxGPU;
+        }
 
         // first some global (topology configuration)
         StormCVConfig conf = new StormCVConfig();

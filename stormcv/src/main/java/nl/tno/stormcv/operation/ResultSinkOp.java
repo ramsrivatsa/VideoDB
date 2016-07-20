@@ -66,7 +66,7 @@ public class ResultSinkOp extends Application
     @Override
     public Set<Class<?>> getClasses() {
         Set<Class<?>> s = new HashSet<>();
-        s.add(MjpegStreamingOp.class);
+        s.add(ResultSinkOp.class);
         return s;
     }
 

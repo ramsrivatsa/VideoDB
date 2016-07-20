@@ -46,6 +46,10 @@ public class CaptionerTopology {
                     // nothing
                 }
                 switch (kv[0]) {
+                    case "group-size":
+                        minGroupSize = value;
+                        maxGroupSize = value;
+                        break;
                     case "min-group-size":
                         minGroupSize = value;
                         break;

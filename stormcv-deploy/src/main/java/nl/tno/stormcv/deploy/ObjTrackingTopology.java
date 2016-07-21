@@ -120,7 +120,7 @@ public class ObjTrackingTopology {
 
         builder.setSpout("fetcher", new CVParticleSpout(opBuilder.buildFetcher()), 1);
         // add bolt that scales frames down to 80% of the original size
-        builder.setBolt("scale", new SingleInputBolt(new ScaleImageOp(0.5f)), scaleHint)
+        builder.setBolt("scale", new SingleInputBolt(new ScaleImageOp(1f)), scaleHint)
                 .shuffleGrouping("fetcher");
 
         builder.setBolt("obj_track", new BatchInputBolt(

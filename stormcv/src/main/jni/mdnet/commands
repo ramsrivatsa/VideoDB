@@ -1,0 +1,6 @@
+#compile libmdnet.so library
+mcc -v -W cpplib:libmdnet -T link:lib -I ../utils/ -I ../matconvnet/matlab/ mdnet_run
+
+#compile libmdnet_main.so library
+g++ -D_GNU_SOURCE  -DUNIX -DX11 -DGLNXA64 -fPIC -shared -pthread -Wl,-rpath-link,/usr/local/MATLAB/R2014a/bin/glnxa64 libmdnet.so -L/usr/local/MATLAB/R2014a/runtime/glnxa64 -lm -lmwmclmcrrt -DGCC -I"/usr/local/MATLAB/R2014a/extern/include" -I"/usr/local/MATLAB/R2014a/simulink/include" -I"/usr/local/MATLAB/R2014a/extern/include/cpp" -ansi -pthread -O -DNDEBUG /home/lvnguyen/MDNet/tracking/mdnet.cpp -o libmdnet_main.so
+

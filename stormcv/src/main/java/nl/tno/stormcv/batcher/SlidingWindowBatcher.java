@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 import xyz.unlimitedcodeworks.utils.Timing;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -29,8 +30,9 @@ public class SlidingWindowBatcher implements IBatcher {
     private Logger logger = LoggerFactory.getLogger(SlidingWindowBatcher.class);
     private int windowSize;
     private int sequenceDelta;
-    private long lastSequence;
-    private long lastSubmitTime = -1;
+    private long initialLastSequence;
+    private Map<String, Long> lastSubmitTimes = new HashMap<>();
+    private Map<String, Long> lastSequences = new HashMap<>();
     private boolean forceSingleFrameBatch = true;
 
     private int maxSize = Integer.MAX_VALUE;
@@ -43,7 +45,7 @@ public class SlidingWindowBatcher implements IBatcher {
     public SlidingWindowBatcher(int windowSize, int sequenceDelta, long lastSequence) {
         this.windowSize = windowSize;
         this.sequenceDelta = sequenceDelta;
-        this.lastSequence = lastSequence;
+        this.initialLastSequence = lastSequence;
     }
 
     /**
@@ -84,7 +86,10 @@ public class SlidingWindowBatcher implements IBatcher {
     private void submitWindow(List<List<CVParticle>> result, List<CVParticle> window) {
         if (window.isEmpty()) return;
 
-        lastSubmitTime = Timing.currentTimeMillis();
+        String streamId = window.get(0).getStreamId();
+        long lastSubmitTime = Timing.currentTimeMillis();
+        lastSubmitTimes.put(streamId, lastSubmitTime);
+
         if (forceSingleFrameBatch) {
             for (CVParticle cvt : window) {
                 List<CVParticle> l = new ArrayList<>();
@@ -101,6 +106,19 @@ public class SlidingWindowBatcher implements IBatcher {
     @Override
     public List<List<CVParticle>> partition(History history, List<CVParticle> currentSet) {
         List<List<CVParticle>> result = new ArrayList<>();
+        if (currentSet.size() <= 0) {
+            return result;
+        }
+
+        String streamId = currentSet.get(0).getStreamId();
+        long lastSequence = initialLastSequence;
+        if (lastSequences.containsKey(streamId)) {
+            lastSequence = lastSequences.get(streamId);
+        }
+        long lastSubmitTime = -1;
+        if (lastSubmitTimes.containsKey(streamId)) {
+            lastSubmitTime = lastSubmitTimes.get(streamId);
+        }
 
         List<CVParticle> window = new ArrayList<>();
 //        for (int curr = 0; curr != currentSet.size(); ++curr) {
@@ -142,6 +160,10 @@ public class SlidingWindowBatcher implements IBatcher {
         }
         // submit what we have at hand
         submitWindow(result, window);
+
+        // save something
+        lastSubmitTimes.put(streamId, lastSubmitTime);
+        lastSequences.put(streamId, lastSequence);
 
         /*
         for (int startAt = 0; startAt != currentSet.size() - 1; ++startAt) {

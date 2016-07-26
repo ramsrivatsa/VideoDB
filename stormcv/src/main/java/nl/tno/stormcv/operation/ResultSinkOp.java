@@ -118,7 +118,7 @@ public class ResultSinkOp extends Application
     @GET
     @Path("/")
     @Produces(MediaType.TEXT_HTML)
-    public String getStreamIds() throws IOException {
+    public String getStreamIds() {
         /*
         String result = "";
         for (String id : results.asMap().keySet()) {
@@ -127,22 +127,27 @@ public class ResultSinkOp extends Application
         return result;
         */
 
-        StringBuilder sb = new StringBuilder();
-        sb.append("<html><head><title>All Stream ");
-        sb.append("Results</title></head><body bgcolor=\"#3C3C3C\">");
-        sb.append("<font style=\"color:#CCC;\">Total: ");
-        sb.append(results.asMap().size());
-        sb.append("<br />");
-        for (String id : results.asMap().keySet()) {
-            sb.append("<a href=\"/results/top?streamid=");
-            sb.append(URLEncoder.encode(id, "UTF-8"));
-            sb.append("\">");
-            sb.append(id);
-            sb.append("</a> ");
+        try {
+            StringBuilder sb = new StringBuilder();
+            sb.append("<html><head><title>All Stream ");
+            sb.append("Results</title></head><body bgcolor=\"#3C3C3C\">");
+            sb.append("<font style=\"color:#CCC;\">Total: ");
+            sb.append(results.asMap().size());
             sb.append("<br />");
+            for (String id : results.asMap().keySet()) {
+                sb.append("<a href=\"/results/top?streamid=");
+                sb.append(URLEncoder.encode(id, "UTF-8"));
+                sb.append("\">");
+                sb.append(id);
+                sb.append("</a> ");
+                sb.append("<br />");
+            }
+            sb.append("</body></html>");
+            return sb.toString();
+        } catch (IOException ex) {
+            ex.printStackTrace();
+            return "Exception caught";
         }
-        sb.append("</body></html>");
-        return sb.toString();
     }
 
     @GET

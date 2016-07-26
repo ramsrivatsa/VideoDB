@@ -62,6 +62,8 @@ JNIEXPORT void JNICALL Java_xyz_unlimitedcodeworks_operations_extra_CMTTracker_n
             ot.trackImage(frame);
         } catch (runtime_error *e) {
             throwJniException(env, e);
+        } catch (cv::Exception *e) {
+            throwJniException(env, e)
         }
     } else {
         throwJniError(env, "Method called on an uninitialized CMTTracker object");

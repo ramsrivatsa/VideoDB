@@ -150,7 +150,10 @@ public class CaptionerTopology {
             //cluster.shutdown();
 
             // run on a storm cluster
-            StormSubmitter.submitTopology("captioning", conf, builder.createTopology());
+            if (opBuilder.topologyId.isEmpty()) {
+                opBuilder.topologyId = "captioning";
+            }
+            StormSubmitter.submitTopology(opBuilder.topologyId, conf, builder.createTopology());
         } catch (Exception e) {
             e.printStackTrace();
         }

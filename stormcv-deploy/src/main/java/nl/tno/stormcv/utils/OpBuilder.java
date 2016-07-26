@@ -28,6 +28,10 @@ public class OpBuilder {
                     // nothing
                 }
                 switch (kv[0]) {
+                    // topology
+                    case "topology-id":
+                        topologyId = kv[1];
+                        break;
                     // CaptionerOp
                     case "cap-use-gpu":
                         captionerUseGPU = value != 0;
@@ -46,6 +50,7 @@ public class OpBuilder {
                         maxGPUNum = value;
                         break;
 
+                    // fetcher
                     case "frame-skip":
                         frameSkip = value;
                         break;
@@ -70,6 +75,8 @@ public class OpBuilder {
             }
         }
     }
+
+    public String topologyId = "";
 
     public boolean useCaffe = false;
     public boolean useGPU = false;

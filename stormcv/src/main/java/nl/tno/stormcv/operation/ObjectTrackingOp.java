@@ -39,6 +39,9 @@ public class ObjectTrackingOp extends OpenCVOp<CVParticle>
     private CMTTracker tracker = null;
     private double[] roi = new double[4];
 
+    private int thisTaskIndex;
+    private String lastStreamId = "";
+
     /**
      * @param featureName    the name of the feature which will be put in the generated Feature's name field
      * @param roi            region of interest, the bounding box that you'd like to track
@@ -72,6 +75,7 @@ public class ObjectTrackingOp extends OpenCVOp<CVParticle>
     @SuppressWarnings("rawtypes")
     @Override
     protected void prepareOpenCVOp(Map stormConf, TopologyContext context) throws Exception {
+        thisTaskIndex = context.getThisTaskIndex();
     }
 
     @Override
@@ -86,7 +90,16 @@ public class ObjectTrackingOp extends OpenCVOp<CVParticle>
 
     @Override
     public List<CVParticle> execute(CVParticle particle) throws Exception {
-        logger.info("ObjectTrackingOp: get frame {}", particle.getSequenceNr());
+        logger.info("ObjectTrackingOp[{}]: get frame {} in stream {}",
+                    thisTaskIndex, particle.getSequenceNr(), particle.getStreamId());
+        if (lastStreamId.isEmpty()) {
+            lastStreamId = particle.getStreamId();
+        } else {
+            if (!lastStreamId.equals(particle.getStreamId())) {
+                logger.error("Received frame from a different stream! Last: {} Received: {}",
+                             lastStreamId, particle.getStreamId());
+            }
+        }
 
         List<CVParticle> result = new ArrayList<>();
         if (!(particle instanceof Frame)) return result;
@@ -98,7 +111,8 @@ public class ObjectTrackingOp extends OpenCVOp<CVParticle>
             Mat image = Imgcodecs.imdecode(mob, Imgcodecs.CV_LOAD_IMAGE_ANYCOLOR);
 
             if (image.empty()) {
-                logger.error("!!!!!!!!!!!!!!!!!At StreamID: {}, Sequence Nr: {}!!!!!!!!!!!!!!!!!!!!!!!!!!Got a empty image even after check", frame.getStreamId(), frame.getSequenceNr());
+                logger.error("At StreamID: {}, Sequence Nr: {} Got a empty image even after check",
+                             frame.getStreamId(), frame.getSequenceNr());
                 return result;
             }
 

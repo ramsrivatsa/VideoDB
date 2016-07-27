@@ -132,7 +132,8 @@ public class CaptionerTopology {
         builder.setBolt("frame_grouper", new BatchInputBolt(
                     new RandomBatcher(minGroupSize, maxGroupSize),
                     new FrameGrouperOp()).groupBy(new Fields(FrameSerializer.STREAMID)),
-                1).shuffleGrouping("vgg_feature");
+                opBuilder.files.size())
+                .fieldsGrouping("vgg_feature", new Fields(FrameSerializer.STREAMID));
 
         builder.setBolt("captioner", new SingleInputBolt(opBuilder.buildCaptioner("caption", "vgg")),
                     captionerHint)

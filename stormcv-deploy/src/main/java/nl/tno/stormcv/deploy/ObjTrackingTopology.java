@@ -126,8 +126,8 @@ public class ObjTrackingTopology {
         builder.setBolt("obj_track", new BatchInputBolt(
                     new SlidingWindowBatcher(2, opBuilder.frameSkip).maxSize(slidingWindow).maxWait(slidingWait).forceSingleFrameBatch(forceSingleFrame),
                     new ObjectTrackingOp("obj1", roi).outputFrame(true)).groupBy(new Fields(FrameSerializer.STREAMID)),
-                1)
-                .shuffleGrouping("scale");
+                opBuilder.files.size())
+                .fieldsGrouping("scale", new Fields(FrameSerializer.STREAMID));
 
         // simple bolt that draws Features (i.e. locations of features) into the frame
         builder.setBolt("drawer", new SingleInputBolt(new DrawFeaturesOp().drawMetadata(true)),

@@ -8,7 +8,9 @@ import nl.tno.stormcv.StormCVConfig;
 import nl.tno.stormcv.batcher.SlidingWindowBatcher;
 import nl.tno.stormcv.bolt.BatchInputBolt;
 import nl.tno.stormcv.bolt.SingleInputBolt;
+import nl.tno.stormcv.grouping.StrongFieldGrouping;
 import nl.tno.stormcv.model.Frame;
+import nl.tno.stormcv.model.serializer.CVParticleSerializer;
 import nl.tno.stormcv.model.serializer.FrameSerializer;
 import nl.tno.stormcv.operation.DrawFeaturesOp;
 import nl.tno.stormcv.operation.MjpegStreamingOp;
@@ -22,7 +24,7 @@ import org.opencv.core.Rect;
  * Created by Aetf (aetf at unlimitedcodeworks dot xyz) on 16-7-08.
  */
 public class ObjTrackingTopology {
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception{
         // process args
         final String switchKeyword = "--";
         int scaleHint = 1;
@@ -125,9 +127,11 @@ public class ObjTrackingTopology {
 
         builder.setBolt("obj_track", new BatchInputBolt(
                     new SlidingWindowBatcher(2, opBuilder.frameSkip).maxSize(slidingWindow).maxWait(slidingWait).forceSingleFrameBatch(forceSingleFrame),
-                    new ObjectTrackingOp("obj1", roi).outputFrame(true)).groupBy(new Fields(FrameSerializer.STREAMID)),
+                    new ObjectTrackingOp("obj1", roi).outputFrame(true)).groupBy(new Fields(CVParticleSerializer.STREAMID)),
                 opBuilder.files.size())
-                .fieldsGrouping("scale", new Fields(FrameSerializer.STREAMID));
+                .customGrouping("scale",
+                                new StrongFieldGrouping<>(new Fields(CVParticleSerializer.STREAMID),
+                                                          new FrameSerializer()));
 
         // simple bolt that draws Features (i.e. locations of features) into the frame
         builder.setBolt("drawer", new SingleInputBolt(new DrawFeaturesOp().drawMetadata(true)),
@@ -137,7 +141,7 @@ public class ObjTrackingTopology {
         // add bolt that creates a webservice on port 8558 enabling users to view the result
         builder.setBolt("streamer", new BatchInputBolt(
                     new SlidingWindowBatcher(2, opBuilder.frameSkip).maxSize(slidingWindow).maxWait(slidingWait).forceSingleFrameBatch(forceSingleFrame),
-                    new MjpegStreamingOp().port(8558).framerate(5)).groupBy(new Fields(FrameSerializer.STREAMID)),
+                    new MjpegStreamingOp().port(8558).framerate(5)).groupBy(new Fields(CVParticleSerializer.STREAMID)),
                 1)
                 .shuffleGrouping("drawer");
 

@@ -8,8 +8,11 @@ import nl.tno.stormcv.StormCVConfig;
 import nl.tno.stormcv.batcher.RandomBatcher;
 import nl.tno.stormcv.bolt.BatchInputBolt;
 import nl.tno.stormcv.bolt.SingleInputBolt;
+import nl.tno.stormcv.grouping.StrongFieldGrouping;
 import nl.tno.stormcv.model.Frame;
+import nl.tno.stormcv.model.serializer.CVParticleSerializer;
 import nl.tno.stormcv.model.serializer.FrameSerializer;
+import nl.tno.stormcv.model.serializer.GroupOfFramesSerializer;
 import nl.tno.stormcv.operation.DnnForwardOp;
 import nl.tno.stormcv.operation.FrameGrouperOp;
 import nl.tno.stormcv.operation.ResultSinkOp;
@@ -21,7 +24,7 @@ import nl.tno.stormcv.utils.OpBuilder;
  * Created by Aetf (aetf at unlimitedcodeworks dot xyz) on 16-7-19.
  */
 public class CaptionerTopology {
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
         // process args
         final String switchKeyword = "--";
         int scaleHint = 1;
@@ -135,9 +138,16 @@ public class CaptionerTopology {
                 opBuilder.files.size())
                 .fieldsGrouping("vgg_feature", new Fields(FrameSerializer.STREAMID));
 
+        /**
+         * TODO: not tested yet.
+         * Can a single captioner instance work with multiple clips from different streams?
+         * Does the resolution of the clips has to be the same as the first clip?
+         */
         builder.setBolt("captioner", new SingleInputBolt(opBuilder.buildCaptioner("caption", "vgg")),
-                    captionerHint)
-                .shuffleGrouping("frame_grouper");
+                    Math.max(opBuilder.files.size(), captionerHint))
+                .customGrouping("frame_grouper",
+                                new StrongFieldGrouping<>(new Fields(CVParticleSerializer.STREAMID),
+                                                          new GroupOfFramesSerializer()));
 
         builder.setBolt("streamer", new SingleInputBolt(new ResultSinkOp().port(8558).topNumber(20)),
                 1)
